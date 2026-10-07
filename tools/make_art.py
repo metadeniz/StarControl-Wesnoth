@@ -1,0 +1,633 @@
+#!/usr/bin/env python3
+"""Build every image and sound the Star Control TC add-on uses.
+
+Two kinds of art come out of this script:
+
+* UQM-derived (personal set): ship sprites, projectiles, explosions and
+  sounds, converted from The Ur-Quan Masters content (CC BY-NC-SA 2.5).
+  Every file of this kind is listed in art-manifest.txt so a future
+  published build can tell exactly what has to be replaced.
+* Original: all terrain (starfield, nebula, asteroids, planets, star,
+  starbases) is generated procedurally here and is ours to publish.
+
+Usage:
+    make_art.py --uqm <UQM-MegaMod-Content checkout> --out <add-on dir>
+                [--wesnoth-data /usr/share/games/wesnoth/1.16/data]
+"""
+
+import argparse
+import math
+import os
+import shutil
+import sys
+
+import numpy as np
+from PIL import Image, ImageDraw, ImageFilter
+
+HEX = 72
+# Screen angle (degrees clockwise from north) of each Wesnoth hex facing.
+# Neighbouring hex centres are 54px across and 36px up/down, not 60 degrees.
+DIAG = math.degrees(math.atan2(54, 36))
+FACINGS = {
+    "n": 0.0,
+    "ne": DIAG,
+    "se": 180.0 - DIAG,
+    "s": 180.0,
+    "sw": 180.0 + DIAG,
+    "nw": 360.0 - DIAG,
+}
+
+# unit image id -> (UQM ship dir, sprite stem)
+SHIPS = {
+    "earthling-cruiser": ("human", "cruiser"),
+    "chenjesu-broodhome": ("chenjesu", "broodhome"),
+    "mmrnmhrm-xform": ("mmrnmhrm", "xform"),
+    "mmrnmhrm-ywing": ("mmrnmhrm", "ywing"),
+    "yehat-terminator": ("yehat", "terminator"),
+    "syreen-penetrator": ("syreen", "penetrator"),
+    "arilou-skiff": ("arilou", "skiff"),
+    "shofixti-scout": ("shofixti", "scout"),
+    "urquan-dreadnought": ("urquan", "dreadnought"),
+    "urquan-fighter": ("urquan", "fighter"),
+    "mycon-podship": ("mycon", "podship"),
+    "spathi-eluder": ("spathi", "eluder"),
+    "umgah-drone": ("umgah", "drone"),
+    "vux-intruder": ("vux", "intruder"),
+    "androsynth-guardian": ("androsynth", "guardian"),
+    "androsynth-blazer": ("androsynth", "blazer"),
+    "ilwrath-avenger": ("ilwrath", "avenger"),
+}
+
+# projectile id -> (UQM ship dir, sprite stem, frame, scale vs HD sprite)
+PROJECTILES = {
+    "nuke": ("human", "saturn", 0, 0.5),
+    "crystal": ("chenjesu", "spark", 0, 0.6),
+    "dogi": ("chenjesu", "doggy", 0, 0.45),
+    "torpedo": ("mmrnmhrm", "torpedo", 0, 0.5),
+    "pulse": ("yehat", "missile", 0, 0.6),
+    "dagger": ("syreen", "dagger", 0, 0.5),
+    "dart": ("shofixti", "missile", 0, 0.6),
+    "fusion": ("urquan", "fusion", 0, 0.5),
+    "plasmoid": ("mycon", "plasma", 0, 0.45),
+    "spathi-missile": ("spathi", "missile", 0, 0.6),
+    "butt": ("spathi", "butt", 0, 0.5),
+    "limpet": ("vux", "limpets", 0, 0.8),
+    "bubble": ("androsynth", "bubble", 0, 0.6),
+    "hellfire": ("ilwrath", "fire", 0, 0.5),
+    "cone": ("umgah", "cone", 0, 0.32),
+}
+
+# Laser bolts are lines in UQM, so these are drawn here: id -> RGB core colour.
+LASERS = {
+    "laser-white": (255, 255, 255),
+    "laser-red": (255, 70, 60),
+    "laser-green": (90, 255, 110),
+    "laser-gold": (255, 220, 90),
+    "laser-violet": (220, 120, 255),
+}
+
+# sound id -> path inside the UQM content dir
+SOUNDS = {
+    "earthling-nuke": "base/ships/human/primary.wav",
+    "earthling-pd": "base/ships/human/secondary.wav",
+    "chenjesu-crystal": "base/ships/chenjesu/primary.wav",
+    "chenjesu-dogi": "base/ships/chenjesu/secondary.wav",
+    "mmrnmhrm-laser": "base/ships/mmrnmhrm/primaryx.wav",
+    "mmrnmhrm-torpedo": "base/ships/mmrnmhrm/primaryy.wav",
+    "mmrnmhrm-transform": "base/ships/mmrnmhrm/secondary.wav",
+    "yehat-pulse": "base/ships/yehat/primary.wav",
+    "yehat-shield": "base/ships/yehat/secondary.wav",
+    "syreen-dagger": "base/ships/syreen/primary.wav",
+    "syreen-song": "base/ships/syreen/secondary.wav",
+    "arilou-laser": "base/ships/arilou/primary.wav",
+    "arilou-jump": "base/ships/arilou/secondary.wav",
+    "shofixti-dart": "base/ships/shofixti/primary.wav",
+    "shofixti-glory": "base/ships/shofixti/secondary.wav",
+    "urquan-fusion": "base/ships/urquan/primary.wav",
+    "urquan-launch": "base/ships/urquan/secondary.wav",
+    "urquan-fighter-laser": "base/ships/urquan/fighter_laser.wav",
+    "urquan-fighter-dock": "base/ships/urquan/fighter_get.wav",
+    "mycon-plasmoid": "base/ships/mycon/primary.wav",
+    "mycon-regrow": "base/ships/mycon/secondary.wav",
+    "spathi-missile": "base/ships/spathi/primary.wav",
+    "spathi-butt": "base/ships/spathi/secondary.wav",
+    "umgah-cone": "base/ships/umgah/primary.wav",
+    "vux-laser": "base/ships/vux/primary.wav",
+    "vux-limpets": "base/ships/vux/secondary.wav",
+    "androsynth-bubbles": "base/ships/androsynth/primary.wav",
+    "androsynth-blazer": "base/ships/androsynth/secondary.wav",
+    "ilwrath-hellfire": "base/ships/ilwrath/primary.wav",
+    "ilwrath-cloak": "base/ships/ilwrath/cloak.wav",
+    "ilwrath-uncloak": "base/ships/ilwrath/uncloak.wav",
+    "boom-small": "base/battle/boom1.wav",
+    "boom-medium": "base/battle/boom23.wav",
+    "boom-large": "base/battle/boom45.wav",
+    "ship-dies": "base/battle/shipdies.wav",
+}
+
+TRANSITION_COMBOS = [
+    "n", "ne", "se", "s", "sw", "nw",
+    "n-ne", "ne-se", "se-s", "s-sw", "sw-nw", "nw-n",
+    "n-ne-se", "ne-se-s", "se-s-sw", "s-sw-nw", "sw-nw-n", "nw-n-ne",
+    "s-sw-nw-n-ne", "sw-nw-n-ne-se", "s-sw-nw-n-ne-se",
+]
+
+manifest = []
+
+
+def save(img, out, rel, uqm):
+    path = os.path.join(out, rel)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    img.save(path, optimize=True)
+    if uqm:
+        manifest.append(rel)
+
+
+# ---------------------------------------------------------------- UQM art
+
+
+def hd_sprite(uqm, ship_dir, stem, frame=0):
+    path = os.path.join(uqm, "addons/mm-hd/ships", ship_dir, f"{stem}-big-{frame:03d}.png")
+    return Image.open(path).convert("RGBA")
+
+
+def sd_size(uqm, ship_dir, stem):
+    path = os.path.join(uqm, "base/ships", ship_dir, f"{stem}-big-000.png")
+    return max(Image.open(path).size)
+
+
+def rotated(img, angle):
+    """Rotate clockwise by `angle` degrees, keeping the whole sprite."""
+    return img.rotate(-angle, resample=Image.BICUBIC, expand=True)
+
+
+def trim(img):
+    box = img.getbbox()
+    return img.crop(box) if box else img
+
+
+def centred(img, size=HEX):
+    canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    canvas.alpha_composite(img, ((size - img.width) // 2, (size - img.height) // 2))
+    return canvas
+
+
+def ship_scale(uqm, ship_dir, stem, hd):
+    """Pixel length of the ship's long side in-game.
+
+    Ships keep their relative sizes from Star Control (a Dreadnought dwarfs a
+    Shofixti Scout) but squeezed so the small ones stay readable.
+    """
+    d = sd_size(uqm, ship_dir, stem)
+    target = min(66.0, max(24.0, 30 + 1.55 * (d - 12)))
+    scale = target / max(hd.size)
+    # Shrink further if any facing would overflow the hex.
+    for angle in FACINGS.values():
+        r = trim(rotated(hd, angle))
+        scale = min(scale, 70.0 / max(r.size))
+    return scale
+
+
+def build_ships(uqm, out):
+    for uid, (ship_dir, stem) in SHIPS.items():
+        hd = hd_sprite(uqm, ship_dir, stem)
+        scale = ship_scale(uqm, ship_dir, stem, hd)
+        for facing, angle in FACINGS.items():
+            r = trim(rotated(hd, angle))
+            w = max(1, round(r.width * scale))
+            h = max(1, round(r.height * scale))
+            img = centred(r.resize((w, h), Image.LANCZOS))
+            save(img, out, f"images/units/sc/{uid}-{facing}.png", True)
+            if facing == "ne":
+                save(img, out, f"images/units/sc/{uid}.png", True)
+
+
+def build_projectiles(uqm, out):
+    for pid, (ship_dir, stem, frame, scale) in PROJECTILES.items():
+        hd = hd_sprite(uqm, ship_dir, stem, frame)
+        w = max(2, round(hd.width * scale))
+        h = max(2, round(hd.height * scale))
+        if max(w, h) < 10:
+            k = 10 / max(w, h)
+            w, h = round(w * k), round(h * k)
+        small = hd.resize((w, h), Image.LANCZOS)
+        for facing in ("n", "ne"):
+            img = trim(rotated(small, FACINGS[facing]))
+            save(img, out, f"images/projectiles/sc/{pid}-{facing}.png", True)
+
+
+def build_lasers(out):
+    for lid, rgb in LASERS.items():
+        w, h = 9, 30
+        img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+        d = ImageDraw.Draw(img)
+        d.rounded_rectangle([1, 0, w - 2, h - 1], radius=3, fill=rgb + (90,))
+        d.rounded_rectangle([3, 1, w - 4, h - 2], radius=2, fill=rgb + (200,))
+        d.line([w // 2, 2, w // 2, h - 3], fill=(255, 255, 255, 255), width=1)
+        img = img.filter(ImageFilter.GaussianBlur(0.6))
+        for facing in ("n", "ne"):
+            save(trim(rotated(img, FACINGS[facing])), out,
+                 f"images/projectiles/sc/{lid}-{facing}.png", False)
+
+
+def build_effects(uqm, out):
+    battle = os.path.join(uqm, "addons/mm-hd/battle")
+    for i in range(9):
+        img = Image.open(os.path.join(battle, f"boom-big-{i:03d}.png")).convert("RGBA")
+        save(img.resize((img.width * 3, img.height * 3), Image.LANCZOS), out,
+             f"images/halo/sc/boom-{i + 1}.png", True)
+    for i in range(8):
+        img = Image.open(os.path.join(battle, f"blast-big-{i:03d}.png")).convert("RGBA")
+        save(img, out, f"images/halo/sc/blast-{i + 1}.png", True)
+    # Shofixti Glory Device: blown up to cover the scout's neighbours.
+    ddir = os.path.join(uqm, "addons/mm-hd/ships/shofixti")
+    frames = sorted(f for f in os.listdir(ddir) if f.startswith("destruct-big-") and f.endswith(".png"))
+    for i, f in enumerate(frames):
+        img = Image.open(os.path.join(ddir, f)).convert("RGBA")
+        k = 200 / max(img.size)
+        save(img.resize((round(img.width * k), round(img.height * k)), Image.LANCZOS), out,
+             f"images/halo/sc/glory-{i + 1}.png", True)
+    # Ilwrath hellfire burst frames
+    fdir = os.path.join(uqm, "addons/mm-hd/ships/ilwrath")
+    frames = sorted(f for f in os.listdir(fdir) if f.startswith("fire-big-") and f.endswith(".png"))
+    for i, f in enumerate(frames):
+        img = Image.open(os.path.join(fdir, f)).convert("RGBA")
+        k = 0.6
+        save(img.resize((max(1, round(img.width * k)), max(1, round(img.height * k))), Image.LANCZOS),
+             out, f"images/halo/sc/hellfire-{i + 1}.png", True)
+    return len(frames)
+
+
+def build_sounds(uqm, out):
+    for sid, rel in SOUNDS.items():
+        dest = f"sounds/sc/{sid}.wav"
+        os.makedirs(os.path.join(out, "sounds/sc"), exist_ok=True)
+        shutil.copyfile(os.path.join(uqm, rel), os.path.join(out, dest))
+        manifest.append(dest)
+
+
+# ------------------------------------------------------- original terrain
+
+
+def hex_mask(wdata):
+    a = Image.open(os.path.join(wdata, "core/images/terrain/grass/green.png")).convert("RGBA")
+    return np.array(a)[:, :, 3].astype(np.float32) / 255.0
+
+
+def transition_masks(wdata):
+    masks = {}
+    for combo in TRANSITION_COMBOS:
+        a = Image.open(os.path.join(wdata, f"core/images/terrain/grass/green-{combo}.png")).convert("RGBA")
+        masks[combo] = np.array(a)[:, :, 3].astype(np.float32) / 255.0
+    return masks
+
+
+def fractal_noise(rng, size, octaves=5, base=4):
+    """Smooth value noise in [0,1], `size` x `size`, tileable."""
+    total = np.zeros((size, size), np.float32)
+    amp, norm = 1.0, 0.0
+    for o in range(octaves):
+        cells = base * 2 ** o
+        grid = rng.random((cells, cells)).astype(np.float32)
+        layer = Image.fromarray((grid * 255).astype(np.uint8)).resize((size, size), Image.BICUBIC)
+        # BICUBIC on a tiny grid is not wrap-aware; good enough for hex crops.
+        total += amp * np.asarray(layer, np.float32) / 255.0
+        norm += amp
+        amp *= 0.5
+    total /= norm
+    total -= total.min()
+    total /= max(total.max(), 1e-6)
+    return total
+
+
+def starfield(rng, density=1.0):
+    """72x72 RGBA, opaque, deep-space colour with stars."""
+    img = np.zeros((HEX, HEX, 4), np.float32)
+    n = fractal_noise(rng, HEX, octaves=3, base=2)
+    img[:, :, 0] = 4 + 6 * n
+    img[:, :, 1] = 5 + 6 * n
+    img[:, :, 2] = 14 + 12 * n
+    img[:, :, 3] = 255
+    pil = Image.fromarray(img.clip(0, 255).astype(np.uint8), "RGBA")
+    d = ImageDraw.Draw(pil)
+    for _ in range(int(rng.integers(14, 24) * density)):
+        x, y = rng.integers(0, HEX, 2)
+        b = int(rng.choice([70, 90, 120, 160, 210], p=[0.35, 0.25, 0.2, 0.12, 0.08]))
+        tint = rng.choice(["w", "b", "y", "r"], p=[0.6, 0.2, 0.15, 0.05])
+        col = {"w": (b, b, b), "b": (b * 3 // 4, b * 4 // 5, b), "y": (b, b * 9 // 10, b * 3 // 4),
+               "r": (b, b * 3 // 4, b * 3 // 4)}[tint]
+        d.point((int(x), int(y)), fill=col + (255,))
+        if b >= 200 and rng.random() < 0.6:
+            dim = tuple(c // 3 for c in col) + (255,)
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                d.point((int(x) + dx, int(y) + dy), fill=dim)
+    return pil
+
+
+def apply_mask(img, mask):
+    a = np.array(img).astype(np.float32)
+    a[:, :, 3] *= mask
+    return Image.fromarray(a.clip(0, 255).astype(np.uint8), "RGBA")
+
+
+NEBULA_A = np.array([200, 80, 245], np.float32)
+NEBULA_B = np.array([60, 175, 235], np.float32)
+
+
+def nebula_layer(field, x0, y0):
+    """Cloud-only RGBA crop from the big nebula field.
+
+    Hexes are drawn independently, so the colour stays close to one mean
+    value (no visible seams between neighbouring nebula hexes) and the
+    variation is fine-grained wisps inside each hex.
+    """
+    n1, n2 = field
+    a = n1[y0:y0 + HEX, x0:x0 + HEX]
+    b = n2[y0:y0 + HEX, x0:x0 + HEX]
+    mix = 0.45 + 0.25 * (b - 0.5)
+    rgb = NEBULA_A[None, None] * (1 - mix[..., None]) + NEBULA_B[None, None] * mix[..., None]
+    bright = 0.75 + 0.45 * (a - 0.5)
+    rgb = rgb * bright[..., None]
+    alpha = (0.62 + 0.2 * (a - 0.5)) * 255
+    out = np.dstack([rgb, alpha])
+    return Image.fromarray(out.clip(0, 255).astype(np.uint8), "RGBA")
+
+
+def build_space(rng, mask, out):
+    for v in range(11):
+        name = "space" if v == 0 else f"space{v + 1}"
+        save(apply_mask(starfield(rng), mask), out, f"images/terrain/sc/{name}.png", False)
+    save(apply_mask(starfield(rng), mask), out, "images/terrain/sc/space-tile.png", False)
+
+
+def build_nebula(rng, mask, tmasks, out):
+    size = 512
+    field = (fractal_noise(rng, size, 5, 24), fractal_noise(rng, size, 4, 12))
+    for v in range(11):
+        x0, y0 = rng.integers(0, size - HEX, 2)
+        img = starfield(rng, 0.7)
+        img.alpha_composite(nebula_layer(field, x0, y0))
+        name = "nebula" if v == 0 else f"nebula{v + 1}"
+        save(apply_mask(img, mask), out, f"images/terrain/sc/{name}.png", False)
+        if v == 0:
+            save(apply_mask(img, mask), out, "images/terrain/sc/nebula-tile.png", False)
+    for combo, m in tmasks.items():
+        x0, y0 = rng.integers(0, size - HEX, 2)
+        layer = nebula_layer(field, x0, y0)
+        # Soften the grass-shaped edge so it reads as gas, not a cut-out.
+        soft = np.array(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(2.5)),
+                        np.float32) / 255.0
+        save(apply_mask(layer, soft * 0.9), out, f"images/terrain/sc/nebula-{combo}.png", False)
+
+
+def shaded_sphere(rng, diameter, palette, kind):
+    """Lit planet sphere on a transparent square canvas."""
+    s = diameter + 8
+    yy, xx = np.mgrid[0:s, 0:s].astype(np.float32)
+    c = (s - 1) / 2
+    r = diameter / 2
+    nx, ny = (xx - c) / r, (yy - c) / r
+    d2 = nx ** 2 + ny ** 2
+    inside = d2 <= 1
+    nz = np.sqrt(np.clip(1 - d2, 0, 1))
+    light = np.array([-0.55, -0.55, 0.63])
+    light /= np.linalg.norm(light)
+    lam = np.clip(nx * light[0] + ny * light[1] + nz * light[2], 0, 1)
+    shade = 0.12 + 0.88 * lam
+    tex = fractal_noise(rng, s, 5, 3)
+    if kind == "gas":
+        bands = np.sin((ny + 0.15 * (tex - 0.5)) * 9.0) * 0.5 + 0.5
+        t = bands
+    else:
+        t = tex
+    cols = np.array(palette, np.float32)
+    idx = np.clip(t * (len(cols) - 1), 0, len(cols) - 1.001)
+    lo = np.floor(idx).astype(int)
+    f = (idx - lo)[..., None]
+    rgb = cols[lo] * (1 - f) + cols[lo + 1] * f
+    rgb *= shade[..., None]
+    alpha = np.where(inside, 255, 0).astype(np.float32)
+    # anti-alias the rim
+    edge = np.clip((1 - np.sqrt(d2)) * r, 0, 1)
+    alpha = np.where(d2 <= 1.2, 255 * edge, 0)
+    img = Image.fromarray(np.dstack([rgb, alpha]).clip(0, 255).astype(np.uint8), "RGBA")
+    return img
+
+
+PLANETS = [
+    ("terran", "rock", [(20, 60, 140), (30, 90, 170), (60, 130, 70), (110, 150, 80), (200, 200, 190)], (120, 170, 255)),
+    ("desert", "rock", [(120, 60, 25), (180, 110, 50), (220, 170, 90), (240, 210, 150)], (255, 190, 120)),
+    ("ice", "rock", [(140, 170, 200), (190, 215, 235), (235, 245, 255), (255, 255, 255)], (200, 230, 255)),
+    ("gas", "gas", [(150, 100, 60), (210, 170, 110), (240, 220, 180), (190, 130, 80), (230, 200, 150)], (255, 220, 170)),
+    ("lava", "rock", [(30, 15, 15), (60, 25, 20), (200, 60, 10), (255, 170, 40)], (255, 120, 60)),
+    ("barren", "rock", [(70, 70, 75), (110, 105, 100), (150, 145, 140), (190, 185, 180)], None),
+]
+
+
+def build_planets(rng, out):
+    for i, (name, kind, pal, glow) in enumerate(PLANETS):
+        dia = 38 if kind != "gas" else 46
+        sphere = shaded_sphere(rng, dia, pal, kind)
+        canvas = Image.new("RGBA", (HEX, HEX), (0, 0, 0, 0))
+        if glow:
+            g = Image.new("RGBA", (HEX, HEX), (0, 0, 0, 0))
+            ImageDraw.Draw(g).ellipse([36 - dia / 2 - 3, 36 - dia / 2 - 3, 36 + dia / 2 + 3, 36 + dia / 2 + 3],
+                                      fill=glow + (110,))
+            canvas.alpha_composite(g.filter(ImageFilter.GaussianBlur(3)))
+        canvas.alpha_composite(sphere, ((HEX - sphere.width) // 2, (HEX - sphere.height) // 2))
+        if kind == "gas" and rng.random() < 2:
+            ring = Image.new("RGBA", (HEX * 2, HEX * 2), (0, 0, 0, 0))
+            rd = ImageDraw.Draw(ring)
+            rd.ellipse([18, 52, HEX * 2 - 18, HEX * 2 - 52], outline=(220, 200, 160, 170), width=4)
+            ring = ring.resize((HEX, HEX), Image.LANCZOS).rotate(-18, resample=Image.BICUBIC)
+            # draw ring in front only on the lower half
+            front = np.array(ring)
+            front[: HEX // 2 + 2, :, 3] = 0
+            back = np.array(ring)
+            back[HEX // 2 + 2:, :, 3] = 0
+            base = Image.new("RGBA", (HEX, HEX), (0, 0, 0, 0))
+            base.alpha_composite(Image.fromarray(back))
+            base.alpha_composite(canvas)
+            base.alpha_composite(Image.fromarray(front))
+            canvas = base
+        vname = "planet" if i == 0 else f"planet{i + 1}"
+        save(canvas, out, f"images/terrain/sc/{vname}.png", False)
+        if i == 0:
+            save(canvas, out, "images/terrain/sc/planet-tile.png", False)
+
+
+def rock(rng, size):
+    s = size * 2 + 4
+    pts = []
+    n = int(rng.integers(7, 11))
+    for k in range(n):
+        a = 2 * math.pi * k / n + rng.uniform(-0.2, 0.2)
+        rr = size * rng.uniform(0.65, 1.0)
+        pts.append((s / 2 + rr * math.cos(a), s / 2 + rr * 0.8 * math.sin(a)))
+    m = Image.new("L", (s, s), 0)
+    ImageDraw.Draw(m).polygon(pts, fill=255)
+    mask = np.asarray(m, np.float32) / 255
+    blurred = np.asarray(m.filter(ImageFilter.GaussianBlur(size / 3)), np.float32) / 255
+    gy, gx = np.gradient(blurred)
+    shade = np.clip(0.55 + (-gx - gy) * size * 1.4, 0.15, 1.2)
+    tex = fractal_noise(rng, s, 3, 2)
+    base = 85 + 50 * tex
+    rgb = np.dstack([base * shade * 1.0, base * shade * 0.95, base * shade * 0.9])
+    img = Image.fromarray(np.dstack([rgb, mask * 255]).clip(0, 255).astype(np.uint8), "RGBA")
+    return img.rotate(rng.uniform(0, 360), resample=Image.BICUBIC)
+
+
+def build_asteroids(rng, out):
+    for v in range(6):
+        canvas = Image.new("RGBA", (HEX, HEX), (0, 0, 0, 0))
+        placed = []
+        for _ in range(int(rng.integers(7, 11))):
+            size = int(rng.choice([5, 6, 8, 10, 12, 14], p=[0.15, 0.2, 0.2, 0.2, 0.15, 0.1]))
+            for _try in range(30):
+                x, y = rng.uniform(10, 62), rng.uniform(9, 63)
+                # keep inside the hex and away from other rocks
+                if abs(x - 36) + abs(y - 36) * 0.6 > 32:
+                    continue
+                if all((x - px) ** 2 + (y - py) ** 2 > (size + ps + 2) ** 2 for px, py, ps in placed):
+                    break
+            placed.append((x, y, size))
+            r = rock(rng, size)
+            canvas.alpha_composite(r, (int(x - r.width / 2), int(y - r.height / 2)))
+        name = "asteroids" if v == 0 else f"asteroids{v + 1}"
+        save(canvas, out, f"images/terrain/sc/{name}.png", False)
+        if v == 0:
+            save(canvas, out, "images/terrain/sc/asteroids-tile.png", False)
+
+
+def build_star(rng, out):
+    s = HEX
+    yy, xx = np.mgrid[0:s, 0:s].astype(np.float32)
+    c = (s - 1) / 2
+    d = np.sqrt((xx - c) ** 2 + (yy - c) ** 2)
+    ang = np.arctan2(yy - c, xx - c)
+    rays = 0.5 + 0.5 * np.sin(ang * 11 + 1.3) * np.sin(ang * 7)
+    core_r = 19
+    corona = np.clip(1 - (d - core_r) / (17 + 8 * rays), 0, 1) ** 1.6
+    core = np.clip(core_r + 1 - d, 0, 1)
+    tex = fractal_noise(rng, s, 4, 4)
+    rgb = np.zeros((s, s, 3), np.float32)
+    rgb[..., 0] = 255
+    rgb[..., 1] = 150 + 100 * core * (0.6 + 0.4 * tex) + 40 * (1 - core) * corona
+    rgb[..., 2] = 40 + 170 * core * np.clip(1 - d / core_r, 0, 1) ** 0.7
+    alpha = 255 * np.maximum(core, corona * 0.85)
+    img = Image.fromarray(np.dstack([rgb, alpha]).clip(0, 255).astype(np.uint8), "RGBA")
+    save(img, out, "images/terrain/sc/star.png", False)
+    tile = apply_mask(starfield(rng), hex_mask_cache)
+    tile.alpha_composite(img)
+    save(apply_mask(tile, hex_mask_cache), out, "images/terrain/sc/star-tile.png", False)
+
+
+def build_starbase(rng, mask, out):
+    # Keep: a station - outer ring, spokes, glowing hub.
+    big = 4
+    S = HEX * big
+    st = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    d = ImageDraw.Draw(st)
+    c = S / 2
+    R = 25 * big
+    for k in range(6):
+        a = math.radians(30 + 60 * k)
+        d.line([c, c, c + R * math.cos(a), c + R * math.sin(a)], fill=(120, 130, 150, 255), width=3 * big)
+    d.ellipse([c - R, c - R, c + R, c + R], outline=(150, 160, 180, 255), width=5 * big)
+    d.ellipse([c - R + 4 * big, c - R + 4 * big, c + R - 4 * big, c + R - 4 * big], outline=(70, 80, 100, 255),
+              width=1 * big)
+    d.ellipse([c - 8 * big, c - 8 * big, c + 8 * big, c + 8 * big], fill=(90, 100, 125, 255),
+              outline=(170, 180, 200, 255), width=big)
+    d.ellipse([c - 4 * big, c - 4 * big, c + 4 * big, c + 4 * big], fill=(120, 220, 255, 255))
+    for k in range(12):
+        a = math.radians(15 + 30 * k)
+        x, y = c + R * math.cos(a), c + R * math.sin(a)
+        col = (255, 80, 80, 255) if k % 3 == 0 else (255, 230, 150, 255)
+        d.ellipse([x - 1.5 * big, y - 1.5 * big, x + 1.5 * big, y + 1.5 * big], fill=col)
+    st = st.resize((HEX, HEX), Image.LANCZOS)
+    glow = st.filter(ImageFilter.GaussianBlur(2))
+    keep = starfield(rng)
+    keep.alpha_composite(glow)
+    keep.alpha_composite(st)
+    save(apply_mask(keep, mask), out, "images/terrain/sc/starbase.png", False)
+    save(apply_mask(keep, mask), out, "images/terrain/sc/starbase-tile.png", False)
+
+    # Dock (castle): a lit hexagonal docking frame.
+    for v in range(3):
+        dock = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+        dd = ImageDraw.Draw(dock)
+        r1 = 30 * big
+        pts = [(c + r1 * math.cos(math.radians(60 * k)), c + r1 * math.sin(math.radians(60 * k))) for k in range(6)]
+        dd.polygon(pts, outline=(70, 160, 210, 230), width=2 * big)
+        r2 = 22 * big
+        pts2 = [(c + r2 * math.cos(math.radians(60 * k)), c + r2 * math.sin(math.radians(60 * k))) for k in range(6)]
+        dd.polygon(pts2, outline=(50, 90, 130, 160), width=big)
+        for (x, y) in pts:
+            dd.ellipse([x - 2 * big, y - 2 * big, x + 2 * big, y + 2 * big], fill=(140, 230, 255, 255))
+        dock = dock.resize((HEX, HEX), Image.LANCZOS)
+        tile = starfield(rng)
+        tile.alpha_composite(dock.filter(ImageFilter.GaussianBlur(1.5)))
+        tile.alpha_composite(dock)
+        name = "dock" if v == 0 else f"dock{v + 1}"
+        save(apply_mask(tile, mask), out, f"images/terrain/sc/{name}.png", False)
+        if v == 0:
+            save(apply_mask(tile, mask), out, "images/terrain/sc/dock-tile.png", False)
+
+
+def build_attack_icons(out):
+    """60x60 attack icons: the projectile on a dark disc."""
+    sources = {pid: (f"images/projectiles/sc/{pid}-ne.png", True) for pid in PROJECTILES}
+    sources.update({lid: (f"images/projectiles/sc/{lid}-ne.png", False) for lid in LASERS})
+    sources["blazer"] = ("images/units/sc/androsynth-blazer-ne.png", True)
+    for iid, (rel, uqm) in sources.items():
+        item = trim(Image.open(os.path.join(out, rel)).convert("RGBA"))
+        k = 44 / max(item.size)
+        item = item.resize((max(1, round(item.width * k)), max(1, round(item.height * k))), Image.LANCZOS)
+        icon = Image.new("RGBA", (60, 60), (0, 0, 0, 0))
+        d = ImageDraw.Draw(icon)
+        d.ellipse([1, 1, 58, 58], fill=(8, 10, 28, 255), outline=(90, 110, 160, 255), width=2)
+        icon.alpha_composite(item, ((60 - item.width) // 2, (60 - item.height) // 2))
+        save(icon, out, f"images/attacks/sc/{iid}.png", uqm)
+
+
+hex_mask_cache = None
+
+
+def main():
+    global hex_mask_cache
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--uqm", required=True, help="UQM-MegaMod-Content checkout")
+    ap.add_argument("--out", required=True, help="add-on directory")
+    ap.add_argument("--wesnoth-data", default="/usr/share/games/wesnoth/1.16/data")
+    ap.add_argument("--seed", type=int, default=1990)
+    args = ap.parse_args()
+
+    rng = np.random.default_rng(args.seed)
+    mask = hex_mask(args.wesnoth_data)
+    hex_mask_cache = mask
+    tmasks = transition_masks(args.wesnoth_data)
+
+    build_ships(args.uqm, args.out)
+    build_projectiles(args.uqm, args.out)
+    build_lasers(args.out)
+    build_attack_icons(args.out)
+    nfire = build_effects(args.uqm, args.out)
+    build_sounds(args.uqm, args.out)
+
+    build_space(rng, mask, args.out)
+    build_nebula(rng, mask, tmasks, args.out)
+    build_planets(rng, args.out)
+    build_asteroids(rng, args.out)
+    build_star(rng, args.out)
+    build_starbase(rng, mask, args.out)
+
+    with open(os.path.join(args.out, "art-manifest.txt"), "w") as f:
+        f.write("# Files derived from The Ur-Quan Masters content (CC BY-NC-SA 2.5).\n")
+        f.write("# A published build must replace every one of these.\n")
+        for rel in sorted(manifest):
+            f.write(rel + "\n")
+    print(f"ok: {len(manifest)} UQM-derived files, hellfire frames={nfire}")
+
+
+if __name__ == "__main__":
+    sys.exit(main())
