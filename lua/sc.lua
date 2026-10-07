@@ -127,6 +127,83 @@ function sc.turn_end()
 	if is_ai(side) then ai_glory(side) end
 end
 
+------------------------------------------------------------ Precursor artifacts
+
+-- Hidden on about one planet in five (never next to a starbase). The first
+-- ship to enter that planet finds it: a random permanent bonus, shown as a
+-- trait, plus some experience. On mirrored maps they come in mirror pairs.
+local ARTIFACT_XP = 8
+local ARTIFACTS = {
+	{ id = "drive",    name = _ "precursor drive",
+	  description = _ "A Precursor drive unit: +1 movement.",
+	  effect = { apply_to = "movement", increase = 1 } },
+	{ id = "crew",     name = _ "precursor crew pods",
+	  description = _ "Precursor life-support pods: room for more crew, +6 max HP.",
+	  effect = { apply_to = "hitpoints", increase_total = 6, increase = 6 } },
+	{ id = "battery",  name = _ "precursor battery",
+	  description = _ "A bigger Precursor energy battery: +1 strike on every attack.",
+	  effect = { apply_to = "attack", increase_attacks = 1 } },
+	{ id = "recharge", name = _ "precursor recharger",
+	  description = _ "A Precursor battery recharger: +1 damage on every attack.",
+	  effect = { apply_to = "attack", increase_damage = 1 } },
+}
+
+local function artifact_key(x, y) return "sc_artifact_" .. x .. "_" .. y end
+
+function sc.place_artifacts()
+	local map = wesnoth.current.map
+	local planets = wesnoth.map.find {
+		terrain = "*^Vyp",
+		T["not"] { T.filter_adjacent_location { terrain = "Yk,Yc" } },
+		T["not"] { terrain = "Yk,Yc" },
+	}
+	local is_planet = {}
+	for _, p in ipairs(planets) do is_planet[p[1] .. "," .. p[2]] = true end
+	local wanted = math.max(2, math.floor(#planets / 5))
+	local placed = 0
+	while placed < wanted and #planets > 0 do
+		local i = mathx.random(#planets)
+		local x, y = planets[i][1], planets[i][2]
+		table.remove(planets, i)
+		if not wml.variables[artifact_key(x, y)] then
+			wml.variables[artifact_key(x, y)] = true
+			placed = placed + 1
+			-- its mirror image, if the map is mirrored left-right here
+			local mx = map.playable_width + 1 - x
+			if is_planet[mx .. "," .. y] and not wml.variables[artifact_key(mx, y)] then
+				wml.variables[artifact_key(mx, y)] = true
+				placed = placed + 1
+			end
+		end
+	end
+end
+
+function sc.check_artifact()
+	local x, y = wml.variables["x1"], wml.variables["y1"]
+	if not wml.variables[artifact_key(x, y)] then return end
+	local u = wesnoth.units.get(x, y)
+	if not u then return end
+	wml.variables[artifact_key(x, y)] = nil
+	count("artifacts")
+
+	local a = ARTIFACTS[mathx.random(#ARTIFACTS)]
+	local n = (u.variables.sc_artifacts or 0) + 1
+	u.variables.sc_artifacts = n
+	u:add_modification("trait", {
+		id = "sc_artifact_" .. a.id .. "_" .. n,
+		male_name = a.name, female_name = a.name,
+		description = a.description,
+		T.effect(a.effect),
+	})
+	wesnoth.audio.play("sc/artifact.wav")
+	wesnoth.interface.float_label(x, y, "<span color='#ffd84a'>" .. tostring(_ "Precursor artifact!") .. "</span>\n" .. tostring(a.name))
+	wesnoth.interface.add_chat_message(tostring(_ "Precursor artifact"),
+		tostring(u.name) .. ": " .. tostring(a.description))
+
+	u.experience = u.experience + ARTIFACT_XP
+	if u.experience >= u.max_experience then u:advance(true, true) end
+end
+
 -------------------------------------------------------------------- reporting
 
 function sc.note_levelup()
@@ -155,9 +232,9 @@ function sc.report_result()
 		if k:match("^recruit_") then recruits[#recruits + 1] = k:gsub("^recruit_", "") .. "=" .. v end
 	end
 	table.sort(recruits)
-	std_print(string.format("SC_RESULT turn=%d %s glory=%d transform=%d to_L2=%d to_L3=%d recruits: %s",
+	std_print(string.format("SC_RESULT turn=%d %s glory=%d transform=%d artifacts=%d to_L2=%d to_L3=%d recruits: %s",
 		wesnoth.current.turn, table.concat(parts, " "),
-		stats.glory or 0, stats.transform or 0,
+		stats.glory or 0, stats.transform or 0, stats.artifacts or 0,
 		stats.level2 or 0, stats.level3 or 0,
 		table.concat(recruits, " ")))
 end

@@ -87,6 +87,18 @@ less (Earthling Cruiser, Syreen, Arilou, Shofixti, Spathi, Umgah, VUX,
 Androsynth, Ilwrath), Veteran (level 2) otherwise. A leader can't use the
 Glory Device.
 
+**Precursor artifacts.** About one planet in five (never next to a
+starbase) hides a Precursor artifact; on mirrored maps they come in mirror
+pairs. The first ship to enter the planet finds it and gains 8 XP plus one
+random, permanent bonus, shown as a trait:
+
+| Artifact | Bonus |
+|---|---|
+| precursor drive | +1 movement |
+| precursor crew pods | +6 max HP |
+| precursor battery | +1 strike on every attack |
+| precursor recharger | +1 damage on every attack |
+
 **Right-click actions** (click your own ship, then pick the top menu entry):
 
 - *Detonate Glory Device* (Shofixti Scout): the Scout explodes for 24

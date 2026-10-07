@@ -198,6 +198,7 @@ sounds/sc/androsynth-blazer.wav
 sounds/sc/androsynth-bubbles.wav
 sounds/sc/arilou-jump.wav
 sounds/sc/arilou-laser.wav
+sounds/sc/artifact.wav
 sounds/sc/boom-large.wav
 sounds/sc/boom-medium.wav
 sounds/sc/boom-small.wav

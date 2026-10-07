@@ -123,6 +123,7 @@ SOUNDS = {
     "boom-medium": "base/battle/boom23.wav",
     "boom-large": "base/battle/boom45.wav",
     "ship-dies": "base/battle/shipdies.wav",
+    "artifact": "base/battle/getcrew.wav",
 }
 
 TRANSITION_COMBOS = [
