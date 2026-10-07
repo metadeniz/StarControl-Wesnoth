@@ -12,10 +12,11 @@ local function count(name)
 	wml.variables["sc_stats." .. name] = (wml.variables["sc_stats." .. name] or 0) + 1
 end
 
--- Every ship comes in levels 1-3: SC_X, SC_X_L2, SC_X_L3.
-local function base_type(t) return (t:gsub("_L[23]$", "")) end
+-- Every ship comes in levels 1-3: SC_X, SC_X_L2, SC_X_L3. The New Alliance
+-- recruits its own level-1 copies of two Alliance ships, SC_X_NA.
+local function base_type(t) return (t:gsub("_L[23]$", ""):gsub("_NA$", "")) end
 local function is_a(u, base) return u and base_type(u.type) == base end
-local function all_levels(base) return base .. "," .. base .. "_L2," .. base .. "_L3" end
+local function all_levels(base) return base .. "," .. base .. "_NA," .. base .. "_L2," .. base .. "_L3" end
 local function by_level(tbl, u) return tbl[math.min(math.max(u.level, 1), #tbl)] end
 
 local function is_ai(side)
