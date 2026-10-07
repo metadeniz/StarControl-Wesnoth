@@ -4,7 +4,8 @@
 Terrain is translated by role, so a converted map plays like the original:
 
     open ground (grass, sand, road...)  -> deep space           Ys
-    forest, trees, mushrooms            -> nebula               Yn
+    forest, trees                       -> nebula               Yn
+    mushroom grove                      -> red nebula           Yr
     hills                               -> asteroid field       Ys^Ya
     mountains                           -> asteroids in nebula  Yn^Ya
     water, swamp                        -> ion storm            Yi
@@ -46,7 +47,9 @@ def convert(code):
     else:
         new_base = "Ys"
     rough = b in "HM"
-    if overlay.startswith(("F", "T")):   # forest-like cover
+    if overlay.startswith("T") or b == "T":   # mushroom grove
+        new_base = "Yr"
+    elif overlay.startswith("F"):            # forest
         new_base = "Yi" if new_base == "Yi" else "Yn"
 
     if overlay.startswith("V"):

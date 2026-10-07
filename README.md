@@ -89,8 +89,11 @@ frequent attacks, new attacks and new abilities:
   the ship's turn.
 
 Planets are villages (income and repair), starbases are keeps, docking
-rings are castles, stars block movement. Nebulae (green) and asteroid fields slow
-ships but give cover; ion storms slow ships *and* make them easier to hit.
+rings are castles, stars block movement. Green nebulae and asteroid fields
+slow ships but give cover; ion storms slow ships *and* make them easier to hit.
+**Red nebulae** (hot plasma) let big ships through more easily than green
+ones but hamper small ships; the fire-born Mycon and Ilwrath (1 move, 60%
+defense) and the heat-proof Chenjesu (2 moves, 50%) are at home in them.
 
 ## Rebuilding (developers)
 
@@ -99,8 +102,9 @@ ships but give cover; ion storms slow ships *and* make them easier to hit.
   lists every UQM-derived file (what a published version must replace).
 - `tools/make_maps.py .` regenerates the 2p maps.
 - `tools/convert_map.py <wesnoth .map> <out .map>` turns any regular
-  Wesnoth map into a space map hex for hex (forest → nebula, hills →
-  asteroids, water → ion storm, villages → planets…). Isar's Cross was
+  Wesnoth map into a space map hex for hex (forest → nebula, mushroom
+  grove → red nebula, hills → asteroids, water → ion storm, villages →
+  planets…). Isar's Cross was
   made this way.
 - `tools/ai_battles.sh [games] [jobs]` plays headless AI-vs-AI games and
   prints win rates (last run: 40–40 over 80 games).

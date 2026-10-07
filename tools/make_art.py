@@ -454,45 +454,60 @@ def build_ionstorm(rng, mask, tmasks, out):
              f"images/terrain/sc/ionstorm-{combo}.png", False)
 
 
-NEBULA_EDGE = 0.5   # nebula strength exactly on a nebula/space hex edge
+NEBULA_EDGE = 0.5   # gas strength exactly on a nebula/space hex edge
+
+# name -> (base colour A, base colour B, highlight colour)
+GAS_NEBULAE = {
+    "nebula": ((60, 210, 120), (150, 230, 80), (90, 170, 255)),       # green, blue wisps
+    "rednebula": ((225, 55, 40), (150, 25, 70), (255, 160, 50)),      # red, orange wisps
+}
 
 
-def build_nebula_v2(rng, out):
-    """Nebula tiles whose colour matches at every hex edge (no seams
-    inside a nebula), plus wavy fades on both sides of the nebula/space
-    border that meet at the same strength (no outline along the hex grid).
-    Overwrites the older nebula images from build_nebula()."""
-    size = 512
-    field = (fractal_noise(rng, size, 5, 24), fractal_noise(rng, size, 4, 12))
+def build_gas_nebula(rng, out, name, colours):
+    """Thin, wispy nebula: mostly transparent haze with brighter streaks and
+    fine highlight filaments, so the dark of space shows through.
+
+    Seamless: all noise is pulled to its mean at the hex border and the
+    streaks fade out before it, so neighbouring tiles meet on the same thin
+    haze. Edges facing open space fade on both sides with a wavy depth.
+    """
+    col_a, col_b, col_hi = (np.array(c, np.float32) for c in colours)
+    size = 530
+    field = (fractal_noise(rng, size, 5, 16), fractal_noise(rng, size, 4, 8),
+             fractal_noise(rng, size, 4, 20))
     mask = hex_mask_cache
 
-    def gas(x0, y0, calm):
-        n1 = field[0][y0:y0 + HEX, x0:x0 + HEX]
-        n2 = field[1][y0:y0 + HEX, x0:x0 + HEX]
-        if calm:
-            n1, n2 = calm_edges(n1, 18), calm_edges(n2, 18)
-        mix = 0.45 + 0.25 * (n2 - 0.5)
-        rgb = NEBULA_A[None, None] * (1 - mix[..., None]) + NEBULA_B[None, None] * mix[..., None]
-        rgb = rgb * (0.75 + 0.45 * (n1 - 0.5))[..., None]
-        alpha = (0.62 + 0.2 * (n1 - 0.5)) * 255
+    def gas(x0, y0):
+        sl = (slice(y0, y0 + HEX), slice(x0, x0 + HEX))
+        # Wisps run right to the hex edge: where two tiles meet, their thin
+        # wisps don't line up exactly, which shows far less than a seam of
+        # uniform haze (a honeycomb) would.
+        edge = 1.0
+        n1 = calm_edges(field[0][sl], 18)
+        n2 = calm_edges(field[1][sl], 18)
+        streak = (1 - np.abs(2 * field[0][sl] - 1)) ** 3 * edge       # soft wisps
+        fine = (1 - np.abs(2 * field[2][sl] - 1)) ** 22 * edge         # thin filaments
+        mix = 0.5 + 0.5 * (n2 - 0.5)
+        rgb = col_a[None, None] * (1 - mix[..., None]) + col_b[None, None] * mix[..., None]
+        rgb = rgb * (0.75 + 0.5 * (n1 - 0.5) + 0.35 * streak)[..., None]
+        rgb = rgb * (1 - 0.55 * fine[..., None]) + col_hi[None, None] * 0.55 * fine[..., None]
+        alpha = np.clip(0.3 + 0.12 * (n1 - 0.5) + 0.3 * streak + 0.22 * fine, 0, 0.85) * 255
         return Image.fromarray(np.dstack([rgb, alpha]).clip(0, 255).astype(np.uint8), "RGBA")
 
     for v in range(11):
-        x0, y0 = rng.integers(0, size - HEX, 2)
-        img = starfield(rng, 0.7)
-        img.alpha_composite(gas(x0, y0, True))
-        name = "nebula" if v == 0 else f"nebula{v + 1}"
-        save(apply_mask(img, mask), out, f"images/terrain/sc/{name}.png", False)
+        x0, y0 = rng.integers(0, size - HEX - 14, 2)
+        img = starfield(rng, 0.9)
+        img.alpha_composite(gas(x0, y0))
+        stem = name if v == 0 else f"{name}{v + 1}"
+        save(apply_mask(img, mask), out, f"images/terrain/sc/{stem}.png", False)
         if v == 0:
-            save(apply_mask(img, mask), out, "images/terrain/sc/nebula-tile.png", False)
+            save(apply_mask(img, mask), out, f"images/terrain/sc/{name}-tile.png", False)
     for combo in TRANSITION_COMBOS:
-        # gas spilling out onto open space...
-        x0, y0 = rng.integers(0, size - HEX, 2)
-        save(apply_mask(gas(x0, y0, True), wavy_mask(rng, combo, NEBULA_EDGE) * mask), out,
-             f"images/terrain/sc/nebula-{combo}.png", False)
-        # ...and open space eating into the nebula's edge hex.
-        save(apply_mask(starfield(rng, 0.7), wavy_mask(rng, combo, NEBULA_EDGE) * mask), out,
-             f"images/terrain/sc/nebula-edge-{combo}.png", False)
+        x0, y0 = rng.integers(0, size - HEX - 14, 2)
+        save(apply_mask(gas(x0, y0), wavy_mask(rng, combo, NEBULA_EDGE) * mask), out,
+             f"images/terrain/sc/{name}-{combo}.png", False)
+        save(apply_mask(starfield(rng, 0.9), wavy_mask(rng, combo, NEBULA_EDGE) * mask), out,
+             f"images/terrain/sc/{name}-edge-{combo}.png", False)
 
 
 def build_ionstorm_v2(rng, out):
@@ -773,7 +788,8 @@ def main():
     build_starbase(rng, mask, args.out)
     # Added later with its own seed so the art above stays byte-identical.
     build_ionstorm(np.random.default_rng(args.seed + 1), mask, tmasks, args.out)
-    build_nebula_v2(np.random.default_rng(args.seed + 2), args.out)
+    for i, (name, colours) in enumerate(GAS_NEBULAE.items()):
+        build_gas_nebula(np.random.default_rng(args.seed + 10 + i), args.out, name, colours)
     build_ionstorm_v2(np.random.default_rng(args.seed + 3), args.out)
 
     with open(os.path.join(args.out, "art-manifest.txt"), "w") as f:
