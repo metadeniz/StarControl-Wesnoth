@@ -78,11 +78,11 @@ another, its race's victory ditty plays (the music dips while it does).
 
 | New Alliance of Free Stars | | Kohr-Ah Death March | |
 |---|---|---|---|
-| **Precursor Flagship** (leader only) | fusion blaster, point-defense, self-repair, leadership; 5 moves | **Sa-Matra** (leader only) | red plasma, homing sentinels, self-repair, leadership; 3 moves |
+| **Precursor Flagship** (leader only) | fusion blaster, point-defense, self-repair, heals +4, leadership; 5 moves | **Sa-Matra** (leader only) | red plasma, homing sentinels, self-repair, heals +4, leadership; 3 moves |
 | Earthling Cruiser | as in the Alliance | Kohr-Ah Marauder | spinning blades; F.R.I.E.D. plasma ring (**magical**) |
 | Chmmr Avatar | megawatt laser, ZapSats (**first strike**), point-defense; tractor beam (**slows**) from Veteran | Druuge Mauler | long-range mass driver (**marksman**); nothing up close |
 | Zoq-Fot-Pik Stinger | cheap; acid spit, hard-hitting tongue | Thraddash Torch | fast; afterburner (**charge**), horn blasters |
-| Pkunk Fury | fast triple gun; **reincarnation**: 50% chance to be reborn at full HP when destroyed | Slylandro Probe | 7 moves; seeking lightning (**magical**); repairs 8 HP a turn in asteroid fields |
+| Pkunk Fury | fast triple gun; **reincarnation**: reborn at full HP when destroyed, 80% the first time, halving with each rebirth | Slylandro Probe | 7 moves; seeking lightning (**magical**); repairs 8 HP a turn in asteroid fields |
 | Supox Blade | **skirmisher**; globs of goo | Orz Nemesis | howitzer; space marines (**drains**) |
 | Utwig Jugger | six-lance volleys; absorbing shield (+30% resistance when attacked) | Yehat Loyalist Terminator | the Queen's Yehat: Terminator in red and black |
 | Shofixti Scout | as in the Alliance | | |

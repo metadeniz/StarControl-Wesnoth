@@ -207,14 +207,19 @@ end
 
 ------------------------------------------------------------- Pkunk rebirth
 
--- A destroyed Pkunk Fury is reborn half the time: the same ship, back at
--- full HP where it died, unable to act until its next turn. Replacing the
--- dying unit inside its "die" event tells Wesnoth not to remove it.
+-- A destroyed Pkunk Fury may be reborn: the same ship, back at full HP
+-- where it died, unable to act until its next turn. The first time the
+-- chance is 80%, and it halves with every rebirth (40%, 20%, ...).
+-- Replacing the dying unit inside its "die" event tells Wesnoth not to
+-- remove it.
+local REBIRTH_CHANCE = 80
 function sc.pkunk_rebirth()
 	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
 	if not u or not u:matches { ability = "sc_reincarnation" } then return end
-	if mathx.random(2) ~= 1 then return end
+	local rebirths = u.variables.sc_rebirths or 0
+	if mathx.random(100) > REBIRTH_CHANCE / 2 ^ rebirths then return end
 	count("rebirth")
+	u.variables.sc_rebirths = rebirths + 1
 	local cfg = u.__cfg
 	cfg.hitpoints = u.max_hitpoints
 	cfg.moves = 0
