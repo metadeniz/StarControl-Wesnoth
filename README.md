@@ -47,7 +47,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 |---|---|---|---|
 | Earthling Cruiser | homing nukes, point-defense | Ur-Quan Dreadnought | fusion blast, launches fighters |
 | Chenjesu Broodhome | photon crystal, DOGI (slows) | Mycon Podship | homing plasmoid, regrows crew |
-| Mmrnmhrm X-Form | twin lasers, transforms to Y-Wing | Spathi Eluder | missiles, B.U.T.T. |
+| Mmrnmhrm X-Form / Y-Form | recruit either; lasers or torpedoes, transforms | Spathi Eluder | missiles, B.U.T.T. |
 | Yehat Terminator | pulse cannons, force shield | Umgah Drone | antimatter cone, skirmisher |
 | Syreen Penetrator | dagger, Syreen song (drains) | VUX Intruder | laser, limpets (slow) |
 | Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison), Blazer ram |
@@ -60,7 +60,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 - *Launch Fighters* (Ur-Quan Dreadnought): instead of attacking, launch up
   to two fighters at 4 HP each. Fighters that end a later turn next to the
   Dreadnought fly back aboard.
-- *Transform* (Mmrnmhrm): swap between the X-Form and the fast Y-Wing; uses
+- *Transform* (Mmrnmhrm): swap between the X-Form and the fast Y-Form; uses
   the ship's turn.
 
 Planets are villages (income and repair), starbases are keeps, docking

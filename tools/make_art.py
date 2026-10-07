@@ -304,9 +304,11 @@ def starfield(rng, density=1.0):
     """72x72 RGBA, opaque, deep-space colour with stars."""
     img = np.zeros((HEX, HEX, 4), np.float32)
     n = fractal_noise(rng, HEX, octaves=3, base=2)
-    img[:, :, 0] = 4 + 6 * n
-    img[:, :, 1] = 5 + 6 * n
-    img[:, :, 2] = 14 + 12 * n
+    # Dark navy rather than black: Wesnoth darkens hexes a selected ship
+    # cannot reach, and on near-black that darkening would be invisible.
+    img[:, :, 0] = 20 + 10 * n
+    img[:, :, 1] = 25 + 10 * n
+    img[:, :, 2] = 52 + 18 * n
     img[:, :, 3] = 255
     pil = Image.fromarray(img.clip(0, 255).astype(np.uint8), "RGBA")
     d = ImageDraw.Draw(pil)
