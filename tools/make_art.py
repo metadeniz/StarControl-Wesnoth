@@ -460,6 +460,7 @@ NEBULA_EDGE = 0.5   # gas strength exactly on a nebula/space hex edge
 GAS_NEBULAE = {
     "nebula": ((60, 210, 120), (150, 230, 80), (90, 170, 255)),       # green, blue wisps
     "rednebula": ((225, 55, 40), (150, 25, 70), (255, 160, 50)),      # red, orange wisps
+    "dust": ((150, 115, 75), (115, 90, 65), (200, 165, 115)),          # brown dust, pale streaks
 }
 
 
@@ -546,6 +547,46 @@ def build_ionstorm_v2(rng, out):
              f"images/terrain/sc/ionstorm-edge-{combo}.png", False)
 
 
+def build_thin_ionstorm(rng, out):
+    """Fords: the ion storm thinned out to a faint crackle over open space."""
+    storm_tiles = [f"ionstorm{'' if v == 0 else v + 1}.png" for v in range(11)]
+    for v in range(6):
+        base = starfield(rng, 1.0)
+        storm = Image.open(os.path.join(out, "images/terrain/sc", storm_tiles[v])).convert("RGBA")
+        a = np.array(storm).astype(np.float32)
+        a[:, :, 3] *= 0.35
+        base.alpha_composite(Image.fromarray(a.astype(np.uint8), "RGBA"))
+        name = "ionstorm-thin" if v == 0 else f"ionstorm-thin{v + 1}"
+        save(apply_mask(base, hex_mask_cache), out, f"images/terrain/sc/{name}.png", False)
+        if v == 0:
+            save(apply_mask(base, hex_mask_cache), out, "images/terrain/sc/ionstorm-thin-tile.png", False)
+
+
+def build_dense_asteroids(rng, out):
+    """Mountains: a packed field of big rocks."""
+    for v in range(6):
+        canvas = Image.new("RGBA", (HEX, HEX), (0, 0, 0, 0))
+        placed = []
+        for _ in range(int(rng.integers(11, 15))):
+            size = int(rng.choice([8, 10, 12, 14, 16, 18], p=[0.15, 0.2, 0.2, 0.2, 0.15, 0.1]))
+            for _try in range(40):
+                x, y = rng.uniform(10, 62), rng.uniform(9, 63)
+                if abs(x - 36) + abs(y - 36) * 0.6 > 33:
+                    continue
+                if all((x - px) ** 2 + (y - py) ** 2 > (0.75 * (size + ps)) ** 2 for px, py, ps in placed):
+                    break
+            placed.append((x, y, size))
+        for x, y, size in sorted(placed, key=lambda p: p[1]):   # back to front
+            r = rock(rng, size, shade_k=0.55)
+            canvas.alpha_composite(r, (int(x - r.width / 2), int(y - r.height / 2)))
+        name = "asteroids-dense" if v == 0 else f"asteroids-dense{v + 1}"
+        save(canvas, out, f"images/terrain/sc/{name}.png", False)
+        if v == 0:
+            tile = starfield(rng)
+            tile.alpha_composite(canvas)
+            save(apply_mask(tile, hex_mask_cache), out, "images/terrain/sc/asteroids-dense-tile.png", False)
+
+
 def shaded_sphere(rng, diameter, palette, kind):
     """Lit planet sphere on a transparent square canvas."""
     s = diameter + 8
@@ -622,7 +663,7 @@ def build_planets(rng, out):
             save(canvas, out, "images/terrain/sc/planet-tile.png", False)
 
 
-def rock(rng, size):
+def rock(rng, size, shade_k=1.4):
     s = size * 2 + 4
     pts = []
     n = int(rng.integers(7, 11))
@@ -635,7 +676,7 @@ def rock(rng, size):
     mask = np.asarray(m, np.float32) / 255
     blurred = np.asarray(m.filter(ImageFilter.GaussianBlur(size / 3)), np.float32) / 255
     gy, gx = np.gradient(blurred)
-    shade = np.clip(0.55 + (-gx - gy) * size * 1.4, 0.15, 1.2)
+    shade = np.clip(0.55 + (-gx - gy) * size * shade_k, 0.15, 1.2)
     tex = fractal_noise(rng, s, 3, 2)
     base = 85 + 50 * tex
     rgb = np.dstack([base * shade * 1.0, base * shade * 0.95, base * shade * 0.9])
@@ -791,6 +832,8 @@ def main():
     for i, (name, colours) in enumerate(GAS_NEBULAE.items()):
         build_gas_nebula(np.random.default_rng(args.seed + 10 + i), args.out, name, colours)
     build_ionstorm_v2(np.random.default_rng(args.seed + 3), args.out)
+    build_thin_ionstorm(np.random.default_rng(args.seed + 4), args.out)
+    build_dense_asteroids(np.random.default_rng(args.seed + 5), args.out)
 
     with open(os.path.join(args.out, "art-manifest.txt"), "w") as f:
         f.write("# Files derived from The Ur-Quan Masters content (CC BY-NC-SA 2.5).\n")

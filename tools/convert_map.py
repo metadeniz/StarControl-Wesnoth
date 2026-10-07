@@ -3,17 +3,21 @@
 
 Terrain is translated by role, so a converted map plays like the original:
 
-    open ground (grass, sand, road...)  -> deep space           Ys
-    forest, trees                       -> nebula               Yn
-    mushroom grove                      -> red nebula           Yr
-    hills                               -> asteroid field       Ys^Ya
-    mountains                           -> asteroids in nebula  Yn^Ya
-    water, swamp                        -> ion storm            Yi
-    bridge                              -> deep space (a lane)  Ys
-    village                             -> planet               ^Vyp
-    castle / keep                       -> docking ring / base  Yc / Yk
-    impassable, chasm                   -> star                 Ys^Yx
-    off-map                             -> unchanged
+    open ground (grass, road, flowers...)  -> deep space          Ys
+    sand, desert                           -> dust cloud          Yd
+    forest, trees                          -> nebula              Yn
+    mushroom grove                         -> red nebula          Yr
+    hills                                  -> asteroid field      Ys^Ya
+    dunes (sandy hills)                    -> asteroids in dust   Yd^Ya
+    forested hills                         -> asteroids in nebula Yn^Ya
+    mountains                              -> dense asteroids     Ys^Yad
+    shallow water, swamp, deep water       -> ion storm           Yi
+    ford                                   -> thin ion storm      Yif
+    bridge                                 -> deep space (a lane) Ys
+    village                                -> planet              ^Vyp
+    castle / keep                          -> docking ring / base Yc / Yk
+    impassable (walls, ^Xm...), chasm      -> star                Ys^Yx
+    off-map                                -> unchanged
 
 Starting positions are kept.
 
@@ -31,30 +35,33 @@ def convert(code):
     base, _, overlay = code.partition("^")
     b = base[:1]
 
-    if overlay.startswith("B"):          # bridges become open lanes
+    if overlay.startswith("X") or b in "XQ":   # impassable, chasm
+        return "Ys^Yx"
+    if overlay.startswith("B"):                # bridges become open lanes
         return "Ys"
     if b == "K":
         return "Yk"
     if b == "C":
         return "Yc"
-    if b in "XQ":
-        return "Ys^Yx"
+    if base.startswith("Wwf"):                 # ford
+        return "Yif^Vyp" if overlay.startswith("V") else "Yif"
 
     if b in "WS":
         new_base = "Yi"
-    elif b == "M":
-        new_base = "Yn"
+    elif b == "D" or base.startswith("Hd"):    # sand, dunes
+        new_base = "Yd"
     else:
         new_base = "Ys"
-    rough = b in "HM"
-    if overlay.startswith("T") or b == "T":   # mushroom grove
+    if overlay.startswith("T") or b == "T":    # mushroom grove
         new_base = "Yr"
-    elif overlay.startswith("F"):            # forest
+    elif overlay.startswith("F"):              # forest
         new_base = "Yi" if new_base == "Yi" else "Yn"
 
     if overlay.startswith("V"):
         return new_base + "^Vyp"
-    if rough:
+    if b == "M":
+        return new_base + "^Yad"
+    if b == "H":
         return new_base + "^Ya"
     return new_base
 

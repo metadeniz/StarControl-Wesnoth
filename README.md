@@ -89,11 +89,23 @@ frequent attacks, new attacks and new abilities:
   the ship's turn.
 
 Planets are villages (income and repair), starbases are keeps, docking
-rings are castles, stars block movement. Green nebulae and asteroid fields
-slow ships but give cover; ion storms slow ships *and* make them easier to hit.
-**Red nebulae** (hot plasma) let big ships through more easily than green
-ones but hamper small ships; the fire-born Mycon and Ilwrath (1 move, 60%
-defense) and the heat-proof Chenjesu (2 moves, 50%) are at home in them.
+rings are castles, stars block movement. Terrain, by hull size
+(moves to enter / defense):
+
+| Terrain | Large | Medium | Small | Tiny |
+|---|---|---|---|---|
+| Open space | 1 / 30% | 1 / 40% | 1 / 50% | 1 / 60% |
+| Green nebula | 3 / 40% | 2 / 50% | 2 / 60% | 1 / 70% |
+| Red nebula (hot plasma) | 2 / 40% | 3 / 50% | 3 / 60% | 2 / 60% |
+| Dust cloud | 2 / 20% | 2 / 30% | 2 / 40% | 1 / 50% |
+| Ion storm | 3 / 10% | 3 / 20% | 3 / 30% | 2 / 40% |
+| Thin ion storm | the better of open space and ion storm |||| 
+| Asteroid field | can't enter | 3 / 60% | 2 / 70% | 2 / 70% |
+| Dense asteroids | can't enter | 3 / 70% | 3 / 70% | 2 / 70% |
+
+Asteroids over nebula or dust give the better defense and the slower
+movement of the two. The fire-born Mycon and Ilwrath (1 / 60%) and the
+heat-proof Chenjesu (2 / 50%) are at home in red nebulae.
 
 ## Rebuilding (developers)
 
@@ -102,9 +114,10 @@ defense) and the heat-proof Chenjesu (2 moves, 50%) are at home in them.
   lists every UQM-derived file (what a published version must replace).
 - `tools/make_maps.py .` regenerates the 2p maps.
 - `tools/convert_map.py <wesnoth .map> <out .map>` turns any regular
-  Wesnoth map into a space map hex for hex (forest → nebula, mushroom
-  grove → red nebula, hills → asteroids, water → ion storm, villages →
-  planets…). Isar's Cross was
+  Wesnoth map into a space map hex for hex: forest → nebula, mushroom
+  grove → red nebula, sand → dust cloud, hills → asteroids, mountains →
+  dense asteroids, water and swamp → ion storm, ford → thin ion storm,
+  villages → planets, impassable → star. Isar's Cross was
   made this way.
 - `tools/ai_battles.sh [games] [jobs]` plays headless AI-vs-AI games and
   prints win rates (last run: 40–40 over 80 games).
