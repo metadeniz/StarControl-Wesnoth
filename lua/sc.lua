@@ -44,6 +44,32 @@ function sc.glory_used()
 	wesnoth.wml_actions.kill { x = u.x, y = u.y, animate = false, fire_event = true }
 end
 
+-- Fire scout s's Glory Device at enemy e, as a normal attack.
+local function fire_glory(s, e)
+	for i, a in ipairs(s.attacks) do
+		if a.name == "glory_device" then
+			wesnoth.wml_actions.do_command { T.attack {
+				weapon = i - 1,
+				T.source { x = s.x, y = s.y },
+				T.destination { x = e.x, y = e.y },
+			} }
+			return
+		end
+	end
+end
+
+-- Human players pick the Glory Device from the attack dialog like any
+-- weapon. An AI side's Scouts get it with attack_weight=0, so the AI never
+-- chooses it on its own; ai_glory below decides when to set it off.
+function sc.ai_glory_weight()
+	for _, u in ipairs(wesnoth.units.find_on_map { type = all_levels("SC_Shofixti_Scout") }) do
+		if is_ai(u.side) and not u.variables.sc_ai_glory then
+			u.variables.sc_ai_glory = true
+			u:add_modification("object", { T.effect { apply_to = "attack", name = "glory_device", attack_weight = 0 } })
+		end
+	end
+end
+
 -- Leaders don't carry a Glory Device: blowing one up would lose the game.
 function sc.disarm_leaders()
 	for _, u in ipairs(wesnoth.units.find_on_map { type = all_levels("SC_Shofixti_Scout"), canrecruit = true }) do
@@ -100,30 +126,24 @@ end
 
 -- End of an AI side's turn: a Shofixti that hasn't attacked uses its Glory
 -- Device on a neighbour it would destroy, or on one worth three times its cost.
--- (The weapon has attack_weight=0, so the AI never picks it by itself.)
+-- (sc.ai_glory_weight keeps the AI from choosing the weapon by itself.)
 local function ai_glory(side)
 	for _, s in ipairs(wesnoth.units.find_on_map { type = all_levels("SC_Shofixti_Scout"), side = side, canrecruit = false }) do
-		local weapon
-		for i, a in ipairs(s.attacks) do if a.name == "glory_device" then weapon = i - 1 end end
-		if weapon and s.attacks_left > 0 then
+		local glory
+		for _, a in ipairs(s.attacks) do if a.name == "glory_device" then glory = a end end
+		if glory and s.attacks_left > 0 then
 			local best, best_worth
 			for _, e in ipairs(wesnoth.units.find_on_map {
 				T.filter_side { T.enemy_of { side = side } },
 				T.filter_adjacent { x = s.x, y = s.y },
 			}) do
-				local damage = s.attacks[weapon + 1].damage * e:resistance_against("fire") / 100
+				local damage = glory.damage * e:resistance_against("fire") / 100
 				local worth = (e.hitpoints <= damage) and e.cost * 2 or e.cost
 				if (e.hitpoints <= damage or e.cost >= 3 * s.cost) and (not best or worth > best_worth) then
 					best, best_worth = e, worth
 				end
 			end
-			if best then
-				wesnoth.wml_actions.do_command { T.attack {
-					weapon = weapon,
-					T.source { x = s.x, y = s.y },
-					T.destination { x = best.x, y = best.y },
-				} }
-			end
+			if best then fire_glory(s, best) end
 		end
 	end
 end
