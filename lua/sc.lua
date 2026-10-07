@@ -37,7 +37,8 @@ end
 
 function wesnoth.wml_actions.sc_glory_device(cfg)
 	local u = wesnoth.units.get(cfg.x, cfg.y)
-	if not is_a(u, "SC_Shofixti_Scout") then return end
+	-- A leader never blows itself up: that would lose the game.
+	if not is_a(u, "SC_Shofixti_Scout") or u.canrecruit then return end
 	local damage = by_level(GLORY_DAMAGE, u)
 	local x, y = u.x, u.y
 	count("glory")
@@ -103,7 +104,7 @@ end
 -- End of an AI side's turn: a Shofixti next to two enemies, or next to one
 -- big one, triggers its Glory Device.
 local function ai_glory(side)
-	for _, s in ipairs(wesnoth.units.find_on_map { type = all_levels("SC_Shofixti_Scout"), side = side }) do
+	for _, s in ipairs(wesnoth.units.find_on_map { type = all_levels("SC_Shofixti_Scout"), side = side, canrecruit = false }) do
 		local enemies = wesnoth.units.find_on_map {
 			T.filter_side { T.enemy_of { side = side } },
 			T.filter_adjacent { x = s.x, y = s.y },

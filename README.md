@@ -60,7 +60,7 @@ defense on every terrain.
 **Promotions.** Every ship can rise from level 1 to **Veteran** (level 2)
 and **Elite** (level 3) by gaining experience. Cheap, small ships promote
 fastest: the Veteran threshold is 8 + 0.8 × recruit cost (16 XP for a
-Shofixti Scout, 34 for an Ur-Quan Dreadnought), Elite is twice that.
+Shofixti Scout, 30 for an Ur-Quan Dreadnought), Elite is twice that.
 (Wesnoth's multiplayer *Experience modifier* setting, 70% by default, scales
 these further.) Each promotion adds HP and some mix of stronger or more
 frequent attacks, new attacks and new abilities:
@@ -81,6 +81,11 @@ frequent attacks, new attacks and new abilities:
 | VUX Intruder | stronger laser, limpets ×3 | laser **marksman** |
 | Androsynth Guardian | hotter Blazer, stronger acid | acid ×4, **cures** nearby ships |
 | Ilwrath Avenger | hotter Hellfire | Hellfire ×4, **backstab** |
+
+**Leaders** start promoted: Elite (level 3) if the ship costs 16 gold or
+less (Earthling Cruiser, Syreen, Arilou, Shofixti, Spathi, Umgah, VUX,
+Androsynth, Ilwrath), Veteran (level 2) otherwise. A leader can't use the
+Glory Device.
 
 **Right-click actions** (click your own ship, then pick the top menu entry):
 
