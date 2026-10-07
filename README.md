@@ -48,7 +48,7 @@ rotation: the Alliance gets Commander (Earthlings), Chmmr, Yehat, Syreen,
 Arilou and Shofixti plus Star Control II's victory theme; the Hierarchy
 gets Ur-Quan, Mycon, Spathi, Umgah, VUX and Ilwrath. The victory fanfare
 plays when you win. When a ship destroys
-another, its race's victory ditty plays.
+another, its race's victory ditty plays (the music dips while it does).
 
 ## The ships
 

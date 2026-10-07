@@ -271,17 +271,32 @@ DITTIES = {
 }
 
 
+DITTY_LOUDNESS = -11.0   # target mean volume, dB; the explosions are about -9
+DITTY_DELAY_MS = 400     # starts after the ship's explosion, not on top of it
+
+
 def build_ditties(uqm, out):
     """Victory ditties: rendered from the .mod files with ffmpeg (libopenmpt),
-    capped at 8 seconds in case a module loops."""
+    capped at 8 seconds in case a module loops, all brought to the same
+    loudness (a limiter catches the peaks) and delayed slightly so the
+    explosion doesn't mask the start."""
+    import re
     import subprocess
     os.makedirs(os.path.join(out, "sounds/sc"), exist_ok=True)
+    base = ["ffmpeg", "-hide_banner", "-y"]
+    fade = "afade=t=out:st=7:d=1"
     for race, rel in DITTIES.items():
+        src = os.path.join(uqm, "base/ships", rel)
+        probe = subprocess.run(base + ["-i", src, "-t", "8", "-af", fade + ",volumedetect",
+                                       "-f", "null", "-"], capture_output=True, text=True, check=True)
+        mean = float(re.search(r"mean_volume: (-?[\d.]+) dB", probe.stderr).group(1))
+        gain = DITTY_LOUDNESS - mean
         dest = f"sounds/sc/ditty-{race}.ogg"
-        subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
-                        "-i", os.path.join(uqm, "base/ships", rel), "-t", "8",
-                        "-af", "afade=t=out:st=7:d=1", "-ac", "2", "-ar", "44100",
-                        "-q:a", "4", os.path.join(out, dest)], check=True)
+        subprocess.run(base + ["-loglevel", "error", "-i", src, "-t", "8", "-af",
+                               f"{fade},volume={gain:.1f}dB,alimiter=limit=0.95:level=disabled,"
+                               f"adelay={DITTY_DELAY_MS}|{DITTY_DELAY_MS}",
+                               "-ac", "2", "-ar", "44100", "-q:a", "4", os.path.join(out, dest)],
+                       check=True)
         manifest.append(dest)
 
 

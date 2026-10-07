@@ -163,12 +163,35 @@ end
 
 ---------------------------------------------------------------- victory ditties
 
--- When a ship destroys another, its race's Star Control victory ditty plays.
+-- When a ship destroys another, its race's Star Control victory ditty plays,
+-- and the music drops to DUCK_VOLUME % until the ditty is over. Nothing here
+-- is game state (music and sound are local), so it is safe in multiplayer.
+local DUCK_VOLUME = 25
+local DITTY_MS = {   -- length of sounds/sc/ditty-<race>.ogg
+	androsynth = 4740, arilou = 3380, chenjesu = 2380, earthling = 3200,
+	ilwrath = 5000, mmrnmhrm = 3800, mycon = 4100, shofixti = 4180,
+	spathi = 3540, syreen = 4100, umgah = 3620, urquan = 5140,
+	vux = 4220, yehat = 2660,
+}
+local duck_until
+
 function sc.victory_ditty()
 	local killer = wesnoth.units.get(wml.variables["x2"], wml.variables["y2"])
 	if not killer then return end
 	local race = tostring(killer.race):match("^sc_(.+)$")
-	if race then wesnoth.audio.play("sc/ditty-" .. race .. ".ogg") end
+	if not race or not DITTY_MS[race] then return end
+	wesnoth.audio.play("sc/ditty-" .. race .. ".ogg")
+	wesnoth.audio.music_list.volume = DUCK_VOLUME
+	duck_until = math.max(duck_until or 0, wesnoth.ms_since_init() + DITTY_MS[race])
+end
+
+-- Lua has no timers, so the music comes back at the first move, selection,
+-- attack or turn change after the ditty has finished.
+function sc.unduck()
+	if duck_until and wesnoth.ms_since_init() >= duck_until then
+		duck_until = nil
+		wesnoth.audio.music_list.volume = 100
+	end
 end
 
 ------------------------------------------------------------ Precursor artifacts
@@ -282,3 +305,6 @@ function sc.report_result()
 		stats.level2 or 0, stats.level3 or 0,
 		table.concat(recruits, " ")))
 end
+
+-- A game saved while a ditty played must not load with the music turned down.
+wesnoth.audio.music_list.volume = 100
