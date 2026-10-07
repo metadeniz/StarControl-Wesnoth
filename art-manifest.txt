@@ -348,6 +348,7 @@ music/sc/utwig.ogg
 music/sc/victory-fanfare.ogg
 music/sc/victory.ogg
 music/sc/vux.ogg
+music/sc/yehat-years-late.ogg
 music/sc/yehat.ogg
 music/sc/zoqfotpik.ogg
 sounds/sc/androsynth-blazer.wav

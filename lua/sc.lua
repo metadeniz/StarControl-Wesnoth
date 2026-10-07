@@ -141,7 +141,8 @@ local PLAYLISTS = {
 	SC_Alliance = { "commander", "chmmr", "yehat", "syreen", "arilou", "shofixti", "intro", "victory", "starbase", "outfit" },
 	SC_NewAlliance = { "chmmr", "zoqfotpik", "pkunk", "supox", "utwig", "commander", "shofixti",
 		"intro", "victory", "starbase", "outfit" },
-	SC_DeathMarch = { "kohrah", "druuge", "thraddash", "slylandro", "orz", "yehat", "starbase", "outfit" },
+	SC_DeathMarch = { "kohrah", "druuge", "thraddash", "slylandro", "orz", "yehat", "yehat-years-late",
+		"starbase", "outfit" },
 	SC_Hierarchy = { "urquan", "mycon", "spathi", "umgah", "vux", "ilwrath", "thraddash", "druuge", "starbase", "outfit" },
 }
 

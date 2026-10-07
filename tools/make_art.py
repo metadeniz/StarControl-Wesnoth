@@ -439,6 +439,23 @@ MUSIC = {
 
 MUSIC_GAIN_DB = {"starbase": 4}   # brings it up to the other tracks' loudness
 
+# Precursors' UQM Remix Packs (sourceforge.net/projects/sc2, "UQM Remix
+# Packs"), unzipped into one directory: id -> (file, gain in dB). They are
+# mastered much louder than the tracker modules.
+REMIXES = {
+    "yehat-years-late": ("remix/4/06_-_Yehat_-_Years_Late_Mix.ogg", -7),
+}
+
+
+def build_remixes(remix, out):
+    import subprocess
+    for name, (rel, gain) in REMIXES.items():
+        dest = f"music/sc/{name}.ogg"
+        subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+                        "-i", os.path.join(remix, rel), "-af", f"volume={gain}dB", "-q:a", "4",
+                        os.path.join(out, dest)], check=True)
+        manifest.append(dest)
+
 
 def build_music(uqm, out):
     import subprocess
@@ -1000,6 +1017,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--uqm", required=True, help="UQM-MegaMod-Content checkout")
     ap.add_argument("--out", required=True, help="add-on directory")
+    ap.add_argument("--remix", help="unzipped UQM Remix Packs (optional)")
     ap.add_argument("--wesnoth-data", default="/usr/share/games/wesnoth/1.16/data")
     ap.add_argument("--seed", type=int, default=1990)
     args = ap.parse_args()
@@ -1019,6 +1037,8 @@ def main():
     build_sounds(args.uqm, args.out)
     build_ditties(args.uqm, args.out)
     build_music(args.uqm, args.out)
+    if args.remix:
+        build_remixes(args.remix, args.out)
 
     build_space(rng, mask, args.out)
     build_nebula(rng, mask, tmasks, args.out)

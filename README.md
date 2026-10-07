@@ -1,12 +1,15 @@
 # Star Control TC for Battle for Wesnoth
 
-A total conversion of Battle for Wesnoth into the Star Control 1 war: the
-Alliance of Free Stars against the Ur-Quan Hierarchy, seven ships a side,
-fought over space maps with nebulae, asteroid fields, planets and stars.
+A total conversion of Battle for Wesnoth into the wars of Star Control: the
+Alliance of Free Stars against the Ur-Quan Hierarchy (Star Control 1), and
+the New Alliance of Free Stars against the Kohr-Ah Death March (Star
+Control II), fought over space maps with nebulae, asteroid fields, planets
+and stars. Any faction can fight any other.
 
 **Status: prototype, development paused.** Personal use only: the ship
 sprites, projectiles, explosions and sounds come from The Ur-Quan Masters
-(CC BY-NC-SA 2.5). The terrain art is original.
+(CC BY-NC-SA 2.5), and one music track from the Precursors' UQM Remix
+Packs. The terrain art is original.
 
 ## Install and play
 
@@ -47,7 +50,11 @@ Each player hears their own faction's Star Control II race themes in
 rotation: the Alliance gets Commander (Earthlings), Chmmr, Yehat, Syreen,
 Arilou and Shofixti plus Star Control II's opening and victory themes; the Hierarchy
 gets Ur-Quan, Mycon, Spathi, Umgah, VUX, Ilwrath, Thraddash and Druuge. Both also
-get the Starbase and Outfit themes. The victory fanfare
+get the Starbase and Outfit themes. The New Alliance gets Chmmr,
+Zoq-Fot-Pik, Pkunk, Supox, Utwig, Commander and Shofixti plus the opening
+and victory themes; the Death March gets Kohr-Ah, Druuge, Thraddash,
+Slylandro, Orz and Yehat, plus the Precursors' "Years Late" Yehat remix.
+Both also get Starbase and Outfit. The victory fanfare
 plays when you win. When a ship destroys
 another, its race's victory ditty plays (the music dips while it does).
 
@@ -62,6 +69,17 @@ another, its race's victory ditty plays (the music dips while it does).
 | Syreen Penetrator | ranged particle dagger; close-range Syreen song (drains) | VUX Intruder | close-range laser (**first strike**); long-range limpets (slow) |
 | Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison), Blazer ram |
 | Shofixti Scout | dart gun; **Glory Device**: one unavoidable fire strike (16 / 20 / 24 by level) on one ship, destroying the Scout | Ilwrath Avenger | Hellfire, cloaking device |
+
+| New Alliance of Free Stars | | Kohr-Ah Death March | |
+|---|---|---|---|
+| **Precursor Flagship** (leader only) | fusion blaster, point-defense, self-repair, leadership; 5 moves | **Sa-Matra** (leader only) | red plasma, homing sentinels, self-repair, leadership; 3 moves |
+| Earthling Cruiser | as in the Alliance | Kohr-Ah Marauder | spinning blades; F.R.I.E.D. plasma ring (**magical**) |
+| Chmmr Avatar | megawatt laser, ZapSats (**first strike**), point-defense; tractor beam (**slows**) from Veteran | Druuge Mauler | long-range mass driver (**marksman**); nothing up close |
+| Zoq-Fot-Pik Stinger | cheap; acid spit, hard-hitting tongue | Thraddash Torch | fast; afterburner (**charge**), horn blasters |
+| Pkunk Fury | fast triple gun; **reincarnation**: 50% chance to be reborn at full HP when destroyed | Slylandro Probe | 7 moves; seeking lightning (**magical**); repairs 8 HP a turn in asteroid fields |
+| Supox Blade | **skirmisher**; globs of goo | Orz Nemesis | howitzer; space marines (**drains**) |
+| Utwig Jugger | six-lance volleys; absorbing shield (+30% resistance when attacked) | Yehat Loyalist Terminator | the Queen's Yehat: Terminator in red and black |
+| Shofixti Scout | as in the Alliance | | |
 
 **Hull size.** Every ship shows its hull class (large, medium, small or
 tiny) as a trait in the side panel; hover over it for that hull's moves and
@@ -158,7 +176,7 @@ heat-proof Chenjesu (2 / 50%) are at home in red nebulae.
 
 ## Rebuilding (developers)
 
-- `tools/make_art.py --uqm <UQM-MegaMod-Content checkout> --out .`
+- `tools/make_art.py --uqm <UQM-MegaMod-Content checkout> --out . [--remix <unzipped UQM Remix Packs>]`
   regenerates all images and sounds. `art-manifest.txt`
   lists every UQM-derived file (what a published version must replace).
 - `tools/make_maps.py .` regenerates the 2p maps.
@@ -168,7 +186,8 @@ heat-proof Chenjesu (2 / 50%) are at home in red nebulae.
   dense asteroids, water and swamp → ion storm, ford → thin ion storm,
   villages → planets, impassable → star. Isar's Cross was
   made this way.
-- `tools/ai_battles.sh [games] [jobs]` plays headless AI-vs-AI games and
-  prints win rates (last run: 40–40 over 80 games).
+- `tools/ai_battles.sh [games] [jobs] [faction] [faction] [first seed]`
+  plays headless AI-vs-AI games and prints win rates. Factions:
+  `SC_Alliance`, `SC_Hierarchy`, `SC_NewAlliance`, `SC_DeathMarch`.
 - All player-visible Star Control names live in `utils/names.cfg`.
   Naming rule: the Hierarchy's masters are "Ur-Quan", never "Kzer-Za".
