@@ -168,7 +168,6 @@ SOUNDS = {
     "utwig-lance": "base/ships/utwig/primary.wav",
     "utwig-shield": "base/ships/utwig/secondary.wav",
     "flagship-blaster": "base/ships/flagship/primary.wav",
-    "flagship-pd": "base/ships/flagship/secondary.wav",
     "samatra-plasma": "base/ships/samatra/primary.wav",
     "samatra-sentinels": "base/ships/samatra/secondary.wav",
     "boom-small": "base/battle/boom1.wav",

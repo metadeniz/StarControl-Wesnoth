@@ -410,7 +410,6 @@ sounds/sc/druuge-furnace.wav
 sounds/sc/earthling-nuke.wav
 sounds/sc/earthling-pd.wav
 sounds/sc/flagship-blaster.wav
-sounds/sc/flagship-pd.wav
 sounds/sc/ilwrath-cloak.wav
 sounds/sc/ilwrath-hellfire.wav
 sounds/sc/ilwrath-uncloak.wav
