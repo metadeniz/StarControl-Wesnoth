@@ -93,14 +93,15 @@ Glory Device.
 **Precursor artifacts.** About one planet in five (never next to a
 starbase) hides a Precursor artifact; on mirrored maps they come in mirror
 pairs. The first ship to enter the planet finds it and gains 8 XP plus one
-random, permanent bonus, shown as a trait:
+random, permanent bonus, shown as a trait next to the hull size in the side
+panel (hover it for details):
 
-| Artifact | Bonus |
+| Trait | Bonus |
 |---|---|
-| precursor drive | +1 movement |
-| precursor crew pods | +6 max HP |
-| precursor battery | +1 strike on every attack |
-| precursor recharger | +1 damage on every attack |
+| +drive | +1 movement |
+| +crew | +6 max HP |
+| +battery | +1 strike on every attack |
+| +recharge | +1 damage on every attack |
 
 **Right-click actions** (click your own ship, then pick the top menu entry):
 

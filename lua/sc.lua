@@ -134,17 +134,17 @@ end
 -- trait, plus some experience. On mirrored maps they come in mirror pairs.
 local ARTIFACT_XP = 8
 local ARTIFACTS = {
-	{ id = "drive",    name = _ "precursor drive",
-	  description = _ "A Precursor drive unit: +1 movement.",
+	{ id = "drive",    name = _ "+drive",
+	  description = _ "Precursor artifact: a drive unit. +1 movement.",
 	  effect = { apply_to = "movement", increase = 1 } },
-	{ id = "crew",     name = _ "precursor crew pods",
-	  description = _ "Precursor life-support pods: room for more crew, +6 max HP.",
+	{ id = "crew",     name = _ "+crew",
+	  description = _ "Precursor artifact: life-support pods, room for more crew. +6 max HP.",
 	  effect = { apply_to = "hitpoints", increase_total = 6, increase = 6 } },
-	{ id = "battery",  name = _ "precursor battery",
-	  description = _ "A bigger Precursor energy battery: +1 strike on every attack.",
+	{ id = "battery",  name = _ "+battery",
+	  description = _ "Precursor artifact: a bigger energy battery. +1 strike on every attack.",
 	  effect = { apply_to = "attack", increase_attacks = 1 } },
-	{ id = "recharge", name = _ "precursor recharger",
-	  description = _ "A Precursor battery recharger: +1 damage on every attack.",
+	{ id = "recharge", name = _ "+recharge",
+	  description = _ "Precursor artifact: a battery recharger. +1 damage on every attack.",
 	  effect = { apply_to = "attack", increase_damage = 1 } },
 }
 
@@ -196,7 +196,7 @@ function sc.check_artifact()
 		T.effect(a.effect),
 	})
 	wesnoth.audio.play("sc/artifact.wav")
-	wesnoth.interface.float_label(x, y, "<span color='#ffd84a'>" .. tostring(_ "Precursor artifact!") .. "</span>\n" .. tostring(a.name))
+	wesnoth.interface.float_label(x, y, "<span color='#ffd84a'>" .. tostring(_ "Precursor artifact!") .. "</span>\n" .. tostring(a.description))
 	wesnoth.interface.add_chat_message(tostring(_ "Precursor artifact"),
 		tostring(u.name) .. ": " .. tostring(a.description))
 
