@@ -41,11 +41,20 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | 2p — Vela Nebula | 1 vs 1 |
 | 4p — Isar’s Cross (Deep Space) | 2 vs 2 (players 1 & 4 vs 2 & 3) |
 
+## Music
+
+Each player hears their own faction's Star Control II race themes in
+rotation: the Alliance gets Commander (Earthlings), Chmmr, Yehat, Syreen,
+Arilou and Shofixti plus Star Control II's victory theme; the Hierarchy
+gets Ur-Quan, Mycon, Spathi, Umgah, VUX and Ilwrath. The victory fanfare
+plays when you win. When a ship destroys
+another, its race's victory ditty plays.
+
 ## The ships
 
 | Alliance of Free Stars | | Ur-Quan Hierarchy | |
 |---|---|---|---|
-| Earthling Cruiser | homing nukes, point-defense | Ur-Quan Dreadnought | close-range fusion blast; fighters at any range (**swarm**: fewer as crew is lost) |
+| Earthling Cruiser | homing nukes, point-defense (fighters hit it at most 50%) | Ur-Quan Dreadnought | close-range fusion blast; fighters at any range (**swarm**: fewer as crew is lost) |
 | Chenjesu Broodhome | photon crystal (ranged; lighter shards close up), DOGI (slows) | Mycon Podship | homing plasmoids at range, heavier plasmoids close up; regrows crew |
 | Mmrnmhrm X-Wing / Y-Wing | recruit either; lasers or torpedoes, transforms | Spathi Eluder | missiles, B.U.T.T. |
 | Yehat Terminator | pulse cannons, force shield | Umgah Drone | antimatter cone, skirmisher |
@@ -133,7 +142,7 @@ rings are castles, stars block movement. Terrain, by hull size
 | Terrain | Large | Medium | Small | Tiny |
 |---|---|---|---|---|
 | Open space | 1 / 30% | 1 / 40% | 1 / 50% | 1 / 60% |
-| Green nebula | 3 / 40% | 2 / 50% | 2 / 60% | 1 / 70% |
+| Green nebula | 2 / 40% | 2 / 50% | 2 / 60% | 1 / 70% |
 | Red nebula (hot plasma) | 2 / 40% | 3 / 50% | 3 / 60% | 2 / 60% |
 | Dust cloud | 2 / 20% | 2 / 30% | 2 / 40% | 1 / 50% |
 | Ion storm | 3 / 10% | 3 / 20% | 3 / 30% | 2 / 40% |

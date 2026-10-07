@@ -132,6 +132,35 @@ function sc.turn_end()
 	if is_ai(side) then ai_glory(side) end
 end
 
+-------------------------------------------------------------------------- music
+
+-- Each player hears their own faction's playlist (the scenario's default is
+-- the Alliance one, which spectators and AI-only games keep). Music is not
+-- game state, so playing it only on the local client is safe in multiplayer.
+local PLAYLISTS = {
+	SC_Alliance = { "commander", "chmmr", "yehat", "syreen", "arilou", "shofixti", "victory" },
+	SC_Hierarchy = { "urquan", "mycon", "spathi", "umgah", "vux", "ilwrath" },
+}
+
+function sc.set_music()
+	for _, side in ipairs(wesnoth.sides) do
+		if side.is_local and side.controller == "human" then
+			local list = PLAYLISTS[side.__cfg.faction]
+			if list then
+				for i, track in ipairs(list) do
+					wesnoth.wml_actions.music {
+						name = "sc/" .. track .. ".ogg",
+						append = i > 1,
+						immediate = i == 1,
+						shuffle = true,
+					}
+				end
+			end
+			return
+		end
+	end
+end
+
 ---------------------------------------------------------------- victory ditties
 
 -- When a ship destroys another, its race's Star Control victory ditty plays.

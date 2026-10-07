@@ -285,6 +285,37 @@ def build_ditties(uqm, out):
         manifest.append(dest)
 
 
+# Music: each faction's races' Star Control II themes, plus SC2's victory music.
+MUSIC = {
+    "commander": "base/comm/commander/commander.mod",   # Earthlings
+    "chmmr": "base/comm/chmmr/chmmr.mod",               # Chenjesu + Mmrnmhrm
+    "yehat": "base/comm/yehat/yehat.mod",
+    "syreen": "base/comm/syreen/syreen.mod",
+    "arilou": "base/comm/arilou/arilou.mod",
+    "shofixti": "base/comm/shofixti/shofixti.mod",
+    "victory": "base/cutscene/ending/victoryf.mod",     # SC2 final victory
+    "victory-fanfare": "base/cutscene/ending/victory1.mod",
+    # Hierarchy playlist
+    "urquan": "base/comm/urquan/urquan.mod",
+    "mycon": "base/comm/mycon/mycon.mod",
+    "spathi": "base/comm/spathi/spathi.mod",
+    "umgah": "base/comm/umgah/umgah.mod",
+    "vux": "base/comm/vux/vux.mod",
+    "ilwrath": "base/comm/ilwrath/ilwrath.mod",
+}
+
+
+def build_music(uqm, out):
+    import subprocess
+    os.makedirs(os.path.join(out, "music/sc"), exist_ok=True)
+    for name, rel in MUSIC.items():
+        dest = f"music/sc/{name}.ogg"
+        subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+                        "-i", os.path.join(uqm, rel), "-t", "600", "-q:a", "4",
+                        os.path.join(out, dest)], check=True)
+        manifest.append(dest)
+
+
 def build_sounds(uqm, out):
     for sid, rel in SOUNDS.items():
         dest = f"sounds/sc/{sid}.wav"
@@ -848,6 +879,7 @@ def main():
     nfire = build_effects(args.uqm, args.out)
     build_sounds(args.uqm, args.out)
     build_ditties(args.uqm, args.out)
+    build_music(args.uqm, args.out)
 
     build_space(rng, mask, args.out)
     build_nebula(rng, mask, tmasks, args.out)
