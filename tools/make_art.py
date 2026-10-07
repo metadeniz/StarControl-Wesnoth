@@ -309,7 +309,9 @@ MUSIC = {
     "arilou": "base/comm/arilou/arilou.mod",
     "shofixti": "base/comm/shofixti/shofixti.mod",
     "intro": "base/cutscene/intro/introx.mod",          # SC2 opening
-    "victory": "base/cutscene/ending/victoryf.mod",     # SC2 final victory
+    "victory": "base/cutscene/ending/victoryf.mod",
+    "starbase": "base/ui/starbase.mod",                 # both playlists
+    "outfit": "base/ui/outfit.mod",     # SC2 final victory
     "victory-fanfare": "base/cutscene/ending/victory1.mod",
     # Hierarchy playlist
     "urquan": "base/comm/urquan/urquan.mod",
@@ -321,14 +323,17 @@ MUSIC = {
     "thraddash": "base/comm/thraddash/thraddash.mod",
 }
 
+MUSIC_GAIN_DB = {"starbase": 4}   # brings it up to the other tracks' loudness
+
 
 def build_music(uqm, out):
     import subprocess
     os.makedirs(os.path.join(out, "music/sc"), exist_ok=True)
     for name, rel in MUSIC.items():
         dest = f"music/sc/{name}.ogg"
+        gain = MUSIC_GAIN_DB.get(name, 0)
         subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
-                        "-i", os.path.join(uqm, rel), "-t", "600", "-q:a", "4",
+                        "-i", os.path.join(uqm, rel), "-t", "600", "-af", f"volume={gain}dB", "-q:a", "4",
                         os.path.join(out, dest)], check=True)
         manifest.append(dest)
 

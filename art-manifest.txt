@@ -202,6 +202,8 @@ music/sc/thraddash.ogg
 music/sc/mycon.ogg
 music/sc/shofixti.ogg
 music/sc/intro.ogg
+music/sc/starbase.ogg
+music/sc/outfit.ogg
 music/sc/spathi.ogg
 music/sc/syreen.ogg
 music/sc/umgah.ogg
