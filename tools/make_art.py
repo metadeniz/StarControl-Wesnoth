@@ -462,7 +462,6 @@ REMIXES = {
     "remix-utwig": "remix/4/08_-_Utwig_-_Mask_of_Ultimate_Embarrassment_and_Shame.ogg",
     "remix-utwig-ultron": "remix/4/11_-_Utwig_-_The_Ultron.ogg",
     "remix-commander": "remix/1/02_-_Starbase_Commander_-_Corridor_Nine.ogg",
-    "remix-shofixti": "remix/4/04_-_Shofixti_-_Bonsai!.ogg",
     "remix-arilou": "remix/2/02_-_Arilou_-_Welcome_to_Falayalaralfali.ogg",
     "remix-intro": "remix/4/02_-_Intro_-_Into_the_Void.ogg",
     "remix-ending": "remix/4/16_-_Outro_-_Awaking_Dreams.ogg",

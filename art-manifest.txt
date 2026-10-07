@@ -346,7 +346,6 @@ music/sc/remix-ending.ogg
 music/sc/remix-intro.ogg
 music/sc/remix-outfit.ogg
 music/sc/remix-pkunk.ogg
-music/sc/remix-shofixti.ogg
 music/sc/remix-starbase.ogg
 music/sc/remix-supox.ogg
 music/sc/remix-utwig-ultron.ogg

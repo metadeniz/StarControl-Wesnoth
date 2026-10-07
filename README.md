@@ -52,15 +52,15 @@ Arilou and Shofixti plus Star Control II's opening and victory themes; the Hiera
 gets Ur-Quan, Mycon, Spathi, Umgah, VUX, Ilwrath, Thraddash and Druuge, plus
 the Precursors' "Now and Forever" Ur-Quan remix. Both also
 get the Starbase and Outfit themes. The New Alliance gets Chmmr,
-Zoq-Fot-Pik, Pkunk, Supox, Utwig, Commander and Shofixti plus the opening
+Zoq-Fot-Pik, Pkunk, Supox, Utwig, Commander and Arilou plus the opening
 and victory themes; the Death March gets Kohr-Ah, Druuge, Thraddash,
 Slylandro, Orz and Yehat, plus seven Precursors remixes: "Years Late"
 (Yehat), "The Eternal Doctrine", "Cleansing Required" and "Kohr-Ah"
 (battle), "The Battle of the Sa-Matra", "Squeezing the Juice" (Orz) and
 "We Come In Peace" (Slylandro Probes).
 Both also get Starbase, and the New Alliance gets Outfit. The New Alliance hears all of these as
-the Precursors' remixes, plus their Arilou remix "Welcome to
-Falayalaralfali" and their second Utwig remix, "The Ultron". The victory fanfare
+the Precursors' remixes (Arilou: "Welcome to Falayalaralfali"), plus their
+second Utwig remix, "The Ultron". The victory fanfare
 plays when you win. When a ship destroys
 another, its race's victory ditty plays: the music fades out for it and
 fades back in afterwards.
@@ -86,7 +86,7 @@ fades back in afterwards.
 | Pkunk Fury | fast triple gun; **reincarnation**: reborn at full HP when destroyed, 80% the first time, halving with each rebirth | Slylandro Probe | 7 moves; seeking lightning (**magical**); repairs 8 HP a turn in asteroid fields |
 | Supox Blade | **skirmisher**; globs of goo | Orz Nemesis | howitzer; space marines (**drains**) |
 | Utwig Jugger | six-lance volleys; absorbing shield (+30% resistance when attacked) | Yehat Loyalist Terminator | the Queen's Yehat: Terminator in red and black |
-| Shofixti Scout | as in the Alliance | | |
+| Arilou Skiff | as in the Alliance | | |
 
 **Hull size.** Every ship shows its hull class (large, medium, small or
 tiny) as a trait in the side panel; hover over it for that hull's moves and
