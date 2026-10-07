@@ -53,6 +53,10 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison), Blazer ram |
 | Shofixti Scout | dart gun, Glory Device | Ilwrath Avenger | Hellfire, cloaking device |
 
+**Hull size.** Every ship shows its hull class (large, medium, small or
+tiny) as a trait in the side panel; hover over it for that hull's moves and
+defense on every terrain.
+
 **Promotions.** Every ship can rise from level 1 to **Veteran** (level 2)
 and **Elite** (level 3) by gaining experience. Cheap, small ships promote
 fastest: the Veteran threshold is 8 + 0.8 × recruit cost (16 XP for a

@@ -122,6 +122,28 @@ function wesnoth.wml_actions.sc_transform(cfg)
 	local hp = u.hitpoints
 	wesnoth.audio.play("sc/mmrnmhrm-transform.wav")
 	u:transform(to)
+	-- The two shapes have different hulls, and transforming adds the new
+	-- shape's hull trait next to the old one. Rebuild the unit without the
+	-- old one.
+	local keep
+	for _, child in ipairs(wesnoth.unit_types[to].__cfg) do
+		if child[1] == "trait" and tostring(child[2].id):match("^sc_hull_") then keep = child[2].id end
+	end
+	local cfg = u.__cfg
+	for _, child in ipairs(cfg) do
+		if child[1] == "modifications" then
+			local kept = {}
+			for _, mod in ipairs(child[2]) do
+				local id = mod[1] == "trait" and tostring(mod[2].id) or ""
+				if not (id:match("^sc_hull_") and id ~= keep) then kept[#kept + 1] = mod end
+			end
+			child[2] = kept
+		end
+	end
+	local x, y = u.x, u.y
+	u:erase()
+	u = wesnoth.units.create(cfg)
+	u:to_map(x, y)
 	u.hitpoints = hp
 	u.moves = 0
 	u.attacks_left = 0
