@@ -7,7 +7,6 @@ local _ = wesnoth.textdomain "wesnoth-Star_Control_TC"
 
 sc = {}
 
-local GLORY_DAMAGE = { 24, 30, 36 }      -- by the Scout's level
 
 local function count(name)
 	wml.variables["sc_stats." .. name] = (wml.variables["sc_stats." .. name] or 0) + 1
@@ -35,23 +34,20 @@ end
 
 ------------------------------------------------------------------ Glory Device
 
-function wesnoth.wml_actions.sc_glory_device(cfg)
-	local u = wesnoth.units.get(cfg.x, cfg.y)
-	-- A leader never blows itself up: that would lose the game.
-	if not is_a(u, "SC_Shofixti_Scout") or u.canrecruit then return end
-	local damage = by_level(GLORY_DAMAGE, u)
-	local x, y = u.x, u.y
+-- The Glory Device is a one-strike attack (see Shofixti_Scout.cfg); the
+-- scout is destroyed once the attack is over.
+function sc.glory_used()
+	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
+	if not u or not is_a(u, "SC_Shofixti_Scout") then return end
 	count("glory")
+	wesnoth.wml_actions.kill { x = u.x, y = u.y, animate = false, fire_event = true }
+end
 
-	wesnoth.wml_actions.animate_unit { flag = "glory", T.filter { x = x, y = y } }
-	wesnoth.wml_actions.kill { x = x, y = y, animate = false, fire_event = true }
-	wesnoth.wml_actions.harm_unit {
-		T.filter { T.filter_location { x = x, y = y, radius = 1 } },
-		amount = damage,
-		damage_type = "fire",
-		animate = true,
-		fire_event = true,
-	}
+-- Leaders don't carry a Glory Device: blowing one up would lose the game.
+function sc.disarm_leaders()
+	for _, u in ipairs(wesnoth.units.find_on_map { type = all_levels("SC_Shofixti_Scout"), canrecruit = true }) do
+		u:add_modification("object", { T.effect { apply_to = "remove_attacks", name = "glory_device" } })
+	end
 end
 
 --------------------------------------------------------------- Mmrnmhrm X <-> Y
@@ -101,23 +97,32 @@ end
 
 ---------------------------------------------------------------------- AI help
 
--- End of an AI side's turn: a Shofixti next to two enemies, or next to one
--- big one, triggers its Glory Device.
+-- End of an AI side's turn: a Shofixti that hasn't attacked uses its Glory
+-- Device on a neighbour it would destroy, or on one worth twice its cost.
+-- (The weapon has attack_weight=0, so the AI never picks it by itself.)
 local function ai_glory(side)
 	for _, s in ipairs(wesnoth.units.find_on_map { type = all_levels("SC_Shofixti_Scout"), side = side, canrecruit = false }) do
-		local enemies = wesnoth.units.find_on_map {
-			T.filter_side { T.enemy_of { side = side } },
-			T.filter_adjacent { x = s.x, y = s.y },
-		}
-		local friends = wesnoth.units.find_on_map {
-			side = side,
-			T.filter_adjacent { x = s.x, y = s.y },
-		}
-		local worth = 0
-		for _, e in ipairs(enemies) do worth = worth + e.cost end
-		for _, f in ipairs(friends) do worth = worth - f.cost end
-		if #enemies >= 2 or worth >= 20 then
-			wesnoth.wml_actions.sc_glory_device { x = s.x, y = s.y }
+		local weapon
+		for i, a in ipairs(s.attacks) do if a.name == "glory_device" then weapon = i - 1 end end
+		if weapon and s.attacks_left > 0 then
+			local best, best_worth
+			for _, e in ipairs(wesnoth.units.find_on_map {
+				T.filter_side { T.enemy_of { side = side } },
+				T.filter_adjacent { x = s.x, y = s.y },
+			}) do
+				local damage = s.attacks[weapon + 1].damage * e:resistance_against("fire") / 100
+				local worth = (e.hitpoints <= damage) and e.cost * 2 or e.cost
+				if (e.hitpoints <= damage or e.cost >= 2 * s.cost) and (not best or worth > best_worth) then
+					best, best_worth = e, worth
+				end
+			end
+			if best then
+				wesnoth.wml_actions.do_command { T.attack {
+					weapon = weapon,
+					T.source { x = s.x, y = s.y },
+					T.destination { x = best.x, y = best.y },
+				} }
+			end
 		end
 	end
 end

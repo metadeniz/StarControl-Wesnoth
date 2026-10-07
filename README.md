@@ -49,9 +49,9 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | Chenjesu Broodhome | photon crystal, DOGI (slows) | Mycon Podship | homing plasmoid, regrows crew |
 | Mmrnmhrm X-Wing / Y-Wing | recruit either; lasers or torpedoes, transforms | Spathi Eluder | missiles, B.U.T.T. |
 | Yehat Terminator | pulse cannons, force shield | Umgah Drone | antimatter cone, skirmisher |
-| Syreen Penetrator | dagger, Syreen song (drains) | VUX Intruder | laser, limpets (slow) |
+| Syreen Penetrator | ranged particle dagger; close-range Syreen song (drains) | VUX Intruder | laser, limpets (slow) |
 | Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison), Blazer ram |
-| Shofixti Scout | dart gun, Glory Device | Ilwrath Avenger | Hellfire, cloaking device |
+| Shofixti Scout | dart gun; **Glory Device**: one unavoidable fire strike (24 / 30 / 36 by level) on one ship, destroying the Scout | Ilwrath Avenger | Hellfire, cloaking device |
 
 **Hull size.** Every ship shows its hull class (large, medium, small or
 tiny) as a trait in the side panel; hover over it for that hull's moves and
@@ -105,8 +105,6 @@ panel (hover it for details):
 
 **Right-click actions** (click your own ship, then pick the top menu entry):
 
-- *Detonate Glory Device* (Shofixti Scout): the Scout explodes for 24
-  damage to every ship next to it, friend or foe.
 - *Transform* (Mmrnmhrm): swap between the X-Wing and the fast Y-Wing; uses
   the ship's turn.
 
