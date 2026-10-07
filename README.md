@@ -53,6 +53,31 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison), Blazer ram |
 | Shofixti Scout | dart gun, Glory Device | Ilwrath Avenger | Hellfire, cloaking device |
 
+**Promotions.** Every ship can rise from level 1 to **Veteran** (level 2)
+and **Elite** (level 3) by gaining experience. Cheap, small ships promote
+fastest: the Veteran threshold is 8 + 0.8 × recruit cost (16 XP for a
+Shofixti Scout, 34 for an Ur-Quan Dreadnought), Elite is twice that.
+(Wesnoth's multiplayer *Experience modifier* setting, 70% by default, scales
+these further.) Each promotion adds HP and some mix of stronger or more
+frequent attacks, new attacks and new abilities:
+
+| Ship | Veteran | Elite |
+|---|---|---|
+| Earthling Cruiser | heavier nukes, stronger point-defense | nukes ×3, **leadership** |
+| Chenjesu Broodhome | stronger crystals, DOGI ×3 | **heals** nearby ships |
+| Mmrnmhrm X-Wing / Y-Wing | stronger lasers / torpedoes ×3 | lasers ×5 / heavy torpedoes, **self-repair** |
+| Yehat Terminator | pulse cannons ×6 | **first strike** |
+| Syreen Penetrator | song ×3 | song also **slows**, dagger ×4 |
+| Arilou Skiff | new **ranged** laser | **nebula ambush** |
+| Shofixti Scout | darts **backstab**, 30-damage Glory | **skirmisher**, 36-damage Glory |
+| Ur-Quan Dreadnought | heavier fusion, 3 fighters per launch | **leadership** |
+| Mycon Podship | bigger plasmoid, faster regrowth | new melee **poison** spore burst |
+| Spathi Eluder | **skirmisher**, stronger B.U.T.T. | B.U.T.T. ×3 |
+| Umgah Drone | stronger cone | cone ×5, **magical** (70% to hit) |
+| VUX Intruder | stronger laser, limpets ×3 | laser **marksman** |
+| Androsynth Guardian | hotter Blazer, stronger acid | acid ×4, **cures** nearby ships |
+| Ilwrath Avenger | hotter Hellfire | Hellfire ×4, **backstab** |
+
 **Right-click actions** (click your own ship, then pick the top menu entry):
 
 - *Detonate Glory Device* (Shofixti Scout): the Scout explodes for 24
@@ -64,7 +89,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
   the ship's turn.
 
 Planets are villages (income and repair), starbases are keeps, docking
-rings are castles, stars block movement. Nebulae and asteroid fields slow
+rings are castles, stars block movement. Nebulae (green) and asteroid fields slow
 ships but give cover; ion storms slow ships *and* make them easier to hit.
 
 ## Rebuilding (developers)

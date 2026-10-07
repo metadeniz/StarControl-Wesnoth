@@ -370,8 +370,8 @@ def apply_mask(img, mask):
     return Image.fromarray(a.clip(0, 255).astype(np.uint8), "RGBA")
 
 
-NEBULA_A = np.array([200, 80, 245], np.float32)
-NEBULA_B = np.array([60, 175, 235], np.float32)
+NEBULA_A = np.array([60, 210, 120], np.float32)    # emerald
+NEBULA_B = np.array([150, 230, 80], np.float32)    # lime
 
 
 def nebula_layer(field, x0, y0):
@@ -493,6 +493,42 @@ def build_nebula_v2(rng, out):
         # ...and open space eating into the nebula's edge hex.
         save(apply_mask(starfield(rng, 0.7), wavy_mask(rng, combo, NEBULA_EDGE) * mask), out,
              f"images/terrain/sc/nebula-edge-{combo}.png", False)
+
+
+def build_ionstorm_v2(rng, out):
+    """Ion storm tiles that join without seams (lightning fades out before
+    the hex edge, where every tile shares one haze colour), plus the same
+    two-sided wavy border as the nebula. Overwrites build_ionstorm()."""
+    size = 512
+    field = (fractal_noise(rng, size, 5, 10), fractal_noise(rng, size, 3, 8))
+    mask = hex_mask_cache
+
+    def storm(x0, y0):
+        a = field[0][y0:y0 + HEX, x0:x0 + HEX]
+        b = calm_edges(field[1][y0:y0 + HEX, x0:x0 + HEX], 18)
+        ridge = (1 - np.abs(2 * a - 1)) ** 6 * np.clip(BORDER_DIST / 14, 0, 1)
+        haze = 0.35 + 0.25 * b
+        rgb = np.zeros((HEX, HEX, 3), np.float32)
+        rgb[..., 0] = 20 + 160 * ridge
+        rgb[..., 1] = 45 + 170 * ridge + 30 * haze
+        rgb[..., 2] = 90 + 150 * np.maximum(ridge, haze * 0.8)
+        alpha = np.clip(0.3 + 0.2 * haze + 0.55 * ridge, 0, 1) * 255
+        return Image.fromarray(np.dstack([rgb, alpha]).clip(0, 255).astype(np.uint8), "RGBA")
+
+    for v in range(11):
+        x0, y0 = rng.integers(0, size - HEX, 2)
+        img = starfield(rng, 0.5)
+        img.alpha_composite(storm(x0, y0))
+        name = "ionstorm" if v == 0 else f"ionstorm{v + 1}"
+        save(apply_mask(img, mask), out, f"images/terrain/sc/{name}.png", False)
+        if v == 0:
+            save(apply_mask(img, mask), out, "images/terrain/sc/ionstorm-tile.png", False)
+    for combo in TRANSITION_COMBOS:
+        x0, y0 = rng.integers(0, size - HEX, 2)
+        save(apply_mask(storm(x0, y0), wavy_mask(rng, combo, 0.5) * mask), out,
+             f"images/terrain/sc/ionstorm-{combo}.png", False)
+        save(apply_mask(starfield(rng, 0.5), wavy_mask(rng, combo, 0.5) * mask), out,
+             f"images/terrain/sc/ionstorm-edge-{combo}.png", False)
 
 
 def shaded_sphere(rng, diameter, palette, kind):
@@ -738,6 +774,7 @@ def main():
     # Added later with its own seed so the art above stays byte-identical.
     build_ionstorm(np.random.default_rng(args.seed + 1), mask, tmasks, args.out)
     build_nebula_v2(np.random.default_rng(args.seed + 2), args.out)
+    build_ionstorm_v2(np.random.default_rng(args.seed + 3), args.out)
 
     with open(os.path.join(args.out, "art-manifest.txt"), "w") as f:
         f.write("# Files derived from The Ur-Quan Masters content (CC BY-NC-SA 2.5).\n")
