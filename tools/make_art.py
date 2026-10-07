@@ -300,10 +300,48 @@ def fractal_noise(rng, size, octaves=5, base=4):
     return total
 
 
+HEX_VERTS = [(18, 0), (54, 0), (72, 36), (54, 72), (18, 72), (0, 36)]
+# edge between vertex i and i+1, named by the neighbour it faces
+HEX_EDGES = {"n": (0, 1), "ne": (1, 2), "se": (2, 3), "s": (3, 4), "sw": (4, 5), "nw": (5, 0)}
+
+
+def _edge_distances():
+    yy, xx = np.mgrid[0:HEX, 0:HEX].astype(np.float32) + 0.5
+    out = {}
+    for name, (i, j) in HEX_EDGES.items():
+        (x1, y1), (x2, y2) = HEX_VERTS[i], HEX_VERTS[j]
+        dx, dy = x2 - x1, y2 - y1
+        t = np.clip(((xx - x1) * dx + (yy - y1) * dy) / (dx * dx + dy * dy), 0, 1)
+        out[name] = np.sqrt((xx - x1 - t * dx) ** 2 + (yy - y1 - t * dy) ** 2)
+    return out
+
+
+EDGE_DIST = _edge_distances()
+BORDER_DIST = np.minimum.reduce(list(EDGE_DIST.values()))
+
+
+def calm_edges(noise, width=12.0):
+    """Pull a [0,1] noise field to 0.5 near the hex border, so neighbouring
+    tiles (picked at random) meet at the same value and no seam shows."""
+    w = np.clip(BORDER_DIST / width, 0, 1)
+    return 0.5 + (noise - 0.5) * w
+
+
+def wavy_mask(rng, combo, peak, reach=34.0):
+    """Fade that starts at strength `peak` on the hex edges in `combo` and
+    dies out a random, wavy distance inside the hex."""
+    out = np.zeros((HEX, HEX), np.float32)
+    wobble = fractal_noise(rng, HEX, 3, 3)
+    r = reach * (0.45 + 1.0 * wobble)
+    for d in combo.split("-"):
+        out = np.maximum(out, np.clip(1 - EDGE_DIST[d] / r, 0, 1) ** 1.3)
+    return out * peak
+
+
 def starfield(rng, density=1.0):
     """72x72 RGBA, opaque, deep-space colour with stars."""
     img = np.zeros((HEX, HEX, 4), np.float32)
-    n = fractal_noise(rng, HEX, octaves=3, base=2)
+    n = calm_edges(fractal_noise(rng, HEX, octaves=3, base=2))
     # Dark navy rather than black: Wesnoth darkens hexes a selected ship
     # cannot reach, and on near-black that darkening would be invisible.
     img[:, :, 0] = 20 + 10 * n
@@ -414,6 +452,47 @@ def build_ionstorm(rng, mask, tmasks, out):
                         np.float32) / 255.0
         save(apply_mask(ion_layer(field, x0, y0), soft * 0.85), out,
              f"images/terrain/sc/ionstorm-{combo}.png", False)
+
+
+NEBULA_EDGE = 0.5   # nebula strength exactly on a nebula/space hex edge
+
+
+def build_nebula_v2(rng, out):
+    """Nebula tiles whose colour matches at every hex edge (no seams
+    inside a nebula), plus wavy fades on both sides of the nebula/space
+    border that meet at the same strength (no outline along the hex grid).
+    Overwrites the older nebula images from build_nebula()."""
+    size = 512
+    field = (fractal_noise(rng, size, 5, 24), fractal_noise(rng, size, 4, 12))
+    mask = hex_mask_cache
+
+    def gas(x0, y0, calm):
+        n1 = field[0][y0:y0 + HEX, x0:x0 + HEX]
+        n2 = field[1][y0:y0 + HEX, x0:x0 + HEX]
+        if calm:
+            n1, n2 = calm_edges(n1, 18), calm_edges(n2, 18)
+        mix = 0.45 + 0.25 * (n2 - 0.5)
+        rgb = NEBULA_A[None, None] * (1 - mix[..., None]) + NEBULA_B[None, None] * mix[..., None]
+        rgb = rgb * (0.75 + 0.45 * (n1 - 0.5))[..., None]
+        alpha = (0.62 + 0.2 * (n1 - 0.5)) * 255
+        return Image.fromarray(np.dstack([rgb, alpha]).clip(0, 255).astype(np.uint8), "RGBA")
+
+    for v in range(11):
+        x0, y0 = rng.integers(0, size - HEX, 2)
+        img = starfield(rng, 0.7)
+        img.alpha_composite(gas(x0, y0, True))
+        name = "nebula" if v == 0 else f"nebula{v + 1}"
+        save(apply_mask(img, mask), out, f"images/terrain/sc/{name}.png", False)
+        if v == 0:
+            save(apply_mask(img, mask), out, "images/terrain/sc/nebula-tile.png", False)
+    for combo in TRANSITION_COMBOS:
+        # gas spilling out onto open space...
+        x0, y0 = rng.integers(0, size - HEX, 2)
+        save(apply_mask(gas(x0, y0, True), wavy_mask(rng, combo, NEBULA_EDGE) * mask), out,
+             f"images/terrain/sc/nebula-{combo}.png", False)
+        # ...and open space eating into the nebula's edge hex.
+        save(apply_mask(starfield(rng, 0.7), wavy_mask(rng, combo, NEBULA_EDGE) * mask), out,
+             f"images/terrain/sc/nebula-edge-{combo}.png", False)
 
 
 def shaded_sphere(rng, diameter, palette, kind):
@@ -658,6 +737,7 @@ def main():
     build_starbase(rng, mask, args.out)
     # Added later with its own seed so the art above stays byte-identical.
     build_ionstorm(np.random.default_rng(args.seed + 1), mask, tmasks, args.out)
+    build_nebula_v2(np.random.default_rng(args.seed + 2), args.out)
 
     with open(os.path.join(args.out, "art-manifest.txt"), "w") as f:
         f.write("# Files derived from The Ur-Quan Masters content (CC BY-NC-SA 2.5).\n")
