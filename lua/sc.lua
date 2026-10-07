@@ -145,7 +145,7 @@ local PLAYLISTS = {
 		"remix-ending", "remix-starbase", "remix-outfit" },
 	SC_DeathMarch = { "kohrah", "druuge", "thraddash", "slylandro", "orz", "yehat", "yehat-years-late",
 		"kohrah-eternal-doctrine", "kohrah-battle", "kohrah-cleansing-required", "slylandro-we-come-in-peace",
-		"samatra-battle", "starbase" },
+		"samatra-battle", "orz-squeezing-the-juice", "starbase" },
 	SC_Hierarchy = { "urquan", "urquan-now-and-forever", "mycon", "spathi", "umgah", "vux", "ilwrath", "thraddash", "druuge", "starbase", "outfit" },
 }
 

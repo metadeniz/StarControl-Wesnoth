@@ -335,6 +335,7 @@ music/sc/kohrah-cleansing-required.ogg
 music/sc/kohrah-eternal-doctrine.ogg
 music/sc/kohrah.ogg
 music/sc/mycon.ogg
+music/sc/orz-squeezing-the-juice.ogg
 music/sc/orz.ogg
 music/sc/outfit.ogg
 music/sc/pkunk.ogg
