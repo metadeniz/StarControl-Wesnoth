@@ -138,8 +138,8 @@ end
 -- the Alliance one, which spectators and AI-only games keep). Music is not
 -- game state, so playing it only on the local client is safe in multiplayer.
 local PLAYLISTS = {
-	SC_Alliance = { "commander", "chmmr", "yehat", "syreen", "arilou", "shofixti", "victory" },
-	SC_Hierarchy = { "urquan", "mycon", "spathi", "umgah", "vux", "ilwrath" },
+	SC_Alliance = { "commander", "chmmr", "yehat", "syreen", "arilou", "shofixti", "intro", "victory" },
+	SC_Hierarchy = { "urquan", "mycon", "spathi", "umgah", "vux", "ilwrath", "thraddash" },
 }
 
 function sc.set_music()

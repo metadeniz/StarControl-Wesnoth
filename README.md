@@ -45,8 +45,8 @@ maps below and the era **Star Control: The Ur-Quan War**.
 
 Each player hears their own faction's Star Control II race themes in
 rotation: the Alliance gets Commander (Earthlings), Chmmr, Yehat, Syreen,
-Arilou and Shofixti plus Star Control II's victory theme; the Hierarchy
-gets Ur-Quan, Mycon, Spathi, Umgah, VUX and Ilwrath. The victory fanfare
+Arilou and Shofixti plus Star Control II's opening and victory themes; the Hierarchy
+gets Ur-Quan, Mycon, Spathi, Umgah, VUX, Ilwrath and Thraddash. The victory fanfare
 plays when you win. When a ship destroys
 another, its race's victory ditty plays (the music dips while it does).
 
@@ -58,7 +58,7 @@ another, its race's victory ditty plays (the music dips while it does).
 | Chenjesu Broodhome | photon crystal (ranged; lighter shards close up), DOGI (slows) | Mycon Podship | homing plasmoids at range, heavier plasmoids close up; regrows crew |
 | Mmrnmhrm X-Wing / Y-Wing | recruit either; lasers or torpedoes, transforms | Spathi Eluder | missiles, B.U.T.T. |
 | Yehat Terminator | pulse cannons, force shield | Umgah Drone | antimatter cone, skirmisher |
-| Syreen Penetrator | ranged particle dagger; close-range Syreen song (drains) | VUX Intruder | laser, limpets (slow) |
+| Syreen Penetrator | ranged particle dagger; close-range Syreen song (drains) | VUX Intruder | close-range laser (**first strike**); long-range limpets (slow) |
 | Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison), Blazer ram |
 | Shofixti Scout | dart gun; **Glory Device**: one unavoidable fire strike (16 / 20 / 24 by level) on one ship, destroying the Scout | Ilwrath Avenger | Hellfire, cloaking device |
 

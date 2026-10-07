@@ -198,8 +198,10 @@ music/sc/arilou.ogg
 music/sc/chmmr.ogg
 music/sc/commander.ogg
 music/sc/ilwrath.ogg
+music/sc/thraddash.ogg
 music/sc/mycon.ogg
 music/sc/shofixti.ogg
+music/sc/intro.ogg
 music/sc/spathi.ogg
 music/sc/syreen.ogg
 music/sc/umgah.ogg

@@ -308,6 +308,7 @@ MUSIC = {
     "syreen": "base/comm/syreen/syreen.mod",
     "arilou": "base/comm/arilou/arilou.mod",
     "shofixti": "base/comm/shofixti/shofixti.mod",
+    "intro": "base/cutscene/intro/introx.mod",          # SC2 opening
     "victory": "base/cutscene/ending/victoryf.mod",     # SC2 final victory
     "victory-fanfare": "base/cutscene/ending/victory1.mod",
     # Hierarchy playlist
@@ -317,6 +318,7 @@ MUSIC = {
     "umgah": "base/comm/umgah/umgah.mod",
     "vux": "base/comm/vux/vux.mod",
     "ilwrath": "base/comm/ilwrath/ilwrath.mod",
+    "thraddash": "base/comm/thraddash/thraddash.mod",
 }
 
 
