@@ -259,6 +259,32 @@ def build_effects(uqm, out):
     return len(frames)
 
 
+# race id -> the ship's victory ditty (a tracker module) in the UQM content
+DITTIES = {
+    "earthling": "human/cruiser.mod", "chenjesu": "chenjesu/broodhome.mod",
+    "mmrnmhrm": "mmrnmhrm/xform.mod", "yehat": "yehat/terminator.mod",
+    "syreen": "syreen/penetrator.mod", "arilou": "arilou/skiff.mod",
+    "shofixti": "shofixti/scout.mod", "urquan": "urquan/dreadnought.mod",
+    "mycon": "mycon/podship.mod", "spathi": "spathi/eluder.mod",
+    "umgah": "umgah/drone.mod", "vux": "vux/intruder.mod",
+    "androsynth": "androsynth/guardian.mod", "ilwrath": "ilwrath/avenger.mod",
+}
+
+
+def build_ditties(uqm, out):
+    """Victory ditties: rendered from the .mod files with ffmpeg (libopenmpt),
+    capped at 8 seconds in case a module loops."""
+    import subprocess
+    os.makedirs(os.path.join(out, "sounds/sc"), exist_ok=True)
+    for race, rel in DITTIES.items():
+        dest = f"sounds/sc/ditty-{race}.ogg"
+        subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+                        "-i", os.path.join(uqm, "base/ships", rel), "-t", "8",
+                        "-af", "afade=t=out:st=7:d=1", "-ac", "2", "-ar", "44100",
+                        "-q:a", "4", os.path.join(out, dest)], check=True)
+        manifest.append(dest)
+
+
 def build_sounds(uqm, out):
     for sid, rel in SOUNDS.items():
         dest = f"sounds/sc/{sid}.wav"
@@ -821,6 +847,7 @@ def main():
     build_attack_icons(args.out)
     nfire = build_effects(args.uqm, args.out)
     build_sounds(args.uqm, args.out)
+    build_ditties(args.uqm, args.out)
 
     build_space(rng, mask, args.out)
     build_nebula(rng, mask, tmasks, args.out)

@@ -132,6 +132,16 @@ function sc.turn_end()
 	if is_ai(side) then ai_glory(side) end
 end
 
+---------------------------------------------------------------- victory ditties
+
+-- When a ship destroys another, its race's Star Control victory ditty plays.
+function sc.victory_ditty()
+	local killer = wesnoth.units.get(wml.variables["x2"], wml.variables["y2"])
+	if not killer then return end
+	local race = tostring(killer.race):match("^sc_(.+)$")
+	if race then wesnoth.audio.play("sc/ditty-" .. race .. ".ogg") end
+end
+
 ------------------------------------------------------------ Precursor artifacts
 
 -- Hidden on about one planet in five (never next to a starbase). The first

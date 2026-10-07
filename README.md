@@ -46,7 +46,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | Alliance of Free Stars | | Ur-Quan Hierarchy | |
 |---|---|---|---|
 | Earthling Cruiser | homing nukes, point-defense | Ur-Quan Dreadnought | close-range fusion blast; fighters at any range (**swarm**: fewer as crew is lost) |
-| Chenjesu Broodhome | photon crystal, DOGI (slows) | Mycon Podship | homing plasmoid, regrows crew |
+| Chenjesu Broodhome | photon crystal, DOGI (slows) | Mycon Podship | homing plasmoids at range, heavier plasmoids close up; regrows crew |
 | Mmrnmhrm X-Wing / Y-Wing | recruit either; lasers or torpedoes, transforms | Spathi Eluder | missiles, B.U.T.T. |
 | Yehat Terminator | pulse cannons, force shield | Umgah Drone | antimatter cone, skirmisher |
 | Syreen Penetrator | ranged particle dagger; close-range Syreen song (drains) | VUX Intruder | laser, limpets (slow) |
@@ -78,7 +78,7 @@ Spathi and Shofixti, which only get it as Elites):
 | Arilou Skiff | new **ranged** laser; close laser **backstab**; **ambush** | ambush, laser ×4 |
 | Shofixti Scout | stronger darts, 30-damage Glory | **skirmisher**, darts **backstab**, 36-damage Glory |
 | Ur-Quan Dreadnought | heavier fusion blast, fighters ×5 | fighters ×6, **leadership** |
-| Mycon Podship | bigger plasmoid, faster regrowth | new melee **poison** spore burst |
+| Mycon Podship | bigger plasmoids, faster regrowth | homing plasmoids **marksman**, new melee **poison** spore burst |
 | Spathi Eluder | **skirmisher**, stronger B.U.T.T. | B.U.T.T. ×3, **backstab** |
 | Umgah Drone | stronger cone | cone ×5, **magical** (70% to hit) |
 | VUX Intruder | stronger laser, limpets ×3, laser **backstab** | laser **marksman** |
