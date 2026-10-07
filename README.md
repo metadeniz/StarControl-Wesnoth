@@ -70,8 +70,8 @@ Spathi and Shofixti, which only get it as Elites):
 
 | Ship | Veteran | Elite |
 |---|---|---|
-| Earthling Cruiser | heavier nukes, stronger point-defense | nukes ×3, **leadership** |
-| Chenjesu Broodhome | stronger crystals, DOGI ×3 | **heals** nearby ships |
+| Earthling Cruiser | heavier nukes, stronger point-defense, **heals +4** | nukes ×3, **leadership** |
+| Chenjesu Broodhome | stronger crystals, DOGI ×3, **heals +4** | **cures** (heals +8 and cures poison) |
 | Mmrnmhrm X-Wing / Y-Wing | X-Wing lasers **backstab**; stronger torpedoes ×3 | lasers ×5 / heavy torpedoes, **self-repair** |
 | Yehat Terminator | pulse cannons ×6 | **first strike** |
 | Syreen Penetrator | song ×3 | song also **slows**, dagger ×4 |
@@ -82,7 +82,7 @@ Spathi and Shofixti, which only get it as Elites):
 | Spathi Eluder | **skirmisher**, stronger B.U.T.T. | B.U.T.T. ×3, **backstab** |
 | Umgah Drone | stronger cone | cone ×5, **magical** (70% to hit) |
 | VUX Intruder | stronger laser, limpets ×3, laser **backstab** | laser **marksman** |
-| Androsynth Guardian | hotter Blazer, stronger acid | acid ×4, **cures** nearby ships |
+| Androsynth Guardian | hotter Blazer, stronger acid | acid ×4, **heals +4** |
 | Ilwrath Avenger | hotter Hellfire, **backstab** | Hellfire ×4 |
 
 **Leaders** start promoted: Elite (level 3) if the ship costs 16 gold or
