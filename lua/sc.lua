@@ -141,11 +141,11 @@ local PLAYLISTS = {
 	SC_Alliance = { "commander", "chmmr", "yehat", "syreen", "arilou", "shofixti", "intro", "victory", "starbase", "outfit" },
 	-- the New Alliance hears the Precursors' remixes
 	SC_NewAlliance = { "remix-chmmr", "remix-zoqfotpik", "remix-pkunk", "remix-supox", "remix-utwig",
-		"remix-utwig-ultron",		"remix-commander", "remix-shofixti", "remix-arilou", "remix-intro", "remix-ending",
-		"remix-starbase", "remix-outfit" },
+		"remix-utwig-ultron", "remix-commander", "remix-shofixti", "remix-arilou", "remix-intro",
+		"remix-ending", "remix-starbase", "remix-outfit" },
 	SC_DeathMarch = { "kohrah", "druuge", "thraddash", "slylandro", "orz", "yehat", "yehat-years-late",
 		"kohrah-eternal-doctrine", "kohrah-battle", "kohrah-cleansing-required", "slylandro-we-come-in-peace",
-		"samatra-battle", "starbase", "outfit" },
+		"samatra-battle", "starbase" },
 	SC_Hierarchy = { "urquan", "urquan-now-and-forever", "mycon", "spathi", "umgah", "vux", "ilwrath", "thraddash", "druuge", "starbase", "outfit" },
 }
 
