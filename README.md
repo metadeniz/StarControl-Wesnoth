@@ -60,7 +60,7 @@ another, its race's victory ditty plays (the music dips while it does).
 | Yehat Terminator | pulse cannons, force shield | Umgah Drone | antimatter cone, skirmisher |
 | Syreen Penetrator | ranged particle dagger; close-range Syreen song (drains) | VUX Intruder | laser, limpets (slow) |
 | Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison), Blazer ram |
-| Shofixti Scout | dart gun; **Glory Device**: one unavoidable fire strike (24 / 30 / 36 by level) on one ship, destroying the Scout | Ilwrath Avenger | Hellfire, cloaking device |
+| Shofixti Scout | dart gun; **Glory Device**: one unavoidable fire strike (16 / 20 / 24 by level) on one ship, destroying the Scout | Ilwrath Avenger | Hellfire, cloaking device |
 
 **Hull size.** Every ship shows its hull class (large, medium, small or
 tiny) as a trait in the side panel; hover over it for that hull's moves and
@@ -69,7 +69,7 @@ defense on every terrain.
 **Promotions.** Every ship can rise from level 1 to **Veteran** (level 2)
 and **Elite** (level 3) by gaining experience. Cheap, small ships promote
 fastest, the powerful ones slowest: the Veteran threshold is 1.6 × recruit
-cost (16 XP for a Shofixti Scout, 45 for an Ur-Quan Dreadnought, 48 for a
+cost (8 XP for a Shofixti Scout, 45 for an Ur-Quan Dreadnought, 48 for a
 Chenjesu Broodhome), Elite is twice that.
 (Wesnoth's multiplayer *Experience modifier* setting, 70% by default, scales
 these further.) Each promotion adds HP and some mix of stronger or more
@@ -86,11 +86,11 @@ Spathi and Shofixti, which only get it as Elites):
 | Yehat Terminator | pulse cannons ×6 | **first strike** |
 | Syreen Penetrator | song ×3 | song also **slows**, dagger ×4 |
 | Arilou Skiff | new **ranged** laser; close laser **backstab**; **ambush** | ambush, laser ×4 |
-| Shofixti Scout | stronger darts, 30-damage Glory | **skirmisher**, darts **backstab**, 36-damage Glory |
+| Shofixti Scout | stronger darts, 20-damage Glory | **skirmisher**, darts **backstab**, 24-damage Glory |
 | Ur-Quan Dreadnought | heavier fusion blast, fighters ×5 | fighters ×6, **leadership** |
 | Mycon Podship | bigger plasmoids, faster regrowth | homing plasmoids **marksman**, new melee **poison** spore burst |
 | Spathi Eluder | **skirmisher**, stronger B.U.T.T. | B.U.T.T. ×3, **backstab** |
-| Umgah Drone | stronger cone | cone ×5, **magical** (70% to hit) |
+| Umgah Drone | stronger cone, **heals +4** | cone ×5, **magical** (70% to hit), **heals +8** |
 | VUX Intruder | stronger laser, limpets ×3, laser **backstab** | laser **marksman** |
 | Androsynth Guardian | hotter Blazer, stronger acid | acid ×4, **heals +4** |
 | Ilwrath Avenger | hotter Hellfire, **backstab** | Hellfire ×4 |

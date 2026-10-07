@@ -98,7 +98,7 @@ end
 ---------------------------------------------------------------------- AI help
 
 -- End of an AI side's turn: a Shofixti that hasn't attacked uses its Glory
--- Device on a neighbour it would destroy, or on one worth twice its cost.
+-- Device on a neighbour it would destroy, or on one worth three times its cost.
 -- (The weapon has attack_weight=0, so the AI never picks it by itself.)
 local function ai_glory(side)
 	for _, s in ipairs(wesnoth.units.find_on_map { type = all_levels("SC_Shofixti_Scout"), side = side, canrecruit = false }) do
@@ -112,7 +112,7 @@ local function ai_glory(side)
 			}) do
 				local damage = s.attacks[weapon + 1].damage * e:resistance_against("fire") / 100
 				local worth = (e.hitpoints <= damage) and e.cost * 2 or e.cost
-				if (e.hitpoints <= damage or e.cost >= 2 * s.cost) and (not best or worth > best_worth) then
+				if (e.hitpoints <= damage or e.cost >= 3 * s.cost) and (not best or worth > best_worth) then
 					best, best_worth = e, worth
 				end
 			end
