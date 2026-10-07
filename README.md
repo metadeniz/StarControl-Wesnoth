@@ -75,7 +75,7 @@ Spathi and Shofixti, which only get it as Elites):
 | Mmrnmhrm X-Wing / Y-Wing | X-Wing lasers **backstab**; stronger torpedoes ×3 | lasers ×5 / heavy torpedoes, **self-repair** |
 | Yehat Terminator | pulse cannons ×6 | **first strike** |
 | Syreen Penetrator | song ×3 | song also **slows**, dagger ×4 |
-| Arilou Skiff | new **ranged** laser; close laser **backstab** | **nebula ambush** |
+| Arilou Skiff | new **ranged** laser; close laser **backstab**; **ambush** | ambush, laser ×4 |
 | Shofixti Scout | stronger darts, 30-damage Glory | **skirmisher**, darts **backstab**, 36-damage Glory |
 | Ur-Quan Dreadnought | heavier fusion blast, fighters ×5 | fighters ×6, **leadership** |
 | Mycon Podship | bigger plasmoid, faster regrowth | new melee **poison** spore burst |
@@ -84,6 +84,24 @@ Spathi and Shofixti, which only get it as Elites):
 | VUX Intruder | stronger laser, limpets ×3, laser **backstab** | laser **marksman** |
 | Androsynth Guardian | hotter Blazer, stronger acid | acid ×4, **heals +4** |
 | Ilwrath Avenger | hotter Hellfire, **backstab** | Hellfire ×4 |
+
+**Ambush.** Some ships can hide in certain terrain: invisible to the enemy
+unless an enemy ship is next to them, and revealed for the rest of a turn
+in which they attack. Nobody hides in open space, ion storms, planets or
+starbases.
+
+| Ship | Hides in | From |
+|---|---|---|
+| Ilwrath Avenger | anywhere (cloaking device) | level 1 |
+| Androsynth Guardian | green nebulae, asteroid fields, dust clouds | level 1 |
+| Mycon Podship | red nebulae | level 1 |
+| Chenjesu Broodhome | red nebulae | level 1 |
+| Arilou Skiff | green nebulae, asteroid fields, dust clouds | Veteran |
+| Spathi Eluder | asteroid fields | Veteran |
+| Mmrnmhrm X-Wing | asteroid fields | Veteran |
+| Mmrnmhrm Y-Wing | green nebulae, dust clouds | Veteran |
+| VUX Intruder | green nebulae | Elite |
+| Shofixti Scout | asteroid fields, green and red nebulae | Elite |
 
 **Leaders** start promoted: Elite (level 3) if the ship costs 16 gold or
 less (Earthling Cruiser, Syreen, Arilou, Shofixti, Spathi, Umgah, VUX,
