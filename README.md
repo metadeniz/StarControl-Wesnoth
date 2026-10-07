@@ -54,13 +54,13 @@ the Precursors' "Now and Forever" Ur-Quan remix. Both also
 get the Starbase and Outfit themes. The New Alliance gets Chmmr,
 Zoq-Fot-Pik, Pkunk, Supox, Utwig, Commander and Shofixti plus the opening
 and victory themes; the Death March gets Kohr-Ah, Druuge, Thraddash,
-Slylandro, Orz and Yehat, plus five Precursors remixes: "Years Late"
+Slylandro, Orz and Yehat, plus six Precursors remixes: "Years Late"
 (Yehat), "The Eternal Doctrine", "Cleansing Required" and "Kohr-Ah"
-(battle), and "We Come In
+(battle), "The Battle of the Sa-Matra", and "We Come In
 Peace" (Slylandro Probes).
 Both also get Starbase and Outfit. The New Alliance hears all of these as
 the Precursors' remixes, plus their Arilou remix "Welcome to
-Falayalaralfali". The victory fanfare
+Falayalaralfali" and their second Utwig remix, "The Ultron". The victory fanfare
 plays when you win. When a ship destroys
 another, its race's victory ditty plays (the music dips while it does).
 

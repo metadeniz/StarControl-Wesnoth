@@ -450,6 +450,7 @@ REMIXES = {
     "kohrah-battle": "extras3/battle/battle-Kohr-Ah.ogg",
     "kohrah-cleansing-required": "remix/3/07_-_Kohr-Ah_-_Cleansing_Required.ogg",
     "slylandro-we-come-in-peace": "remix/2/03_-_Slylandro_Probes_-_We_Come_In_Peace.ogg",
+    "samatra-battle": "remix/1/05_-_Melee_-_The_Battle_of_the_Sa-Matra.ogg",
     # Hierarchy
     "urquan-now-and-forever": "remix/3/01_-_Ur-Quan_-_Now_and_Forever.ogg",
     # New Alliance: every track a remix
@@ -458,6 +459,7 @@ REMIXES = {
     "remix-pkunk": "remix/4/07_-_Pkunk_-_Pkunks_Not_Dead.ogg",
     "remix-supox": "remix/4/12_-_Supox_-_Shake_Yer_Rootz.ogg",
     "remix-utwig": "remix/4/08_-_Utwig_-_Mask_of_Ultimate_Embarrassment_and_Shame.ogg",
+    "remix-utwig-ultron": "remix/4/11_-_Utwig_-_The_Ultron.ogg",
     "remix-commander": "remix/1/02_-_Starbase_Commander_-_Corridor_Nine.ogg",
     "remix-shofixti": "remix/4/04_-_Shofixti_-_Bonsai!.ogg",
     "remix-arilou": "remix/2/02_-_Arilou_-_Welcome_to_Falayalaralfali.ogg",

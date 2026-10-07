@@ -348,8 +348,10 @@ music/sc/remix-pkunk.ogg
 music/sc/remix-shofixti.ogg
 music/sc/remix-starbase.ogg
 music/sc/remix-supox.ogg
+music/sc/remix-utwig-ultron.ogg
 music/sc/remix-utwig.ogg
 music/sc/remix-zoqfotpik.ogg
+music/sc/samatra-battle.ogg
 music/sc/shofixti.ogg
 music/sc/slylandro-we-come-in-peace.ogg
 music/sc/slylandro.ogg
