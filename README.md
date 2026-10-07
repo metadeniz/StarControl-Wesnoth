@@ -8,7 +8,7 @@ and stars. Any faction can fight any other.
 
 **Status: prototype, development paused.** Personal use only: the ship
 sprites, projectiles, explosions and sounds come from The Ur-Quan Masters
-(CC BY-NC-SA 2.5), and one music track from the Precursors' UQM Remix
+(CC BY-NC-SA 2.5), and music tracks from the Precursors' UQM Remix
 Packs. The terrain art is original.
 
 ## Install and play
@@ -49,12 +49,18 @@ maps below and the era **Star Control: The Ur-Quan War**.
 Each player hears their own faction's Star Control II race themes in
 rotation: the Alliance gets Commander (Earthlings), Chmmr, Yehat, Syreen,
 Arilou and Shofixti plus Star Control II's opening and victory themes; the Hierarchy
-gets Ur-Quan, Mycon, Spathi, Umgah, VUX, Ilwrath, Thraddash and Druuge. Both also
+gets Ur-Quan, Mycon, Spathi, Umgah, VUX, Ilwrath, Thraddash and Druuge, plus
+the Precursors' "Now and Forever" Ur-Quan remix. Both also
 get the Starbase and Outfit themes. The New Alliance gets Chmmr,
 Zoq-Fot-Pik, Pkunk, Supox, Utwig, Commander and Shofixti plus the opening
 and victory themes; the Death March gets Kohr-Ah, Druuge, Thraddash,
-Slylandro, Orz and Yehat, plus the Precursors' "Years Late" Yehat remix.
-Both also get Starbase and Outfit. The victory fanfare
+Slylandro, Orz and Yehat, plus five Precursors remixes: "Years Late"
+(Yehat), "The Eternal Doctrine", "Cleansing Required" and "Kohr-Ah"
+(battle), and "We Come In
+Peace" (Slylandro Probes).
+Both also get Starbase and Outfit. The New Alliance hears all of these as
+the Precursors' remixes, plus their Arilou remix "Welcome to
+Falayalaralfali". The victory fanfare
 plays when you win. When a ship destroys
 another, its race's victory ditty plays (the music dips while it does).
 

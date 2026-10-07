@@ -440,19 +440,48 @@ MUSIC = {
 MUSIC_GAIN_DB = {"starbase": 4}   # brings it up to the other tracks' loudness
 
 # Precursors' UQM Remix Packs (sourceforge.net/projects/sc2, "UQM Remix
-# Packs"), unzipped into one directory: id -> (file, gain in dB). They are
-# mastered much louder than the tracker modules.
+# Packs"): the disc .uqm files unzipped into one directory, and pack 3's
+# extras zip into its "extras3" subdirectory. They are mastered louder than
+# the tracker modules, so each is brought to the same loudness.
+REMIX_LOUDNESS = -16.7   # mean volume, dB, like the other music
 REMIXES = {
-    "yehat-years-late": ("remix/4/06_-_Yehat_-_Years_Late_Mix.ogg", -7),
+    # Death March
+    "yehat-years-late": "remix/4/06_-_Yehat_-_Years_Late_Mix.ogg",
+    "kohrah-eternal-doctrine": "extras3/aliens/blackur-the_eternal_doctrine.ogg",
+    "kohrah-battle": "extras3/battle/battle-Kohr-Ah.ogg",
+    "kohrah-cleansing-required": "remix/3/07_-_Kohr-Ah_-_Cleansing_Required.ogg",
+    "slylandro-we-come-in-peace": "remix/2/03_-_Slylandro_Probes_-_We_Come_In_Peace.ogg",
+    # Hierarchy
+    "urquan-now-and-forever": "remix/3/01_-_Ur-Quan_-_Now_and_Forever.ogg",
+    # New Alliance: every track a remix
+    "remix-chmmr": "remix/4/03_-_Chmmr_-_Photosynthesis.ogg",
+    "remix-zoqfotpik": "remix/4/09_-_Zoq-Fot-Pik_-_Frungy_Party.ogg",
+    "remix-pkunk": "remix/4/07_-_Pkunk_-_Pkunks_Not_Dead.ogg",
+    "remix-supox": "remix/4/12_-_Supox_-_Shake_Yer_Rootz.ogg",
+    "remix-utwig": "remix/4/08_-_Utwig_-_Mask_of_Ultimate_Embarrassment_and_Shame.ogg",
+    "remix-commander": "remix/1/02_-_Starbase_Commander_-_Corridor_Nine.ogg",
+    "remix-shofixti": "remix/4/04_-_Shofixti_-_Bonsai!.ogg",
+    "remix-arilou": "remix/2/02_-_Arilou_-_Welcome_to_Falayalaralfali.ogg",
+    "remix-intro": "remix/4/02_-_Intro_-_Into_the_Void.ogg",
+    "remix-ending": "remix/4/16_-_Outro_-_Awaking_Dreams.ogg",
+    "remix-starbase": "remix/1/01_-_Starbase_-_Under_a_Red_Sky.ogg",
+    "remix-outfit": "remix/1/06_-_Outfit_-_Outfit_the_Vindicator.ogg",
 }
 
 
-def build_remixes(remix, out):
+def build_remixes(remix, out, only=None):
+    import re
     import subprocess
-    for name, (rel, gain) in REMIXES.items():
+    for name, rel in REMIXES.items():
+        if only and name not in only:
+            continue
+        src = os.path.join(remix, rel)
+        probe = subprocess.run(["ffmpeg", "-hide_banner", "-i", src, "-af", "volumedetect", "-f", "null", "-"],
+                               capture_output=True, text=True, check=True)
+        mean = float(re.search(r"mean_volume: (-?[\d.]+) dB", probe.stderr).group(1))
         dest = f"music/sc/{name}.ogg"
-        subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
-                        "-i", os.path.join(remix, rel), "-af", f"volume={gain}dB", "-q:a", "4",
+        subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", src,
+                        "-af", f"volume={REMIX_LOUDNESS - mean:.1f}dB", "-q:a", "4",
                         os.path.join(out, dest)], check=True)
         manifest.append(dest)
 

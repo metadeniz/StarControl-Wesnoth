@@ -139,11 +139,13 @@ end
 -- game state, so playing it only on the local client is safe in multiplayer.
 local PLAYLISTS = {
 	SC_Alliance = { "commander", "chmmr", "yehat", "syreen", "arilou", "shofixti", "intro", "victory", "starbase", "outfit" },
-	SC_NewAlliance = { "chmmr", "zoqfotpik", "pkunk", "supox", "utwig", "commander", "shofixti",
-		"intro", "victory", "starbase", "outfit" },
+	-- the New Alliance hears the Precursors' remixes
+	SC_NewAlliance = { "remix-chmmr", "remix-zoqfotpik", "remix-pkunk", "remix-supox", "remix-utwig",
+		"remix-commander", "remix-shofixti", "remix-arilou", "remix-intro", "remix-ending",
+		"remix-starbase", "remix-outfit" },
 	SC_DeathMarch = { "kohrah", "druuge", "thraddash", "slylandro", "orz", "yehat", "yehat-years-late",
-		"starbase", "outfit" },
-	SC_Hierarchy = { "urquan", "mycon", "spathi", "umgah", "vux", "ilwrath", "thraddash", "druuge", "starbase", "outfit" },
+		"kohrah-eternal-doctrine", "kohrah-battle", "kohrah-cleansing-required", "slylandro-we-come-in-peace", "starbase", "outfit" },
+	SC_Hierarchy = { "urquan", "urquan-now-and-forever", "mycon", "spathi", "umgah", "vux", "ilwrath", "thraddash", "druuge", "starbase", "outfit" },
 }
 
 function sc.set_music()
