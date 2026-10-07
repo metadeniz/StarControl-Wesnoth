@@ -171,10 +171,11 @@ end
 
 ---------------------------------------------------------------- victory ditties
 
--- When a ship destroys another, its race's Star Control victory ditty plays,
--- and the music drops to DUCK_VOLUME % until the ditty is over. Nothing here
--- is game state (music and sound are local), so it is safe in multiplayer.
-local DUCK_VOLUME = 25
+-- When a ship destroys another, its race's Star Control victory ditty plays:
+-- the music fades out quickly (the ditty file starts with 0.4 s of silence,
+-- so it is gone by then), and fades back in once the ditty is over. Nothing
+-- here is game state (music and sound are local), so it is safe in
+-- multiplayer.
 local DITTY_MS = {   -- length of sounds/sc/ditty-<race>.ogg
 	androsynth = 4740, arilou = 3380, chenjesu = 2380, chmmr = 4560,
 	druuge = 3980, earthling = 3200, ilwrath = 5000, kohrah = 5660,
@@ -186,22 +187,31 @@ local DITTY_MS = {   -- length of sounds/sc/ditty-<race>.ogg
 }
 local duck_until
 
+-- Lua has no timers, so a fade is a few volume steps a short delay apart.
+local function fade_music(from, to, ms)
+	local steps = 6
+	for i = 1, steps do
+		wesnoth.audio.music_list.volume = from + (to - from) * i / steps
+		if i < steps then wesnoth.interface.delay(ms // steps) end
+	end
+end
+
 function sc.victory_ditty()
 	local killer = wesnoth.units.get(wml.variables["x2"], wml.variables["y2"])
 	if not killer then return end
 	local race = tostring(killer.race):match("^sc_(.+)$")
 	if not race or not DITTY_MS[race] then return end
 	wesnoth.audio.play("sc/ditty-" .. race .. ".ogg")
-	wesnoth.audio.music_list.volume = DUCK_VOLUME
+	if not duck_until then fade_music(100, 0, 200) end
 	duck_until = math.max(duck_until or 0, wesnoth.ms_since_init() + DITTY_MS[race])
 end
 
--- Lua has no timers, so the music comes back at the first move, selection,
--- attack or turn change after the ditty has finished.
+-- The music fades back in at the first move, selection, attack or turn
+-- change after the ditty has finished.
 function sc.unduck()
 	if duck_until and wesnoth.ms_since_init() >= duck_until then
 		duck_until = nil
-		wesnoth.audio.music_list.volume = 100
+		fade_music(0, 100, 300)
 	end
 end
 

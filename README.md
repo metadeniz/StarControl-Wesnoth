@@ -62,7 +62,8 @@ Both also get Starbase, and the New Alliance gets Outfit. The New Alliance hears
 the Precursors' remixes, plus their Arilou remix "Welcome to
 Falayalaralfali" and their second Utwig remix, "The Ultron". The victory fanfare
 plays when you win. When a ship destroys
-another, its race's victory ditty plays (the music dips while it does).
+another, its race's victory ditty plays: the music fades out for it and
+fades back in afterwards.
 
 ## The ships
 
@@ -80,7 +81,7 @@ another, its race's victory ditty plays (the music dips while it does).
 |---|---|---|---|
 | **Precursor Flagship** (leader only) | fusion blaster, point-defense, self-repair, heals +4, leadership; 5 moves | **Sa-Matra** (leader only) | red plasma, homing sentinels, self-repair, heals +4, leadership; 3 moves |
 | Earthling Cruiser | as in the Alliance | Kohr-Ah Marauder | spinning blades; F.R.I.E.D. plasma ring (**magical**) |
-| Chmmr Avatar | megawatt laser, ZapSats (**first strike**), point-defense; tractor beam (**slows**) from Veteran | Druuge Mauler | long-range mass driver (**marksman**); nothing up close |
+| Chmmr Avatar | 4 moves, and a drive that handles nebulae, dust, ion storms and asteroids better than other large hulls; megawatt laser, ZapSats (**first strike**), point-defense; tractor beam (**slows**) from Veteran | Druuge Mauler | long-range mass driver (**marksman**); nothing up close |
 | Zoq-Fot-Pik Stinger | cheap; acid spit, hard-hitting tongue | Thraddash Torch | fast; afterburner (**charge**), horn blasters |
 | Pkunk Fury | fast triple gun; **reincarnation**: reborn at full HP when destroyed, 80% the first time, halving with each rebirth | Slylandro Probe | 7 moves; seeking lightning (**magical**); repairs 8 HP a turn in asteroid fields |
 | Supox Blade | **skirmisher**; globs of goo | Orz Nemesis | howitzer; space marines (**drains**) |
