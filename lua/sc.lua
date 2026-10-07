@@ -1,5 +1,5 @@
--- Star Control TC: the right-click ship devices, fighter docking, and the
--- small amount of help the AI needs to use those devices.
+-- Star Control TC: the right-click ship devices (Glory Device, Mmrnmhrm
+-- Transform), and the small amount of help the AI needs to use them.
 -- Written against the Wesnoth 1.16 Lua API.
 
 local T = wml.tag
@@ -8,9 +8,6 @@ local _ = wesnoth.textdomain "wesnoth-Star_Control_TC"
 sc = {}
 
 local GLORY_DAMAGE = { 24, 30, 36 }      -- by the Scout's level
-local FIGHTER_CREW = 4                   -- HP a Dreadnought spends per fighter
-local FIGHTERS_PER_LAUNCH = { 2, 3, 3 }  -- by the Dreadnought's level
-local AI_MAX_FIGHTERS = 4      -- the AI stops launching at this many per side
 
 local function count(name)
 	wml.variables["sc_stats." .. name] = (wml.variables["sc_stats." .. name] or 0) + 1
@@ -54,54 +51,6 @@ function wesnoth.wml_actions.sc_glory_device(cfg)
 		animate = true,
 		fire_event = true,
 	}
-end
-
----------------------------------------------------------------- Ur-Quan fighters
-
-function wesnoth.wml_actions.sc_launch_fighters(cfg)
-	local u = wesnoth.units.get(cfg.x, cfg.y)
-	if not is_a(u, "SC_UrQuan_Dreadnought") or u.attacks_left < 1 then return end
-
-	local spots = free_neighbours(u.x, u.y)
-	local n = math.min(by_level(FIGHTERS_PER_LAUNCH, u), #spots, math.floor((u.hitpoints - 1) / FIGHTER_CREW))
-	if n < 1 then
-		wesnoth.interface.add_chat_message(_ "No room to launch fighters.")
-		return
-	end
-	count("launch")
-
-	wesnoth.audio.play("sc/urquan-launch.wav")
-	for i = 1, n do
-		local f = wesnoth.units.create {
-			type = "SC_UrQuan_Fighter",
-			side = u.side,
-			name = "",
-			random_traits = false,
-			T.variables { launched_turn = wesnoth.current.turn },
-		}
-		f:to_map(spots[i][1], spots[i][2])
-	end
-	u.hitpoints = u.hitpoints - n * FIGHTER_CREW
-	u.attacks_left = 0
-end
-
--- Fighters that end a later turn next to a friendly Dreadnought fly home.
-local function dock_fighters(side)
-	local turn = wesnoth.current.turn
-	for _, f in ipairs(wesnoth.units.find_on_map { type = "SC_UrQuan_Fighter", side = side }) do
-		if (f.variables.launched_turn or 0) < turn then
-			local carrier = wesnoth.units.find_on_map {
-				type = all_levels("SC_UrQuan_Dreadnought"), side = side,
-				T.filter_adjacent { x = f.x, y = f.y },
-			}[1]
-			if carrier then
-				carrier.hitpoints = math.min(carrier.max_hitpoints, carrier.hitpoints + FIGHTER_CREW)
-				wesnoth.audio.play("sc/urquan-fighter-dock.wav")
-				f:erase()
-				count("dock")
-			end
-		end
-	end
 end
 
 --------------------------------------------------------------- Mmrnmhrm X <-> Y
@@ -151,27 +100,6 @@ end
 
 ---------------------------------------------------------------------- AI help
 
--- Start of an AI side's turn (units already refreshed): launch fighters
--- when there is something to fight.
-function sc.ai_turn_start()
-	local side = wesnoth.current.side
-	if not is_ai(side) then return end
-	local fighters = #wesnoth.units.find_on_map { type = "SC_UrQuan_Fighter", side = side }
-	for _, d in ipairs(wesnoth.units.find_on_map { type = all_levels("SC_UrQuan_Dreadnought"), side = side }) do
-		if fighters >= AI_MAX_FIGHTERS then break end
-		if d.attacks_left > 0 and d.hitpoints >= 30 then
-			local enemies = wesnoth.units.find_on_map {
-				T.filter_side { T.enemy_of { side = side } },
-				T.filter_location { x = d.x, y = d.y, radius = 5 },
-			}
-			if #enemies > 0 then
-				wesnoth.wml_actions.sc_launch_fighters { x = d.x, y = d.y }
-				fighters = #wesnoth.units.find_on_map { type = "SC_UrQuan_Fighter", side = side }
-			end
-		end
-	end
-end
-
 -- End of an AI side's turn: a Shofixti next to two enemies, or next to one
 -- big one, triggers its Glory Device.
 local function ai_glory(side)
@@ -195,7 +123,6 @@ end
 
 function sc.turn_end()
 	local side = wesnoth.current.side
-	dock_fighters(side)
 	if is_ai(side) then ai_glory(side) end
 end
 
@@ -227,9 +154,9 @@ function sc.report_result()
 		if k:match("^recruit_") then recruits[#recruits + 1] = k:gsub("^recruit_", "") .. "=" .. v end
 	end
 	table.sort(recruits)
-	std_print(string.format("SC_RESULT turn=%d %s glory=%d launch=%d dock=%d transform=%d to_L2=%d to_L3=%d recruits: %s",
+	std_print(string.format("SC_RESULT turn=%d %s glory=%d transform=%d to_L2=%d to_L3=%d recruits: %s",
 		wesnoth.current.turn, table.concat(parts, " "),
-		stats.glory or 0, stats.launch or 0, stats.dock or 0, stats.transform or 0,
+		stats.glory or 0, stats.transform or 0,
 		stats.level2 or 0, stats.level3 or 0,
 		table.concat(recruits, " ")))
 end

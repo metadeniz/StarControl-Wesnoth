@@ -45,7 +45,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 
 | Alliance of Free Stars | | Ur-Quan Hierarchy | |
 |---|---|---|---|
-| Earthling Cruiser | homing nukes, point-defense | Ur-Quan Dreadnought | fusion blast, launches fighters |
+| Earthling Cruiser | homing nukes, point-defense | Ur-Quan Dreadnought | close-range fusion blast; fighters at any range (**swarm**: fewer as crew is lost) |
 | Chenjesu Broodhome | photon crystal, DOGI (slows) | Mycon Podship | homing plasmoid, regrows crew |
 | Mmrnmhrm X-Wing / Y-Wing | recruit either; lasers or torpedoes, transforms | Spathi Eluder | missiles, B.U.T.T. |
 | Yehat Terminator | pulse cannons, force shield | Umgah Drone | antimatter cone, skirmisher |
@@ -74,7 +74,7 @@ frequent attacks, new attacks and new abilities:
 | Syreen Penetrator | song ×3 | song also **slows**, dagger ×4 |
 | Arilou Skiff | new **ranged** laser | **nebula ambush** |
 | Shofixti Scout | darts **backstab**, 30-damage Glory | **skirmisher**, 36-damage Glory |
-| Ur-Quan Dreadnought | heavier fusion, 3 fighters per launch | **leadership** |
+| Ur-Quan Dreadnought | heavier fusion blast, fighters ×5 | fighters ×6, **leadership** |
 | Mycon Podship | bigger plasmoid, faster regrowth | new melee **poison** spore burst |
 | Spathi Eluder | **skirmisher**, stronger B.U.T.T. | B.U.T.T. ×3 |
 | Umgah Drone | stronger cone | cone ×5, **magical** (70% to hit) |
@@ -86,9 +86,6 @@ frequent attacks, new attacks and new abilities:
 
 - *Detonate Glory Device* (Shofixti Scout): the Scout explodes for 24
   damage to every ship next to it, friend or foe.
-- *Launch Fighters* (Ur-Quan Dreadnought): instead of attacking, launch up
-  to two fighters at 4 HP each. Fighters that end a later turn next to the
-  Dreadnought fly back aboard.
 - *Transform* (Mmrnmhrm): swap between the X-Wing and the fast Y-Wing; uses
   the ship's turn.
 

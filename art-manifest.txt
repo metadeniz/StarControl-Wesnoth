@@ -8,6 +8,7 @@ images/attacks/sc/crystal.png
 images/attacks/sc/dagger.png
 images/attacks/sc/dart.png
 images/attacks/sc/dogi.png
+images/attacks/sc/fighter.png
 images/attacks/sc/fusion.png
 images/attacks/sc/hellfire.png
 images/attacks/sc/limpet.png
@@ -63,6 +64,8 @@ images/projectiles/sc/dart-n.png
 images/projectiles/sc/dart-ne.png
 images/projectiles/sc/dogi-n.png
 images/projectiles/sc/dogi-ne.png
+images/projectiles/sc/fighter-n.png
+images/projectiles/sc/fighter-ne.png
 images/projectiles/sc/fusion-n.png
 images/projectiles/sc/fusion-ne.png
 images/projectiles/sc/hellfire-n.png
@@ -177,13 +180,6 @@ images/units/sc/urquan-dreadnought-s.png
 images/units/sc/urquan-dreadnought-se.png
 images/units/sc/urquan-dreadnought-sw.png
 images/units/sc/urquan-dreadnought.png
-images/units/sc/urquan-fighter-n.png
-images/units/sc/urquan-fighter-ne.png
-images/units/sc/urquan-fighter-nw.png
-images/units/sc/urquan-fighter-s.png
-images/units/sc/urquan-fighter-se.png
-images/units/sc/urquan-fighter-sw.png
-images/units/sc/urquan-fighter.png
 images/units/sc/vux-intruder-n.png
 images/units/sc/vux-intruder-ne.png
 images/units/sc/vux-intruder-nw.png
