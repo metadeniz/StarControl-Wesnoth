@@ -380,6 +380,40 @@ def build_nebula(rng, mask, tmasks, out):
         save(apply_mask(layer, soft * 0.9), out, f"images/terrain/sc/nebula-{combo}.png", False)
 
 
+def ion_layer(field, x0, y0):
+    """Electric filaments for the ion storm: ridged noise, cyan on blue."""
+    n1, n2 = field
+    a = n1[y0:y0 + HEX, x0:x0 + HEX]
+    b = n2[y0:y0 + HEX, x0:x0 + HEX]
+    ridge = (1 - np.abs(2 * a - 1)) ** 6           # thin bright lines
+    haze = 0.35 + 0.25 * b
+    rgb = np.zeros((HEX, HEX, 3), np.float32)
+    rgb[..., 0] = 20 + 160 * ridge
+    rgb[..., 1] = 45 + 170 * ridge + 30 * haze
+    rgb[..., 2] = 90 + 150 * np.maximum(ridge, haze * 0.8)
+    alpha = np.clip(0.3 + 0.2 * haze + 0.55 * ridge, 0, 1) * 255
+    return Image.fromarray(np.dstack([rgb, alpha]).clip(0, 255).astype(np.uint8), "RGBA")
+
+
+def build_ionstorm(rng, mask, tmasks, out):
+    size = 512
+    field = (fractal_noise(rng, size, 5, 10), fractal_noise(rng, size, 3, 8))
+    for v in range(11):
+        x0, y0 = rng.integers(0, size - HEX, 2)
+        img = starfield(rng, 0.5)
+        img.alpha_composite(ion_layer(field, x0, y0))
+        name = "ionstorm" if v == 0 else f"ionstorm{v + 1}"
+        save(apply_mask(img, mask), out, f"images/terrain/sc/{name}.png", False)
+        if v == 0:
+            save(apply_mask(img, mask), out, "images/terrain/sc/ionstorm-tile.png", False)
+    for combo, m in tmasks.items():
+        x0, y0 = rng.integers(0, size - HEX, 2)
+        soft = np.array(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(2.0)),
+                        np.float32) / 255.0
+        save(apply_mask(ion_layer(field, x0, y0), soft * 0.85), out,
+             f"images/terrain/sc/ionstorm-{combo}.png", False)
+
+
 def shaded_sphere(rng, diameter, palette, kind):
     """Lit planet sphere on a transparent square canvas."""
     s = diameter + 8
@@ -620,6 +654,8 @@ def main():
     build_asteroids(rng, args.out)
     build_star(rng, args.out)
     build_starbase(rng, mask, args.out)
+    # Added later with its own seed so the art above stays byte-identical.
+    build_ionstorm(np.random.default_rng(args.seed + 1), mask, tmasks, args.out)
 
     with open(os.path.join(args.out, "art-manifest.txt"), "w") as f:
         f.write("# Files derived from The Ur-Quan Masters content (CC BY-NC-SA 2.5).\n")

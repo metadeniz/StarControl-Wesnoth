@@ -32,9 +32,14 @@ then `git pull` inside `Star_Control_TC` to get new versions.
 **Without git:** download the repository as a ZIP and unpack it into the
 add-ons folder as `Star_Control_TC`.
 
-Then restart Wesnoth, choose **Multiplayer → Local game**, pick a map whose
-name starts with **2p —** (*Procyon Front* or *Vela Nebula*) and the era
-**Star Control: The Ur-Quan War**.
+Then restart Wesnoth, choose **Multiplayer → Local game**, pick one of the
+maps below and the era **Star Control: The Ur-Quan War**.
+
+| Map | Players |
+|---|---|
+| 2p — Procyon Front | 1 vs 1 |
+| 2p — Vela Nebula | 1 vs 1 |
+| 4p — Isar’s Cross (Deep Space) | 2 vs 2 (players 1 & 4 vs 2 & 3) |
 
 ## The ships
 
@@ -59,14 +64,19 @@ name starts with **2p —** (*Procyon Front* or *Vela Nebula*) and the era
   the ship's turn.
 
 Planets are villages (income and repair), starbases are keeps, docking
-rings are castles, stars block movement.
+rings are castles, stars block movement. Nebulae and asteroid fields slow
+ships but give cover; ion storms slow ships *and* make them easier to hit.
 
 ## Rebuilding (developers)
 
 - `tools/make_art.py --uqm <UQM-MegaMod-Content checkout> --out .`
   regenerates all images and sounds. `art-manifest.txt`
   lists every UQM-derived file (what a published version must replace).
-- `tools/make_maps.py .` regenerates the maps.
+- `tools/make_maps.py .` regenerates the 2p maps.
+- `tools/convert_map.py <wesnoth .map> <out .map>` turns any regular
+  Wesnoth map into a space map hex for hex (forest → nebula, hills →
+  asteroids, water → ion storm, villages → planets…). Isar's Cross was
+  made this way.
 - `tools/ai_battles.sh [games] [jobs]` plays headless AI-vs-AI games and
   prints win rates (last run: 40–40 over 80 games).
 - All player-visible Star Control names live in `utils/names.cfg`.
