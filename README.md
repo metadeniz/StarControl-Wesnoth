@@ -46,7 +46,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | Alliance of Free Stars | | Ur-Quan Hierarchy | |
 |---|---|---|---|
 | Earthling Cruiser | homing nukes, point-defense | Ur-Quan Dreadnought | close-range fusion blast; fighters at any range (**swarm**: fewer as crew is lost) |
-| Chenjesu Broodhome | photon crystal, DOGI (slows) | Mycon Podship | homing plasmoids at range, heavier plasmoids close up; regrows crew |
+| Chenjesu Broodhome | photon crystal (ranged; lighter shards close up), DOGI (slows) | Mycon Podship | homing plasmoids at range, heavier plasmoids close up; regrows crew |
 | Mmrnmhrm X-Wing / Y-Wing | recruit either; lasers or torpedoes, transforms | Spathi Eluder | missiles, B.U.T.T. |
 | Yehat Terminator | pulse cannons, force shield | Umgah Drone | antimatter cone, skirmisher |
 | Syreen Penetrator | ranged particle dagger; close-range Syreen song (drains) | VUX Intruder | laser, limpets (slow) |
