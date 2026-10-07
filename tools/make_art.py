@@ -321,6 +321,7 @@ MUSIC = {
     "vux": "base/comm/vux/vux.mod",
     "ilwrath": "base/comm/ilwrath/ilwrath.mod",
     "thraddash": "base/comm/thraddash/thraddash.mod",
+    "druuge": "base/comm/druuge/druuge.mod",
 }
 
 MUSIC_GAIN_DB = {"starbase": 4}   # brings it up to the other tracks' loudness

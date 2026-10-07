@@ -199,6 +199,7 @@ music/sc/chmmr.ogg
 music/sc/commander.ogg
 music/sc/ilwrath.ogg
 music/sc/thraddash.ogg
+music/sc/druuge.ogg
 music/sc/mycon.ogg
 music/sc/shofixti.ogg
 music/sc/intro.ogg

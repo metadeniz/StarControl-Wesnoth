@@ -46,7 +46,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 Each player hears their own faction's Star Control II race themes in
 rotation: the Alliance gets Commander (Earthlings), Chmmr, Yehat, Syreen,
 Arilou and Shofixti plus Star Control II's opening and victory themes; the Hierarchy
-gets Ur-Quan, Mycon, Spathi, Umgah, VUX, Ilwrath and Thraddash. Both also
+gets Ur-Quan, Mycon, Spathi, Umgah, VUX, Ilwrath, Thraddash and Druuge. Both also
 get the Starbase and Outfit themes. The victory fanfare
 plays when you win. When a ship destroys
 another, its race's victory ditty plays (the music dips while it does).
