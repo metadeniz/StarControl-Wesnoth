@@ -139,6 +139,9 @@ end
 -- game state, so playing it only on the local client is safe in multiplayer.
 local PLAYLISTS = {
 	SC_Alliance = { "commander", "chmmr", "yehat", "syreen", "arilou", "shofixti", "intro", "victory", "starbase", "outfit" },
+	SC_NewAlliance = { "chmmr", "zoqfotpik", "pkunk", "supox", "utwig", "commander", "shofixti",
+		"intro", "victory", "starbase", "outfit" },
+	SC_DeathMarch = { "kohrah", "druuge", "thraddash", "slylandro", "orz", "yehat", "starbase", "outfit" },
 	SC_Hierarchy = { "urquan", "mycon", "spathi", "umgah", "vux", "ilwrath", "thraddash", "druuge", "starbase", "outfit" },
 }
 
@@ -168,10 +171,13 @@ end
 -- is game state (music and sound are local), so it is safe in multiplayer.
 local DUCK_VOLUME = 25
 local DITTY_MS = {   -- length of sounds/sc/ditty-<race>.ogg
-	androsynth = 4740, arilou = 3380, chenjesu = 2380, earthling = 3200,
-	ilwrath = 5000, mmrnmhrm = 3800, mycon = 4100, shofixti = 4180,
-	spathi = 3540, syreen = 4100, umgah = 3620, urquan = 5140,
-	vux = 4220, yehat = 2660,
+	androsynth = 4740, arilou = 3380, chenjesu = 2380, chmmr = 4560,
+	druuge = 3980, earthling = 3200, ilwrath = 5000, kohrah = 5660,
+	mmrnmhrm = 3800, mycon = 4100, orz = 4460, pkunk = 3620,
+	precursor = 3740, shofixti = 4180, slylandro = 4000, spathi = 3540,
+	supox = 2880, syreen = 4100, thraddash = 2500, umgah = 3620,
+	urquan = 5140, utwig = 6000, vux = 4220, yehat = 2660,
+	zoqfotpik = 5180,
 }
 local duck_until
 
@@ -192,6 +198,30 @@ function sc.unduck()
 		duck_until = nil
 		wesnoth.audio.music_list.volume = 100
 	end
+end
+
+------------------------------------------------------------- Pkunk rebirth
+
+-- A destroyed Pkunk Fury is reborn half the time: the same ship, back at
+-- full HP where it died, unable to act until its next turn. Replacing the
+-- dying unit inside its "die" event tells Wesnoth not to remove it.
+function sc.pkunk_rebirth()
+	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
+	if not u or not u:matches { ability = "sc_reincarnation" } then return end
+	if mathx.random(2) ~= 1 then return end
+	count("rebirth")
+	local cfg = u.__cfg
+	cfg.hitpoints = u.max_hitpoints
+	cfg.moves = 0
+	cfg.attacks_left = 0
+	local x, y = u.x, u.y
+	u:erase()
+	local reborn = wesnoth.units.create(cfg)
+	reborn.status.poisoned = false   -- reborn clean
+	reborn.status.slowed = false
+	reborn:to_map(x, y)
+	wesnoth.audio.play("sc/pkunk-rebirth.wav")
+	wesnoth.interface.float_label(x, y, "<span color='#ffe680'>" .. tostring(_ "Reborn!") .. "</span>")
 end
 
 ------------------------------------------------------------ Precursor artifacts
@@ -299,9 +329,9 @@ function sc.report_result()
 		if k:match("^recruit_") then recruits[#recruits + 1] = k:gsub("^recruit_", "") .. "=" .. v end
 	end
 	table.sort(recruits)
-	std_print(string.format("SC_RESULT turn=%d %s glory=%d transform=%d artifacts=%d to_L2=%d to_L3=%d recruits: %s",
+	std_print(string.format("SC_RESULT turn=%d %s glory=%d transform=%d artifacts=%d rebirth=%d to_L2=%d to_L3=%d recruits: %s",
 		wesnoth.current.turn, table.concat(parts, " "),
-		stats.glory or 0, stats.transform or 0, stats.artifacts or 0,
+		stats.glory or 0, stats.transform or 0, stats.artifacts or 0, stats.rebirth or 0,
 		stats.level2 or 0, stats.level3 or 0,
 		table.concat(recruits, " ")))
 end

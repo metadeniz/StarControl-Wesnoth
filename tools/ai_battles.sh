@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # Play many headless AI-vs-AI games and summarise who wins.
 #
-#   tools/ai_battles.sh [games-per-map-and-side] [parallel jobs]
+#   tools/ai_battles.sh [games-per-map-and-side] [parallel jobs] [faction] [faction] [first seed]
+#
+# Factions default to SC_Alliance and SC_Hierarchy (others: SC_NewAlliance,
+# SC_DeathMarch).
 #
 # Each map is played with the Alliance as side 1 and again as side 2, so
 # first-move advantage cancels out. Needs Wesnoth 1.16 (wesnoth-1.16 or
@@ -11,6 +14,9 @@ set -euo pipefail
 
 GAMES=${1:-10}
 JOBS=${2:-$(nproc)}
+FA=${3:-SC_Alliance}
+FB=${4:-SC_Hierarchy}
+SEED0=${5:-1}
 HERE=$(cd "$(dirname "$0")/.." && pwd)
 WESNOTH=$(command -v wesnoth-1.16 || command -v /usr/games/wesnoth-1.16 || command -v wesnoth)
 WORK=$(mktemp -d)
@@ -24,9 +30,9 @@ ln -s "$HERE" "$WORK/user/data/add-ons/Star_Control_TC"
 
 jobs_file="$WORK/jobs"
 for map in SC_2p_Procyon_Front SC_2p_Vela_Nebula; do
-	for order in "SC_Alliance SC_Hierarchy" "SC_Hierarchy SC_Alliance"; do
+	for order in "$FA $FB" "$FB $FA"; do
 		set -- $order
-		for seed in $(seq 1 "$GAMES"); do
+		for seed in $(seq "$SEED0" $((SEED0 + GAMES - 1))); do
 			echo "$map $1 $2 $seed"
 		done
 	done
