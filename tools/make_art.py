@@ -55,6 +55,19 @@ SHIPS = {
     "androsynth-guardian": ("androsynth", "guardian"),
     "androsynth-blazer": ("androsynth", "blazer"),
     "ilwrath-avenger": ("ilwrath", "avenger"),
+    # Star Control II: the Kohr-Ah Death March
+    "kohrah-marauder": ("kohrah", "marauder"),
+    "druuge-mauler": ("druuge", "mauler"),
+    "thraddash-torch": ("thraddash", "torch"),
+    "slylandro-probe": ("slylandro", "probe"),
+    "orz-nemesis": ("orz", "nemesis"),
+    # Star Control II: the New Alliance of Free Stars
+    "chmmr-avatar": ("chmmr", "avatar"),
+    "zoqfotpik-stinger": ("zoqfotpik", "stinger"),
+    "pkunk-fury": ("pkunk", "fury"),
+    "supox-blade": ("supox", "blade"),
+    "utwig-jugger": ("utwig", "jugger"),
+    "precursor-flagship": ("flagship", "flagship"),
 }
 
 # projectile id -> (UQM ship dir, sprite stem, frame, scale vs HD sprite)
@@ -75,6 +88,19 @@ PROJECTILES = {
     "bubble": ("androsynth", "bubble", 0, 0.6),
     "hellfire": ("ilwrath", "fire", 0, 0.5),
     "cone": ("umgah", "cone", 0, 0.32),
+    "buzzsaw": ("kohrah", "buzzsaw", 0, 0.5),
+    "fried": ("kohrah", "gas", 0, 1.6),
+    "mass-driver": ("druuge", "cannon", 0, 0.6),
+    "horn": ("thraddash", "horn", 0, 0.6),
+    "napalm": ("thraddash", "napalm", 0, 1.2),
+    "howitzer": ("orz", "howitzer", 0, 0.9),
+    "zapsat": ("chmmr", "satellite", 0, 0.4),
+    "spit": ("zoqfotpik", "spit", 0, 1.4),
+    "tongue": ("zoqfotpik", "proboscis", 0, 0.8),
+    "bug": ("pkunk", "bug", 0, 0.8),
+    "glob": ("supox", "glob", 0, 0.6),
+    "lance": ("utwig", "lance", 0, 0.9),
+    "blaster": ("flagship", "blaster", 0, 0.8),
 }
 
 # Laser bolts are lines in UQM, so these are drawn here: id -> RGB core colour.
@@ -84,6 +110,9 @@ LASERS = {
     "laser-green": (90, 255, 110),
     "laser-gold": (255, 220, 90),
     "laser-violet": (220, 120, 255),
+    "laser-cyan": (110, 230, 255),       # Chmmr megawatt laser
+    "laser-blue": (90, 130, 255),        # Chmmr tractor beam
+    "lightning": (200, 220, 255),        # Slylandro probe
 }
 
 # sound id -> path inside the UQM content dir
@@ -119,6 +148,29 @@ SOUNDS = {
     "ilwrath-hellfire": "base/ships/ilwrath/primary.wav",
     "ilwrath-cloak": "base/ships/ilwrath/cloak.wav",
     "ilwrath-uncloak": "base/ships/ilwrath/uncloak.wav",
+    "kohrah-buzzsaw": "base/ships/kohrah/primary.wav",
+    "kohrah-fried": "base/ships/kohrah/secondary.wav",
+    "druuge-cannon": "base/ships/druuge/primary.wav",
+    "druuge-furnace": "base/ships/druuge/secondary.wav",
+    "thraddash-horn": "base/ships/thraddash/primary.wav",
+    "thraddash-afterburner": "base/ships/thraddash/secondary.wav",
+    "slylandro-lightning": "base/ships/slylandro/primary.wav",
+    "slylandro-harvest": "base/ships/slylandro/secondary.wav",
+    "orz-howitzer": "base/ships/orz/primary.wav",
+    "orz-marines": "base/ships/orz/zap.wav",
+    "chmmr-laser": "base/ships/chmmr/primary.wav",
+    "chmmr-tractor": "base/ships/chmmr/secondary.wav",
+    "zoqfotpik-spit": "base/ships/zoqfotpik/primary.wav",
+    "zoqfotpik-tongue": "base/ships/zoqfotpik/secondary.wav",
+    "pkunk-bug": "base/ships/pkunk/primary.wav",
+    "pkunk-rebirth": "base/ships/pkunk/rebirth.wav",
+    "supox-glob": "base/ships/supox/primary.wav",
+    "utwig-lance": "base/ships/utwig/primary.wav",
+    "utwig-shield": "base/ships/utwig/secondary.wav",
+    "flagship-blaster": "base/ships/flagship/primary.wav",
+    "flagship-pd": "base/ships/flagship/secondary.wav",
+    "samatra-plasma": "base/ships/samatra/primary.wav",
+    "samatra-sentinels": "base/ships/samatra/secondary.wav",
     "boom-small": "base/battle/boom1.wav",
     "boom-medium": "base/battle/boom23.wav",
     "boom-large": "base/battle/boom45.wav",
@@ -259,6 +311,53 @@ def build_effects(uqm, out):
     return len(frames)
 
 
+def build_samatra(uqm, out):
+    """The Sa-Matra: cut out of Star Control II's final-battle picture,
+    without the asteroid belt and shield around it. A battle platform has
+    no front, so every facing uses the same picture."""
+    im = Image.open(os.path.join(uqm, "addons/mm-hd/planets/samatra-final-000.png")).convert("RGBA")
+    a = np.array(im).astype(float)
+    rgb = a[..., :3]
+    mx, mn = rgb.max(axis=2), rgb.min(axis=2)
+    sat = (mx - mn) / np.maximum(mx, 1)
+    h, w = mx.shape
+    yy, xx = np.mgrid[0:h, 0:w]
+    inside = ((xx - w / 2) / 250) ** 2 + ((yy - 138) / 105) ** 2 < 1
+    keep = (sat > 0.35) & (mx > 30) & inside & (yy < 235)   # grey rocks and the shield bar go
+    a[..., 3] = np.where(keep, a[..., 3], 0)
+    body = trim(Image.fromarray(a.astype("uint8")))
+    k = 96 / body.width                     # wider than a hex: it is huge
+    body = body.resize((96, round(body.height * k)), Image.LANCZOS)
+    canvas = Image.new("RGBA", (96, 72), (0, 0, 0, 0))
+    canvas.alpha_composite(body, (0, (72 - body.height) // 2))
+    for facing in FACINGS:
+        save(canvas, out, f"images/units/sc/samatra-{facing}.png", True)
+    save(canvas, out, "images/units/sc/samatra.png", True)
+    # its sentinels: glowing red orbs (UQM draws them from masks)
+    orb = Image.new("RGBA", (22, 22), (0, 0, 0, 0))
+    d = ImageDraw.Draw(orb)
+    for r, col in ((10, (255, 40, 60, 70)), (7, (255, 70, 90, 170)), (4, (255, 200, 210, 255))):
+        d.ellipse([11 - r, 11 - r, 11 + r, 11 + r], fill=col)
+    orb = orb.filter(ImageFilter.GaussianBlur(1))
+    for facing in ("n", "ne"):
+        save(orb, out, f"images/projectiles/sc/sentinel-{facing}.png", False)
+
+
+def build_loyalist_yehat(out):
+    """The Queen's loyalist Yehat: the Terminator in blood red and black."""
+    for facing in list(FACINGS) + [None]:
+        suffix = f"-{facing}" if facing else ""
+        im = Image.open(os.path.join(out, f"images/units/sc/yehat-terminator{suffix}.png")).convert("RGBA")
+        a = np.array(im).astype(float)
+        lum = a[..., :3] @ np.array([0.30, 0.59, 0.11])
+        lum = np.clip((lum / 255.0) ** 1.4, 0, 1)          # deeper shadows
+        a[..., 0] = 40 + 215 * lum
+        a[..., 1] = 10 + 40 * lum ** 2
+        a[..., 2] = 25 + 90 * lum ** 2.5
+        save(Image.fromarray(a.clip(0, 255).astype("uint8")), out,
+             f"images/units/sc/yehat-loyalist{suffix}.png", True)
+
+
 # race id -> the ship's victory ditty (a tracker module) in the UQM content
 DITTIES = {
     "earthling": "human/cruiser.mod", "chenjesu": "chenjesu/broodhome.mod",
@@ -268,6 +367,12 @@ DITTIES = {
     "mycon": "mycon/podship.mod", "spathi": "spathi/eluder.mod",
     "umgah": "umgah/drone.mod", "vux": "vux/intruder.mod",
     "androsynth": "androsynth/guardian.mod", "ilwrath": "ilwrath/avenger.mod",
+    "kohrah": "kohrah/marauder.mod", "druuge": "druuge/mauler.mod",
+    "thraddash": "thraddash/torch.mod", "slylandro": "slylandro/probe.mod",
+    "orz": "orz/nemesis.mod", "chmmr": "chmmr/avatar.mod",
+    "zoqfotpik": "zoqfotpik/stinger.mod", "pkunk": "pkunk/fury.mod",
+    "supox": "supox/blade.mod", "utwig": "utwig/jugger.mod",
+    "precursor": "flagship/flagship.mod",
 }
 
 
@@ -322,6 +427,14 @@ MUSIC = {
     "ilwrath": "base/comm/ilwrath/ilwrath.mod",
     "thraddash": "base/comm/thraddash/thraddash.mod",
     "druuge": "base/comm/druuge/druuge.mod",
+    "kohrah": "base/comm/kohrah/kohrah.mod",
+    "slylandro": "base/comm/slylandro/slylandro.mod",
+    "orz": "base/comm/orz/orz.mod",
+    # New Alliance playlist
+    "zoqfotpik": "base/comm/zoqfotpik/zoqfotpik.mod",
+    "pkunk": "base/comm/pkunk/pkunk.mod",
+    "supox": "base/comm/supox/supox.mod",
+    "utwig": "base/comm/utwig/utwig.mod",
 }
 
 MUSIC_GAIN_DB = {"starbase": 4}   # brings it up to the other tracks' loudness
@@ -867,6 +980,7 @@ def build_attack_icons(out):
     sources = {pid: (f"images/projectiles/sc/{pid}-ne.png", True) for pid in PROJECTILES}
     sources.update({lid: (f"images/projectiles/sc/{lid}-ne.png", False) for lid in LASERS})
     sources["blazer"] = ("images/units/sc/androsynth-blazer-ne.png", True)
+    sources["sentinel"] = ("images/projectiles/sc/sentinel-ne.png", False)
     for iid, (rel, uqm) in sources.items():
         item = trim(Image.open(os.path.join(out, rel)).convert("RGBA"))
         k = 44 / max(item.size)
@@ -896,6 +1010,8 @@ def main():
     tmasks = transition_masks(args.wesnoth_data)
 
     build_ships(args.uqm, args.out)
+    build_samatra(args.uqm, args.out)
+    build_loyalist_yehat(args.out)
     build_projectiles(args.uqm, args.out)
     build_lasers(args.out)
     build_attack_icons(args.out)
