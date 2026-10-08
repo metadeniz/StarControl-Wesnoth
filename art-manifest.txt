@@ -346,6 +346,7 @@ music/sc/remix-intro.ogg
 music/sc/remix-mystic-shadows.ogg
 music/sc/remix-outfit.ogg
 music/sc/remix-pkunk.ogg
+music/sc/remix-quasispace.ogg
 music/sc/remix-starbase.ogg
 music/sc/remix-supox.ogg
 music/sc/remix-syreen.ogg

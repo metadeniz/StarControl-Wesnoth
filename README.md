@@ -63,7 +63,7 @@ Each player hears their own faction's playlist, shuffled:
   Yer Rootz"), Utwig ("Mask of Ultimate Embarrassment and Shame", "The
   Ultron"), Commander ("Corridor Nine"), Arilou ("Welcome to
   Falayalaralfali"), Syreen ("Close Encounters of the Seventh Kind"),
-  quasispace ("Mystic Shadows"), the opening ("Into the Void"), the ending ("Awaking
+  quasispace ("Mystic Shadows", "Through the Angles of Space"), the opening ("Into the Void"), the ending ("Awaking
   Dreams"), Starbase ("Under a Red Sky") and Outfit ("Outfit the
   Vindicator").
 - **Death March:** only the Precursors' remixes: Kohr-Ah ("Cleansing

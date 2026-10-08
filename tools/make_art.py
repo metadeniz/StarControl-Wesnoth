@@ -462,6 +462,7 @@ REMIXES = {
     "remix-arilou": "remix/2/02_-_Arilou_-_Welcome_to_Falayalaralfali.ogg",
     "remix-syreen": "remix/4/05_-_Syreen_-_Close_Encounters_of_the_Seventh_Kind.ogg",
     "remix-mystic-shadows": "extras2/extraspack/Bonus/arispace_bonus.ogg",   # quasispace
+    "remix-quasispace": "remix/2/01_-_Quasispace_-_Through_the_Angles_of_Space.ogg",
 
     "remix-intro": "remix/4/02_-_Intro_-_Into_the_Void.ogg",
     "remix-ending": "remix/4/16_-_Outro_-_Awaking_Dreams.ogg",
