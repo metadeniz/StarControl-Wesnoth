@@ -68,7 +68,8 @@ Each player hears their own faction's playlist, shuffled:
   quasispace ("Mystic Shadows", "Through the Angles of Space"), the opening ("Into the Void"), the ending ("Awaking
   Dreams"), Starbase ("Under a Red Sky") and Outfit ("Outfit the
   Vindicator").
-- **Death March:** only the Precursors' remixes: Kohr-Ah ("Cleansing
+- **Death March:** modern versions only: the Melnorme theme re-imagined by
+  DJ Yan Yan Lipavsky, and the Precursors' remixes: Kohr-Ah ("Cleansing
   Required", "The Eternal Doctrine", "Kohr-Ah" battle remix), Druuge
   ("Property of the Crimson Corporation"), Thraddash ("Culture 19"),
   Slylandro Probes ("We Come In Peace"), Orz ("Squeezing the Juice"), Yehat

@@ -1250,8 +1250,9 @@ def main():
     manifest.extend(["music/sc/chenjesu-titus.ogg", "music/sc/mmrnmhrm-titus.ogg"])
     # ...and Star Control 1's Alliance and Hierarchy victory themes (MP3s).
     manifest.extend(["music/sc/alliance-victory.ogg", "music/sc/hierarchy-victory.ogg"])
-    # ...and an Androsynth theme by TheMisterCat (DUOLED) (MP3).
-    manifest.append("music/sc/androsynth-duoled.ogg")
+    # ...an Androsynth theme by TheMisterCat (DUOLED), and the Melnorme theme
+    # re-imagined by DJ Yan Yan Lipavsky (MP3s).
+    manifest.extend(["music/sc/androsynth-duoled.ogg", "music/sc/melnorme-lipavsky.ogg"])
     with open(os.path.join(args.out, "art-manifest.txt"), "w") as f:
         f.write("# Files derived from The Ur-Quan Masters content (CC BY-NC-SA 2.5).\n")
         f.write("# A published build must replace every one of these.\n")

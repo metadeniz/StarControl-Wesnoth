@@ -352,6 +352,7 @@ music/sc/intro.ogg
 music/sc/kohrah-battle.ogg
 music/sc/kohrah-cleansing-required.ogg
 music/sc/kohrah-eternal-doctrine.ogg
+music/sc/melnorme-lipavsky.ogg
 music/sc/mmrnmhrm-titus.ogg
 music/sc/mycon.ogg
 music/sc/orz-squeezing-the-juice.ogg
