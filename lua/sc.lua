@@ -171,7 +171,7 @@ local PLAYLISTS = {
 	SC_DeathMarch = { "kohrah-cleansing-required", "kohrah-eternal-doctrine", "kohrah-battle",
 		"druuge-crimson-corporation", "thraddash-culture-19", "slylandro-we-come-in-peace",
 		"orz-squeezing-the-juice", "yehat-years-late", "samatra-battle", "remix-starbase" },
-	SC_Hierarchy = { "urquan", "urquan-now-and-forever", "mycon", "spathi", "umgah", "vux", "ilwrath", "thraddash", "starbase", "outfit" },
+	SC_Hierarchy = { "urquan", "urquan-now-and-forever", "mycon", "spathi", "umgah", "vux", "ilwrath", "thraddash", "starbase" },
 }
 
 function sc.set_music()

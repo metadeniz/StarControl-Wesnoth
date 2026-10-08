@@ -58,7 +58,7 @@ Each player hears their own faction's playlist, shuffled:
   and victory themes, Starbase and Outfit.
 - **Hierarchy:** the Ur-Quan, Mycon, Spathi, Umgah, VUX, Ilwrath and
   Thraddash themes, the Precursors' "Now and Forever" (Ur-Quan) remix,
-  Starbase and Outfit.
+  and Starbase.
 - **New Alliance:** only the Precursors' remixes: Chmmr ("Photosynthesis"),
   Zoq-Fot-Pik ("Frungy Party"), Pkunk ("Pkunks Not Dead"), Supox ("Shake
   Yer Rootz"), Utwig ("Mask of Ultimate Embarrassment and Shame", "The
