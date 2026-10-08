@@ -182,7 +182,7 @@ local VICTORY_MUSIC = {
 	SC_Alliance = "sc/alliance-victory.ogg",     -- Star Control 1's Alliance victory theme
 	SC_Hierarchy = "sc/hierarchy-victory.ogg",   -- Star Control 1's Hierarchy victory theme
 	SC_NewAlliance = "sc/victory-fanfare.ogg",   -- Star Control II's victory fanfare
-	SC_DeathMarch = "sc/kohrah-victory.ogg",     -- for now: the Kohr-Ah victory ditty
+	SC_DeathMarch = "sc/kohrah-victory.ogg",     -- for now: the Precursors' Kohr-Ah ditty remix
 }
 
 function sc.set_music()

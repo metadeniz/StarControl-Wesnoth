@@ -78,7 +78,8 @@ Each player hears their own faction's playlist, shuffled:
 
 When you win, the old Alliance and the Hierarchy hear Star Control 1's
 victory theme for their side, the New Alliance hears Star Control II's
-victory fanfare, and the Death March (for now) the Kohr-Ah victory ditty. When a ship destroys
+victory fanfare, and the Death March (for now) the Precursors' remix of the
+Kohr-Ah victory ditty. When a ship destroys
 another, its race's victory ditty plays: the music fades out for it and
 fades back in slowly (about 3 seconds) afterwards.
 

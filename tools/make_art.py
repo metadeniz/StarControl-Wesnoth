@@ -386,17 +386,6 @@ DITTY_LOUDNESS = -11.0   # target mean volume, dB; the explosions are about -9
 DITTY_DELAY_MS = 400     # starts after the ship's explosion, not on top of it
 
 
-def build_kohrah_victory(out):
-    """The Death March's victory music, for now: the Kohr-Ah victory ditty
-    without its lead-in silence (victory music must live under music/)."""
-    import subprocess
-    dest = "music/sc/kohrah-victory.ogg"
-    subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-ss", f"{DITTY_DELAY_MS / 1000}",
-                    "-i", os.path.join(out, "sounds/sc/ditty-kohrah.ogg"), "-q:a", "4",
-                    os.path.join(out, dest)], check=True)
-    manifest.append(dest)
-
-
 def build_ditties(uqm, out):
     """Victory ditties: rendered from the .mod files with ffmpeg (libopenmpt),
     capped at 8 seconds in case a module loops, all brought to the same
@@ -463,6 +452,7 @@ REMIXES = {
     "kohrah-cleansing-required": "remix/3/07_-_Kohr-Ah_-_Cleansing_Required.ogg",
     "slylandro-we-come-in-peace": "remix/2/03_-_Slylandro_Probes_-_We_Come_In_Peace.ogg",
     "samatra-battle": "remix/1/05_-_Melee_-_The_Battle_of_the_Sa-Matra.ogg",
+    "kohrah-victory": "remix/1/ditties/kohrah.ogg",     # Death March victory music (for now)
     "orz-squeezing-the-juice": "remix/4/10_-_Orz_-_Squeezing_the_Juice.ogg",
     "druuge-crimson-corporation": "remix/2/07_-_Druuge_-_Property_of_the_Crimson_Corporation.ogg",
     "thraddash-culture-19": "remix/3/06_-_Thraddash_-_Culture_19.ogg",
@@ -1233,7 +1223,6 @@ def main():
     nfire = build_effects(args.uqm, args.out)
     build_sounds(args.uqm, args.out)
     build_ditties(args.uqm, args.out)
-    build_kohrah_victory(args.out)
     build_music(args.uqm, args.out)
     if args.remix:
         build_remixes(args.remix, args.out)
