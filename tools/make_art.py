@@ -386,6 +386,17 @@ DITTY_LOUDNESS = -11.0   # target mean volume, dB; the explosions are about -9
 DITTY_DELAY_MS = 400     # starts after the ship's explosion, not on top of it
 
 
+def build_kohrah_victory(out):
+    """The Death March's victory music, for now: the Kohr-Ah victory ditty
+    without its lead-in silence (victory music must live under music/)."""
+    import subprocess
+    dest = "music/sc/kohrah-victory.ogg"
+    subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-ss", f"{DITTY_DELAY_MS / 1000}",
+                    "-i", os.path.join(out, "sounds/sc/ditty-kohrah.ogg"), "-q:a", "4",
+                    os.path.join(out, dest)], check=True)
+    manifest.append(dest)
+
+
 def build_ditties(uqm, out):
     """Victory ditties: rendered from the .mod files with ffmpeg (libopenmpt),
     capped at 8 seconds in case a module loops, all brought to the same
@@ -1222,6 +1233,7 @@ def main():
     nfire = build_effects(args.uqm, args.out)
     build_sounds(args.uqm, args.out)
     build_ditties(args.uqm, args.out)
+    build_kohrah_victory(args.out)
     build_music(args.uqm, args.out)
     if args.remix:
         build_remixes(args.remix, args.out)
