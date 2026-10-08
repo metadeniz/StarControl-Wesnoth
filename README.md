@@ -43,6 +43,10 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | 2p — Procyon Front | 1 vs 1 |
 | 2p — Vela Nebula | 1 vs 1 |
 | 4p — Isar’s Cross (Deep Space) | 2 vs 2 (players 1 & 4 vs 2 & 3) |
+| 2p — The Freelands (Deep Space) | 1 vs 1 |
+| 2p — Weldyn Channel (Deep Space) | 1 vs 1 |
+| 2p — Fallenstar Lake (Deep Space) | 1 vs 1 |
+| 2p — Caves of the Basilisk (Deep Space) | 1 vs 1; the statues are petrified derelict ships |
 
 ## Music
 
@@ -191,8 +195,9 @@ heat-proof Chenjesu (2 / 50%) are at home in red nebulae.
   Wesnoth map into a space map hex for hex: forest → nebula, mushroom
   grove → red nebula, sand → dust cloud, hills → asteroids, mountains →
   dense asteroids, water and swamp → badlands, ford → thin badlands,
-  villages → planets, impassable → star. Isar's Cross was
-  made this way.
+  villages → planets, impassable → star (touching impassable hexes →
+  asteroid wall). Isar's Cross, The Freelands, Weldyn Channel, Fallenstar
+  Lake and Caves of the Basilisk were made this way.
 - `tools/ai_battles.sh [games] [jobs] [faction] [faction] [first seed]`
   plays headless AI-vs-AI games and prints win rates. Factions:
   `SC_Alliance`, `SC_Hierarchy`, `SC_NewAlliance`, `SC_DeathMarch`.

@@ -3,11 +3,11 @@
 
 Terrain is translated by role, so a converted map plays like the original:
 
-    open ground (grass, road, flowers...)  -> deep space          Ys
+    open ground (grass, road, cave floor)  -> deep space          Ys
     sand, desert                           -> dust cloud          Yd
     forest, trees                          -> nebula              Yn
     mushroom grove                         -> red nebula          Yr
-    hills                                  -> asteroid field      Ys^Ya
+    hills, rockbound cave                  -> asteroid field      Ys^Ya
     dunes (sandy hills)                    -> asteroids in dust   Yd^Ya
     forested hills                         -> asteroids in nebula Yn^Ya
     mountains                              -> dense asteroids     Ys^Yad
@@ -17,6 +17,8 @@ Terrain is translated by role, so a converted map plays like the original:
     village                                -> planet              ^Vyp
     castle / keep                          -> docking ring / base Yc / Yk
     impassable (walls, ^Xm...), chasm      -> star                Ys^Yx
+        ...but where impassable hexes touch,  -> asteroid wall       Ys^Yw
+        so a wall doesn't become a row of suns
     off-map                                -> unchanged
 
 Starting positions are kept.
@@ -43,6 +45,8 @@ def convert(code):
         return "Yk"
     if b == "C":
         return "Yc"
+    if base.startswith("Uh"):                  # rockbound cave (rough, like hills)
+        return "Ys^Vyp" if overlay.startswith("V") else "Ys^Ya"
     if base.startswith("Wwf"):                 # ford
         return "Yif^Vyp" if overlay.startswith("V") else "Yif"
 
@@ -66,23 +70,35 @@ def convert(code):
     return new_base
 
 
+def neighbours(x, y):
+    """Wesnoth hex neighbours (columns with an odd x sit half a hex higher)."""
+    if x % 2:
+        return [(x, y - 1), (x, y + 1), (x - 1, y - 1), (x + 1, y - 1), (x - 1, y), (x + 1, y)]
+    return [(x, y - 1), (x, y + 1), (x - 1, y), (x + 1, y), (x - 1, y + 1), (x + 1, y + 1)]
+
+
 def main():
     src, dst = sys.argv[1], sys.argv[2]
-    rows = []
-    counts = collections.Counter()
+    grid = []
     for line in open(src):
         line = line.rstrip("\n")
         if not line.strip():
             continue
-        cells = []
+        row = []
         for cell in line.split(","):
-            cell = cell.strip()
-            m = re.match(r"^(\d+ )?(.*)$", cell)
-            start, code = m.group(1) or "", m.group(2)
-            new = convert(code)
-            counts[new] += 1
-            cells.append(start + new)
-        rows.append(", ".join(cells))
+            m = re.match(r"^(\d+ )?(.*)$", cell.strip())
+            row.append([m.group(1) or "", convert(m.group(2))])
+        grid.append(row)
+    # Impassable hexes that touch another one become an asteroid wall.
+    star = {(x, y) for y, row in enumerate(grid) for x, (_, c) in enumerate(row) if c == "Ys^Yx"}
+    for x, y in star:
+        if any(n in star for n in neighbours(x, y)):
+            grid[y][x][1] = "Ys^Yw"
+    rows = []
+    counts = collections.Counter()
+    for row in grid:
+        rows.append(", ".join(start + code for start, code in row))
+        counts.update(code for _, code in row)
     with open(dst, "w") as f:
         f.write("\n".join(rows) + "\n")
     for code, n in counts.most_common():

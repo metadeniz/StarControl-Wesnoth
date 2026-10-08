@@ -136,6 +136,7 @@ local function ai_glory(side)
 			for _, e in ipairs(wesnoth.units.find_on_map {
 				T.filter_side { T.enemy_of { side = side } },
 				T.filter_adjacent { x = s.x, y = s.y },
+				T["not"] { status = "petrified" },
 			}) do
 				local damage = glory.damage * e:resistance_against("fire") / 100
 				local worth = (e.hitpoints <= damage) and e.cost * 2 or e.cost
@@ -357,11 +358,13 @@ end
 function sc.report_result()
 	local parts = {}
 	for _, s in ipairs(wesnoth.sides) do
+		if s.hidden then goto continue end   -- e.g. the Caves' derelicts
 		local units = wesnoth.units.find_on_map { side = s.side }
 		local leader = #wesnoth.units.find_on_map { side = s.side, canrecruit = true } > 0
 		local faction = s.__cfg.faction or "?"
 		parts[#parts + 1] = string.format("side%d=%s units=%d leader=%s gold=%d",
 			s.side, faction, #units, tostring(leader), s.gold)
+		::continue::
 	end
 	local stats = wml.variables["sc_stats"] or {}
 	local recruits = {}

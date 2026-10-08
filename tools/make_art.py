@@ -830,6 +830,31 @@ def build_dense_asteroids(rng, out):
             save(apply_mask(tile, hex_mask_cache), out, "images/terrain/sc/asteroids-dense-tile.png", False)
 
 
+def build_asteroid_wall(rng, out):
+    """Impassable: a wall of huge, tightly packed rocks reaching the hex
+    edges, so neighbouring wall hexes join into one barrier."""
+    for v in range(6):
+        canvas = Image.new("RGBA", (HEX, HEX), (0, 0, 0, 0))
+        placed = []
+        for _ in range(int(rng.integers(16, 21))):
+            size = int(rng.choice([12, 14, 16, 18, 20, 22], p=[0.1, 0.15, 0.2, 0.2, 0.2, 0.15]))
+            x, y = rng.uniform(4, 68), rng.uniform(4, 68)
+            placed.append((x, y, size))
+        for x, y, size in sorted(placed, key=lambda p: p[1]):   # back to front
+            r = rock(rng, size, shade_k=0.7)
+            a = np.array(r).astype(np.float32)
+            a[..., :3] *= 0.8                                    # a shade darker than asteroid fields
+            r = Image.fromarray(a.clip(0, 255).astype(np.uint8), "RGBA")
+            canvas.alpha_composite(r, (int(x - r.width / 2), int(y - r.height / 2)))
+        canvas = apply_mask(canvas, hex_mask_cache)
+        name = "asteroid-wall" if v == 0 else f"asteroid-wall{v + 1}"
+        save(canvas, out, f"images/terrain/sc/{name}.png", False)
+        if v == 0:
+            tile = starfield(rng)
+            tile.alpha_composite(canvas)
+            save(apply_mask(tile, hex_mask_cache), out, "images/terrain/sc/asteroid-wall-tile.png", False)
+
+
 def shaded_sphere(rng, diameter, palette, kind):
     """Lit planet sphere on a transparent square canvas."""
     s = diameter + 8
@@ -1085,6 +1110,7 @@ def main():
     build_ionstorm_v2(np.random.default_rng(args.seed + 3), args.out)
     build_thin_ionstorm(np.random.default_rng(args.seed + 4), args.out)
     build_dense_asteroids(np.random.default_rng(args.seed + 5), args.out)
+    build_asteroid_wall(np.random.default_rng(args.seed + 6), args.out)
 
     with open(os.path.join(args.out, "art-manifest.txt"), "w") as f:
         f.write("# Files derived from The Ur-Quan Masters content (CC BY-NC-SA 2.5).\n")
