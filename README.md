@@ -190,6 +190,11 @@ rings are castles, stars block movement. Terrain, by hull size
 | Asteroid field | can't enter | 3 / 60% | 2 / 70% | 2 / 70% |
 | Dense asteroids | can't enter | 3 / 70% | 3 / 70% | 2 / 70% |
 
+**Badlands runners** cross the badlands more easily: Arilou, Shofixti and
+Zoq-Fot-Pik need 1 move there (50% defense); Mycon, Androsynth, Slylandro
+and Thraddash need 2 (with their hull's light-badlands defense), and light
+badlands cost all of them 1 move.
+
 Asteroids over nebula or dust give the better defense and the slower
 movement of the two. The fire-born Mycon and Ilwrath (1 / 60%) and the
 heat-proof Chenjesu (2 / 50%) are at home in red nebulae.
