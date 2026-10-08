@@ -165,9 +165,10 @@ local PLAYLISTS = {
 	SC_NewAlliance = { "remix-chmmr", "remix-zoqfotpik", "remix-pkunk", "remix-supox", "remix-utwig",
 		"remix-utwig-ultron", "remix-commander", "remix-arilou", "remix-intro",
 		"remix-ending", "remix-starbase", "remix-outfit" },
-	SC_DeathMarch = { "kohrah", "druuge", "thraddash", "slylandro", "orz", "yehat", "yehat-years-late",
-		"kohrah-eternal-doctrine", "kohrah-battle", "kohrah-cleansing-required", "slylandro-we-come-in-peace",
-		"samatra-battle", "orz-squeezing-the-juice", "starbase" },
+	-- the Death March hears only the Precursors' remixes
+	SC_DeathMarch = { "kohrah-cleansing-required", "kohrah-eternal-doctrine", "kohrah-battle",
+		"druuge-crimson-corporation", "thraddash-culture-19", "slylandro-we-come-in-peace",
+		"orz-squeezing-the-juice", "yehat-years-late", "samatra-battle", "remix-starbase" },
 	SC_Hierarchy = { "urquan", "urquan-now-and-forever", "mycon", "spathi", "umgah", "vux", "ilwrath", "thraddash", "druuge", "starbase", "outfit" },
 }
 

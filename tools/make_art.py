@@ -406,16 +406,18 @@ def build_ditties(uqm, out):
 
 # Music: each faction's races' Star Control II themes, plus SC2's victory music.
 MUSIC = {
+    # Alliance playlist
     "commander": "base/comm/commander/commander.mod",   # Earthlings
     "yehat": "base/comm/yehat/yehat.mod",
     "syreen": "base/comm/syreen/syreen.mod",
     "arilou": "base/comm/arilou/arilou.mod",
     "shofixti": "base/comm/shofixti/shofixti.mod",
     "intro": "base/cutscene/intro/introx.mod",          # SC2 opening
-    "victory": "base/cutscene/ending/victoryf.mod",
-    "starbase": "base/ui/starbase.mod",                 # both playlists
-    "outfit": "base/ui/outfit.mod",     # SC2 final victory
+    "victory": "base/cutscene/ending/victoryf.mod",     # SC2 final victory
     "victory-fanfare": "base/cutscene/ending/victory1.mod",
+    # Alliance and Hierarchy
+    "starbase": "base/ui/starbase.mod",
+    "outfit": "base/ui/outfit.mod",
     # Hierarchy playlist
     "urquan": "base/comm/urquan/urquan.mod",
     "mycon": "base/comm/mycon/mycon.mod",
@@ -425,14 +427,7 @@ MUSIC = {
     "ilwrath": "base/comm/ilwrath/ilwrath.mod",
     "thraddash": "base/comm/thraddash/thraddash.mod",
     "druuge": "base/comm/druuge/druuge.mod",
-    "kohrah": "base/comm/kohrah/kohrah.mod",
-    "slylandro": "base/comm/slylandro/slylandro.mod",
-    "orz": "base/comm/orz/orz.mod",
-    # New Alliance playlist
-    "zoqfotpik": "base/comm/zoqfotpik/zoqfotpik.mod",
-    "pkunk": "base/comm/pkunk/pkunk.mod",
-    "supox": "base/comm/supox/supox.mod",
-    "utwig": "base/comm/utwig/utwig.mod",
+    # (the New Alliance and the Death March play Precursors remixes: REMIXES)
 }
 
 MUSIC_GAIN_DB = {"starbase": 4}   # brings it up to the other tracks' loudness
@@ -451,6 +446,8 @@ REMIXES = {
     "slylandro-we-come-in-peace": "remix/2/03_-_Slylandro_Probes_-_We_Come_In_Peace.ogg",
     "samatra-battle": "remix/1/05_-_Melee_-_The_Battle_of_the_Sa-Matra.ogg",
     "orz-squeezing-the-juice": "remix/4/10_-_Orz_-_Squeezing_the_Juice.ogg",
+    "druuge-crimson-corporation": "remix/2/07_-_Druuge_-_Property_of_the_Crimson_Corporation.ogg",
+    "thraddash-culture-19": "remix/3/06_-_Thraddash_-_Culture_19.ogg",
     # Hierarchy
     "urquan-now-and-forever": "remix/3/01_-_Ur-Quan_-_Now_and_Forever.ogg",
     # New Alliance: every track a remix

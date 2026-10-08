@@ -50,21 +50,29 @@ maps below and the era **Star Control: The Ur-Quan War**.
 
 ## Music
 
-Each player hears their own faction's Star Control II race themes in
-rotation: the Alliance gets Commander (Earthlings), Yehat, Syreen,
-Arilou and Shofixti plus Star Control II's opening and victory themes; the Hierarchy
-gets Ur-Quan, Mycon, Spathi, Umgah, VUX, Ilwrath, Thraddash and Druuge, plus
-the Precursors' "Now and Forever" Ur-Quan remix. Both also
-get the Starbase and Outfit themes. The New Alliance gets Chmmr,
-Zoq-Fot-Pik, Pkunk, Supox, Utwig, Commander and Arilou plus the opening
-and victory themes; the Death March gets Kohr-Ah, Druuge, Thraddash,
-Slylandro, Orz and Yehat, plus seven Precursors remixes: "Years Late"
-(Yehat), "The Eternal Doctrine", "Cleansing Required" and "Kohr-Ah"
-(battle), "The Battle of the Sa-Matra", "Squeezing the Juice" (Orz) and
-"We Come In Peace" (Slylandro Probes).
-Both also get Starbase, and the New Alliance gets Outfit. The New Alliance hears all of these as
-the Precursors' remixes (Arilou: "Welcome to Falayalaralfali"), plus their
-second Utwig remix, "The Ultron". The victory fanfare
+Each player hears their own faction's playlist, shuffled:
+
+- **Alliance:** Star Control II's Commander (Earthlings), Yehat, Syreen,
+  Arilou and Shofixti themes, its opening and victory themes, Starbase and
+  Outfit.
+- **Hierarchy:** the Ur-Quan, Mycon, Spathi, Umgah, VUX, Ilwrath, Thraddash
+  and Druuge themes, the Precursors' "Now and Forever" (Ur-Quan) remix,
+  Starbase and Outfit.
+- **New Alliance:** only the Precursors' remixes: Chmmr ("Photosynthesis"),
+  Zoq-Fot-Pik ("Frungy Party"), Pkunk ("Pkunks Not Dead"), Supox ("Shake
+  Yer Rootz"), Utwig ("Mask of Ultimate Embarrassment and Shame", "The
+  Ultron"), Commander ("Corridor Nine"), Arilou ("Welcome to
+  Falayalaralfali"), the opening ("Into the Void"), the ending ("Awaking
+  Dreams"), Starbase ("Under a Red Sky") and Outfit ("Outfit the
+  Vindicator").
+- **Death March:** only the Precursors' remixes: Kohr-Ah ("Cleansing
+  Required", "The Eternal Doctrine", "Kohr-Ah" battle remix), Druuge
+  ("Property of the Crimson Corporation"), Thraddash ("Culture 19"),
+  Slylandro Probes ("We Come In Peace"), Orz ("Squeezing the Juice"), Yehat
+  ("Years Late"), "The Battle of the Sa-Matra" and Starbase ("Under a Red
+  Sky").
+
+The victory fanfare
 plays when you win. When a ship destroys
 another, its race's victory ditty plays: the music fades out for it and
 fades back in afterwards.
