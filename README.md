@@ -187,8 +187,8 @@ rings are castles, stars block movement. Terrain, by hull size
 | Badlands | 3 / 10% | 3 / 20% | 3 / 30% | 2 / 40% |
 | Light badlands | 2 / 20% | 2 / 30% | 2 / 40% | 1 / 50% |
 | Thin badlands | the better of open space and badlands |||| 
-| Asteroid field | can't enter | 3 / 60% | 2 / 70% | 2 / 70% |
-| Dense asteroids | can't enter | 3 / 70% | 3 / 70% | 2 / 70% |
+| Asteroid field | 4 / 50% | 3 / 60% | 2 / 70% | 2 / 70% |
+| Dense asteroids | 4 / 60% | 3 / 70% | 3 / 70% | 2 / 70% |
 
 **Badlands runners** cross the badlands more easily: Arilou, Shofixti and
 Zoq-Fot-Pik need 1 move there (50% defense); Mycon, Androsynth, Slylandro
