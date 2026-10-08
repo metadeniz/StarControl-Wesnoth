@@ -325,6 +325,7 @@ images/units/sc/zoqfotpik-stinger-se.png
 images/units/sc/zoqfotpik-stinger-sw.png
 images/units/sc/zoqfotpik-stinger.png
 music/sc/arilou.ogg
+music/sc/chenjesu-titus.ogg
 music/sc/commander.ogg
 music/sc/druuge-crimson-corporation.ogg
 music/sc/druuge.ogg
@@ -333,6 +334,7 @@ music/sc/intro.ogg
 music/sc/kohrah-battle.ogg
 music/sc/kohrah-cleansing-required.ogg
 music/sc/kohrah-eternal-doctrine.ogg
+music/sc/mmrnmhrm-titus.ogg
 music/sc/mycon.ogg
 music/sc/orz-squeezing-the-juice.ogg
 music/sc/outfit.ogg

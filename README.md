@@ -53,8 +53,8 @@ maps below and the era **Star Control: The Ur-Quan War**.
 Each player hears their own faction's playlist, shuffled:
 
 - **Alliance:** Star Control II's Commander (Earthlings), Yehat, Syreen,
-  Arilou and Shofixti themes, its opening and victory themes, Starbase and
-  Outfit.
+  Arilou and Shofixti themes, Chenjesu and Mmrnmhrm themes by Titus, Star
+  Control II's opening and victory themes, Starbase and Outfit.
 - **Hierarchy:** the Ur-Quan, Mycon, Spathi, Umgah, VUX, Ilwrath, Thraddash
   and Druuge themes, the Precursors' "Now and Forever" (Ur-Quan) remix,
   Starbase and Outfit.

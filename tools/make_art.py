@@ -1224,6 +1224,9 @@ def main():
     build_dense_asteroids(np.random.default_rng(args.seed + 5), args.out)
     build_asteroid_wall(np.random.default_rng(args.seed + 6), args.out)
 
+    # Added by hand, not built here: Chenjesu and Mmrnmhrm themes by Titus
+    # (supplied as MP3s, loudness-matched to the other music).
+    manifest.extend(["music/sc/chenjesu-titus.ogg", "music/sc/mmrnmhrm-titus.ogg"])
     with open(os.path.join(args.out, "art-manifest.txt"), "w") as f:
         f.write("# Files derived from The Ur-Quan Masters content (CC BY-NC-SA 2.5).\n")
         f.write("# A published build must replace every one of these.\n")
