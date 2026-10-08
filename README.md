@@ -83,7 +83,7 @@ fades back in afterwards.
 
 | New Alliance of Free Stars | | Kohr-Ah Death March | |
 |---|---|---|---|
-| **Precursor Flagship** (leader only) | fast: 6 moves and a Precursor drive (like the Chmmr's); fusion blaster, point-defense, self-repair, heals +4, leadership | **Sa-Matra** (leader only) | red plasma, homing sentinels, self-repair, heals +4, leadership; 3 moves |
+| **Precursor Flagship** (leader only) | fast: 6 moves and a Precursor drive (like the Chmmr's); fusion blaster, point-defense, self-repair, heals +4, leadership | **Sa-Matra** (leader only) | red plasma, homing sentinels, self-repair, cures and heals +8, leadership; 3 moves |
 | Earthling Cruiser | as in the Alliance | Kohr-Ah Marauder | 4 moves; spinning blades; F.R.I.E.D. plasma ring (**magical**) |
 | Chmmr Avatar | 4 moves, and a drive that handles nebulae, dust, badlands and asteroids better than other large hulls; close-range megawatt laser and ZapSats (**first strike**); ranged tractor beam + laser (**slows** from Veteran); point-defense | Druuge Mauler | 4 moves; long-range mass driver (**marksman**); nothing up close |
 | Zoq-Fot-Pik Stinger | cheap; acid spit, hard-hitting tongue | Thraddash Torch | fast; afterburner (**charge**), horn blasters |
