@@ -160,7 +160,7 @@ end
 -- the Alliance one, which spectators and AI-only games keep). Music is not
 -- game state, so playing it only on the local client is safe in multiplayer.
 local PLAYLISTS = {
-	SC_Alliance = { "commander", "chmmr", "yehat", "syreen", "arilou", "shofixti", "intro", "victory", "starbase", "outfit" },
+	SC_Alliance = { "commander", "yehat", "syreen", "arilou", "shofixti", "intro", "victory", "starbase", "outfit" },
 	-- the New Alliance hears the Precursors' remixes
 	SC_NewAlliance = { "remix-chmmr", "remix-zoqfotpik", "remix-pkunk", "remix-supox", "remix-utwig",
 		"remix-utwig-ultron", "remix-commander", "remix-arilou", "remix-intro",

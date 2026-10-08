@@ -51,7 +51,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 ## Music
 
 Each player hears their own faction's Star Control II race themes in
-rotation: the Alliance gets Commander (Earthlings), Chmmr, Yehat, Syreen,
+rotation: the Alliance gets Commander (Earthlings), Yehat, Syreen,
 Arilou and Shofixti plus Star Control II's opening and victory themes; the Hierarchy
 gets Ur-Quan, Mycon, Spathi, Umgah, VUX, Ilwrath, Thraddash and Druuge, plus
 the Precursors' "Now and Forever" Ur-Quan remix. Both also

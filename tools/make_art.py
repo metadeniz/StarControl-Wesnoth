@@ -407,7 +407,6 @@ def build_ditties(uqm, out):
 # Music: each faction's races' Star Control II themes, plus SC2's victory music.
 MUSIC = {
     "commander": "base/comm/commander/commander.mod",   # Earthlings
-    "chmmr": "base/comm/chmmr/chmmr.mod",               # Chenjesu + Mmrnmhrm
     "yehat": "base/comm/yehat/yehat.mod",
     "syreen": "base/comm/syreen/syreen.mod",
     "arilou": "base/comm/arilou/arilou.mod",

@@ -325,7 +325,6 @@ images/units/sc/zoqfotpik-stinger-se.png
 images/units/sc/zoqfotpik-stinger-sw.png
 images/units/sc/zoqfotpik-stinger.png
 music/sc/arilou.ogg
-music/sc/chmmr.ogg
 music/sc/commander.ogg
 music/sc/druuge.ogg
 music/sc/ilwrath.ogg
