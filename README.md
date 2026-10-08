@@ -72,8 +72,8 @@ Each player hears their own faction's playlist, shuffled:
   DJ Yan Yan Lipavsky, and the Precursors' remixes: Kohr-Ah ("Cleansing
   Required", "The Eternal Doctrine", "Kohr-Ah" battle remix), Druuge
   ("Property of the Crimson Corporation"), Thraddash ("Culture 19"),
-  Slylandro Probes ("We Come In Peace"), Orz ("Squeezing the Juice"),
-  "The Battle of the Sa-Matra" and Starbase ("Under a Red
+  Slylandro Probes ("We Come In Peace"), Orz ("Squeezing the Juice"), Mycon
+  ("Rebirth"), Ilwrath ("All Evil"), "The Battle of the Sa-Matra" and Starbase ("Under a Red
   Sky").
 
 When you win, the old Alliance and the Hierarchy hear Star Control 1's
@@ -103,8 +103,8 @@ fades back in slowly (about 3 seconds) afterwards.
 | Zoq-Fot-Pik Stinger | cheap; acid spit, hard-hitting tongue | Thraddash Torch | fast; afterburner (**charge**), horn blasters |
 | Pkunk Fury | fast triple gun; **reincarnation**: reborn at full HP when destroyed, 80% the first time, halving with each rebirth | Slylandro Probe | 7 moves; seeking lightning (**magical**); repairs 8 HP a turn in asteroid fields |
 | Supox Blade | **skirmisher**; globs of goo | Orz Nemesis | howitzer; space marines (**drains**) |
-| Utwig Jugger | six-lance volleys; absorbing shield (+30% resistance when attacked) | | |
-| Melnorme Trader | 4-shot blaster up close; one heavy charged shot and a confusion ray (**slows**) at range; heals +4 (Veteran +8, Elite cures) | | |
+| Utwig Jugger | six-lance volleys; absorbing shield (+30% resistance when attacked) | Mycon Podship | as in the Hierarchy |
+| Melnorme Trader | 4-shot blaster up close; one heavy charged shot and a confusion ray (**slows**) at range; heals +4 (Veteran +8, Elite cures) | Ilwrath Avenger | as in the Hierarchy |
 
 **Hull size.** Every ship shows its hull class (large, medium, small or
 tiny) as a trait in the side panel; hover over it for that hull's moves and

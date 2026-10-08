@@ -438,6 +438,8 @@ REMIXES = {
     "samatra-battle": "remix/1/05_-_Melee_-_The_Battle_of_the_Sa-Matra.ogg",
     "kohrah-victory": "remix/1/ditties/kohrah.ogg",     # Death March victory music (for now)
     "orz-squeezing-the-juice": "remix/4/10_-_Orz_-_Squeezing_the_Juice.ogg",
+    "mycon-rebirth": "remix/3/05_-_Mycon_-_Rebirth.ogg",
+    "ilwrath-all-evil": "remix/3/02_-_Ilwrath_-_All_Evil.ogg",
     "druuge-crimson-corporation": "remix/2/07_-_Druuge_-_Property_of_the_Crimson_Corporation.ogg",
     "thraddash-culture-19": "remix/3/06_-_Thraddash_-_Culture_19.ogg",
     # Hierarchy

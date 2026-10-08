@@ -13,8 +13,9 @@ local function count(name)
 end
 
 -- Every ship comes in levels 1-3: SC_X, SC_X_L2, SC_X_L3. The New Alliance
--- recruits its own level-1 copies of two Alliance ships, SC_X_NA.
-local function base_type(t) return (t:gsub("_L[23]$", ""):gsub("_NA$", "")) end
+-- and the Agents of Chaos recruit their own level-1 copies of some older
+-- ships, SC_X_NA and SC_X_AC.
+local function base_type(t) return (t:gsub("_L[23]$", ""):gsub("_NA$", ""):gsub("_AC$", "")) end
 local function is_a(u, base) return u and base_type(u.type) == base end
 local function all_levels(base) return base .. "," .. base .. "_NA," .. base .. "_L2," .. base .. "_L3" end
 local function by_level(tbl, u) return tbl[math.min(math.max(u.level, 1), #tbl)] end
@@ -171,7 +172,7 @@ local PLAYLISTS = {
 	-- re-imagined Melnorme theme
 	SC_DeathMarch = { "kohrah-cleansing-required", "kohrah-eternal-doctrine", "kohrah-battle",
 		"druuge-crimson-corporation", "thraddash-culture-19", "slylandro-we-come-in-peace",
-		"orz-squeezing-the-juice", "samatra-battle", "melnorme-lipavsky",
+		"orz-squeezing-the-juice", "mycon-rebirth", "ilwrath-all-evil", "samatra-battle", "melnorme-lipavsky",
 		"remix-starbase" },
 	SC_Hierarchy = { "urquan", "urquan-now-and-forever", "mycon", "spathi", "umgah", "vux", "ilwrath", "thraddash",
 		"androsynth-duoled", "starbase" },
