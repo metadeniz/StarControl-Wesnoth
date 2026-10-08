@@ -416,6 +416,7 @@ sounds/sc/mmrnmhrm-torpedo.wav
 sounds/sc/mmrnmhrm-transform.wav
 sounds/sc/mycon-plasmoid.wav
 sounds/sc/mycon-regrow.wav
+sounds/sc/orz-go.wav
 sounds/sc/orz-howitzer.wav
 sounds/sc/orz-marines.wav
 sounds/sc/pkunk-bug.wav

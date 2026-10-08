@@ -158,6 +158,7 @@ SOUNDS = {
     "slylandro-harvest": "base/ships/slylandro/secondary.wav",
     "orz-howitzer": "base/ships/orz/primary.wav",
     "orz-marines": "base/ships/orz/zap.wav",
+    "orz-go": "base/ships/orz/secondary.wav",          # the marines' "Go!"
     "chmmr-laser": "base/ships/chmmr/primary.wav",
     "chmmr-tractor": "base/ships/chmmr/secondary.wav",
     "zoqfotpik-spit": "base/ships/zoqfotpik/primary.wav",
