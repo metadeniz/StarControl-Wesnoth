@@ -61,6 +61,7 @@ SHIPS = {
     "thraddash-torch": ("thraddash", "torch"),
     "slylandro-probe": ("slylandro", "probe"),
     "orz-nemesis": ("orz", "nemesis"),
+    "melnorme-trader": ("melnorme", "trader"),
     # Star Control II: the New Alliance of Free Stars
     "chmmr-avatar": ("chmmr", "avatar"),
     "zoqfotpik-stinger": ("zoqfotpik", "stinger"),
@@ -101,6 +102,9 @@ PROJECTILES = {
     "glob": ("supox", "glob", 0, 0.6),
     "lance": ("utwig", "lance", 0, 0.9),
     "blaster": ("flagship", "blaster", 0, 0.8),
+    "charge-blue": ("melnorme", "pumpup", 6, 0.5),     # the Melnorme blaster, lightly charged
+    "charge-red": ("melnorme", "pumpup", 16, 0.4),     # ...and fully charged
+    "confuser": ("melnorme", "confuse", 0, 0.6),
 }
 
 # Laser bolts are lines in UQM, so these are drawn here: id -> RGB core colour.
@@ -169,6 +173,8 @@ SOUNDS = {
     "utwig-lance": "base/ships/utwig/primary.wav",
     "utwig-shield": "base/ships/utwig/secondary.wav",
     "flagship-blaster": "base/ships/flagship/primary.wav",
+    "melnorme-blaster": "base/ships/melnorme/primary.wav",
+    "melnorme-confuser": "base/ships/melnorme/secondary.wav",
     "samatra-plasma": "base/ships/samatra/primary.wav",
     "samatra-sentinels": "base/ships/samatra/secondary.wav",
     "boom-small": "base/battle/boom1.wav",
@@ -372,7 +378,7 @@ DITTIES = {
     "orz": "orz/nemesis.mod", "chmmr": "chmmr/avatar.mod",
     "zoqfotpik": "zoqfotpik/stinger.mod", "pkunk": "pkunk/fury.mod",
     "supox": "supox/blade.mod", "utwig": "utwig/jugger.mod",
-    "precursor": "flagship/flagship.mod",
+    "precursor": "flagship/flagship.mod", "melnorme": "melnorme/trader.mod",
 }
 
 
@@ -1244,6 +1250,8 @@ def main():
     manifest.extend(["music/sc/chenjesu-titus.ogg", "music/sc/mmrnmhrm-titus.ogg"])
     # ...and Star Control 1's Alliance and Hierarchy victory themes (MP3s).
     manifest.extend(["music/sc/alliance-victory.ogg", "music/sc/hierarchy-victory.ogg"])
+    # ...and an Androsynth theme by TheMisterCat (DUOLED) (MP3).
+    manifest.append("music/sc/androsynth-duoled.ogg")
     with open(os.path.join(args.out, "art-manifest.txt"), "w") as f:
         f.write("# Files derived from The Ur-Quan Masters content (CC BY-NC-SA 2.5).\n")
         f.write("# A published build must replace every one of these.\n")

@@ -171,7 +171,8 @@ local PLAYLISTS = {
 	SC_DeathMarch = { "kohrah-cleansing-required", "kohrah-eternal-doctrine", "kohrah-battle",
 		"druuge-crimson-corporation", "thraddash-culture-19", "slylandro-we-come-in-peace",
 		"orz-squeezing-the-juice", "yehat-years-late", "samatra-battle", "remix-starbase" },
-	SC_Hierarchy = { "urquan", "urquan-now-and-forever", "mycon", "spathi", "umgah", "vux", "ilwrath", "thraddash", "starbase" },
+	SC_Hierarchy = { "urquan", "urquan-now-and-forever", "mycon", "spathi", "umgah", "vux", "ilwrath", "thraddash",
+		"androsynth-duoled", "starbase" },
 }
 
 -- Music played when you win; factions not listed keep the scenario's
@@ -218,7 +219,7 @@ local DITTY_MS = {   -- length of sounds/sc/ditty-<race>.ogg
 	precursor = 3740, shofixti = 4180, slylandro = 4000, spathi = 3540,
 	supox = 2880, syreen = 4100, thraddash = 2500, umgah = 3620,
 	urquan = 5140, utwig = 6000, vux = 4220, yehat = 2660,
-	zoqfotpik = 5180,
+	zoqfotpik = 5180, melnorme = 3400,
 }
 local duck_until
 local FADE_IN_MS = 3000   -- the music fades back in this slowly after a ditty

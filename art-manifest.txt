@@ -6,7 +6,10 @@ images/attacks/sc/bubble.png
 images/attacks/sc/bug.png
 images/attacks/sc/butt.png
 images/attacks/sc/buzzsaw.png
+images/attacks/sc/charge-blue.png
+images/attacks/sc/charge-red.png
 images/attacks/sc/cone.png
+images/attacks/sc/confuser.png
 images/attacks/sc/crystal.png
 images/attacks/sc/dagger.png
 images/attacks/sc/dart.png
@@ -73,8 +76,14 @@ images/projectiles/sc/butt-n.png
 images/projectiles/sc/butt-ne.png
 images/projectiles/sc/buzzsaw-n.png
 images/projectiles/sc/buzzsaw-ne.png
+images/projectiles/sc/charge-blue-n.png
+images/projectiles/sc/charge-blue-ne.png
+images/projectiles/sc/charge-red-n.png
+images/projectiles/sc/charge-red-ne.png
 images/projectiles/sc/cone-n.png
 images/projectiles/sc/cone-ne.png
+images/projectiles/sc/confuser-n.png
+images/projectiles/sc/confuser-ne.png
 images/projectiles/sc/crystal-n.png
 images/projectiles/sc/crystal-ne.png
 images/projectiles/sc/dagger-n.png
@@ -184,6 +193,13 @@ images/units/sc/kohrah-marauder-s.png
 images/units/sc/kohrah-marauder-se.png
 images/units/sc/kohrah-marauder-sw.png
 images/units/sc/kohrah-marauder.png
+images/units/sc/melnorme-trader-n.png
+images/units/sc/melnorme-trader-ne.png
+images/units/sc/melnorme-trader-nw.png
+images/units/sc/melnorme-trader-s.png
+images/units/sc/melnorme-trader-se.png
+images/units/sc/melnorme-trader-sw.png
+images/units/sc/melnorme-trader.png
 images/units/sc/mmrnmhrm-xform-n.png
 images/units/sc/mmrnmhrm-xform-ne.png
 images/units/sc/mmrnmhrm-xform-nw.png
@@ -325,6 +341,7 @@ images/units/sc/zoqfotpik-stinger-se.png
 images/units/sc/zoqfotpik-stinger-sw.png
 images/units/sc/zoqfotpik-stinger.png
 music/sc/alliance-victory.ogg
+music/sc/androsynth-duoled.ogg
 music/sc/arilou.ogg
 music/sc/chenjesu-titus.ogg
 music/sc/commander.ogg
@@ -392,6 +409,7 @@ sounds/sc/ditty-druuge.ogg
 sounds/sc/ditty-earthling.ogg
 sounds/sc/ditty-ilwrath.ogg
 sounds/sc/ditty-kohrah.ogg
+sounds/sc/ditty-melnorme.ogg
 sounds/sc/ditty-mmrnmhrm.ogg
 sounds/sc/ditty-mycon.ogg
 sounds/sc/ditty-orz.ogg
@@ -419,6 +437,8 @@ sounds/sc/ilwrath-hellfire.wav
 sounds/sc/ilwrath-uncloak.wav
 sounds/sc/kohrah-buzzsaw.wav
 sounds/sc/kohrah-fried.wav
+sounds/sc/melnorme-blaster.wav
+sounds/sc/melnorme-confuser.wav
 sounds/sc/mmrnmhrm-laser.wav
 sounds/sc/mmrnmhrm-torpedo.wav
 sounds/sc/mmrnmhrm-transform.wav

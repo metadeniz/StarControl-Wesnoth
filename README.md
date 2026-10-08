@@ -57,7 +57,8 @@ Each player hears their own faction's playlist, shuffled:
   quasispace theme (original and 3DO versions), Star Control II's opening
   and victory themes, Starbase and Outfit.
 - **Hierarchy:** the Ur-Quan, Mycon, Spathi, Umgah, VUX, Ilwrath and
-  Thraddash themes, the Precursors' "Now and Forever" (Ur-Quan) remix,
+  Thraddash themes, an Androsynth theme by TheMisterCat (DUOLED), the
+  Precursors' "Now and Forever" (Ur-Quan) remix,
   and Starbase.
 - **New Alliance:** only the Precursors' remixes: Chmmr ("Photosynthesis"),
   Zoq-Fot-Pik ("Frungy Party"), Pkunk ("Pkunks Not Dead"), Supox ("Shake
@@ -101,7 +102,7 @@ fades back in slowly (about 3 seconds) afterwards.
 | Pkunk Fury | fast triple gun; **reincarnation**: reborn at full HP when destroyed, 80% the first time, halving with each rebirth | Slylandro Probe | 7 moves; seeking lightning (**magical**); repairs 8 HP a turn in asteroid fields |
 | Supox Blade | **skirmisher**; globs of goo | Orz Nemesis | howitzer; space marines (**drains**) |
 | Utwig Jugger | six-lance volleys; absorbing shield (+30% resistance when attacked) | Yehat Loyalist Terminator | the Queen's Yehat: Terminator in red and black |
-| Arilou Skiff | as in the Alliance | | |
+| Arilou Skiff | as in the Alliance | Melnorme Trader | 4-shot blaster up close; one heavy charged shot and a confusion ray (**slows**) at range; heals +4 (Veteran +8, Elite cures) |
 
 **Hull size.** Every ship shows its hull class (large, medium, small or
 tiny) as a trait in the side panel; hover over it for that hull's moves and
