@@ -81,7 +81,7 @@ fades back in afterwards.
 |---|---|---|---|
 | **Precursor Flagship** (leader only) | fast: 6 moves and a Precursor drive (like the Chmmr's); fusion blaster, point-defense, self-repair, heals +4, leadership | **Sa-Matra** (leader only) | red plasma, homing sentinels, self-repair, heals +4, leadership; 3 moves |
 | Earthling Cruiser | as in the Alliance | Kohr-Ah Marauder | spinning blades; F.R.I.E.D. plasma ring (**magical**) |
-| Chmmr Avatar | 4 moves, and a drive that handles nebulae, dust, ion storms and asteroids better than other large hulls; close-range megawatt laser and ZapSats (**first strike**); ranged tractor beam + laser (**slows** from Veteran); point-defense | Druuge Mauler | long-range mass driver (**marksman**); nothing up close |
+| Chmmr Avatar | 4 moves, and a drive that handles nebulae, dust, badlands and asteroids better than other large hulls; close-range megawatt laser and ZapSats (**first strike**); ranged tractor beam + laser (**slows** from Veteran); point-defense | Druuge Mauler | long-range mass driver (**marksman**); nothing up close |
 | Zoq-Fot-Pik Stinger | cheap; acid spit, hard-hitting tongue | Thraddash Torch | fast; afterburner (**charge**), horn blasters |
 | Pkunk Fury | fast triple gun; **reincarnation**: reborn at full HP when destroyed, 80% the first time, halving with each rebirth | Slylandro Probe | 7 moves; seeking lightning (**magical**); repairs 8 HP a turn in asteroid fields |
 | Supox Blade | **skirmisher**; globs of goo | Orz Nemesis | howitzer; space marines (**drains**) |
@@ -123,7 +123,7 @@ Spathi and Shofixti, which only get it as Elites):
 
 **Ambush.** Some ships can hide in certain terrain: invisible to the enemy
 unless an enemy ship is next to them, and revealed for the rest of a turn
-in which they attack. Nobody hides in open space, ion storms, planets or
+in which they attack. Nobody hides in open space, badlands, planets or
 starbases.
 
 | Ship | Hides in | From |
@@ -172,8 +172,8 @@ rings are castles, stars block movement. Terrain, by hull size
 | Green nebula | 2 / 40% | 2 / 50% | 2 / 60% | 1 / 70% |
 | Red nebula (hot plasma) | 2 / 40% | 3 / 50% | 3 / 60% | 2 / 60% |
 | Dust cloud | 2 / 20% | 2 / 30% | 2 / 40% | 1 / 50% |
-| Ion storm | 3 / 10% | 3 / 20% | 3 / 30% | 2 / 40% |
-| Thin ion storm | the better of open space and ion storm |||| 
+| Badlands | 3 / 10% | 3 / 20% | 3 / 30% | 2 / 40% |
+| Thin badlands | the better of open space and badlands |||| 
 | Asteroid field | can't enter | 3 / 60% | 2 / 70% | 2 / 70% |
 | Dense asteroids | can't enter | 3 / 70% | 3 / 70% | 2 / 70% |
 
@@ -190,7 +190,7 @@ heat-proof Chenjesu (2 / 50%) are at home in red nebulae.
 - `tools/convert_map.py <wesnoth .map> <out .map>` turns any regular
   Wesnoth map into a space map hex for hex: forest → nebula, mushroom
   grove → red nebula, sand → dust cloud, hills → asteroids, mountains →
-  dense asteroids, water and swamp → ion storm, ford → thin ion storm,
+  dense asteroids, water and swamp → badlands, ford → thin badlands,
   villages → planets, impassable → star. Isar's Cross was
   made this way.
 - `tools/ai_battles.sh [games] [jobs] [faction] [faction] [first seed]`

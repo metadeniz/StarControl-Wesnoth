@@ -696,6 +696,7 @@ def build_ionstorm(rng, mask, tmasks, out):
 
 
 NEBULA_EDGE = 0.5   # gas strength exactly on a nebula/space hex edge
+GAS_DENSITY = 0.7   # overall opacity of nebulae and dust (1 = original); lower shows more space
 
 # name -> (base colour A, base colour B, highlight colour)
 GAS_NEBULAE = {
@@ -733,7 +734,7 @@ def build_gas_nebula(rng, out, name, colours):
         rgb = col_a[None, None] * (1 - mix[..., None]) + col_b[None, None] * mix[..., None]
         rgb = rgb * (0.75 + 0.5 * (n1 - 0.5) + 0.35 * streak)[..., None]
         rgb = rgb * (1 - 0.55 * fine[..., None]) + col_hi[None, None] * 0.55 * fine[..., None]
-        alpha = np.clip(0.3 + 0.12 * (n1 - 0.5) + 0.3 * streak + 0.22 * fine, 0, 0.85) * 255
+        alpha = np.clip(0.3 + 0.12 * (n1 - 0.5) + 0.3 * streak + 0.22 * fine, 0, 0.85) * GAS_DENSITY * 255
         return Image.fromarray(np.dstack([rgb, alpha]).clip(0, 255).astype(np.uint8), "RGBA")
 
     for v in range(11):
@@ -769,7 +770,8 @@ def build_ionstorm_v2(rng, out):
         rgb[..., 0] = 20 + 160 * ridge
         rgb[..., 1] = 45 + 170 * ridge + 30 * haze
         rgb[..., 2] = 90 + 150 * np.maximum(ridge, haze * 0.8)
-        alpha = np.clip(0.3 + 0.2 * haze + 0.55 * ridge, 0, 1) * 255
+        # a faint haze (more space shows through) around bright filaments
+        alpha = np.clip(0.12 + 0.16 * haze + 0.6 * ridge, 0, 1) * 255
         return Image.fromarray(np.dstack([rgb, alpha]).clip(0, 255).astype(np.uint8), "RGBA")
 
     for v in range(11):

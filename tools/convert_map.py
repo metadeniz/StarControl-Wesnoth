@@ -11,8 +11,8 @@ Terrain is translated by role, so a converted map plays like the original:
     dunes (sandy hills)                    -> asteroids in dust   Yd^Ya
     forested hills                         -> asteroids in nebula Yn^Ya
     mountains                              -> dense asteroids     Ys^Yad
-    shallow water, swamp, deep water       -> ion storm           Yi
-    ford                                   -> thin ion storm      Yif
+    shallow water, swamp, deep water       -> badlands           Yi
+    ford                                   -> thin badlands      Yif
     bridge                                 -> deep space (a lane) Ys
     village                                -> planet              ^Vyp
     castle / keep                          -> docking ring / base Yc / Yk
