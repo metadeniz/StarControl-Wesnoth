@@ -75,7 +75,7 @@ Each player hears their own faction's playlist, shuffled:
 The victory fanfare
 plays when you win. When a ship destroys
 another, its race's victory ditty plays: the music fades out for it and
-fades back in afterwards.
+fades back in slowly (about 3 seconds) afterwards.
 
 ## The ships
 

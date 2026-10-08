@@ -208,6 +208,8 @@ local DITTY_MS = {   -- length of sounds/sc/ditty-<race>.ogg
 	zoqfotpik = 5180,
 }
 local duck_until
+local FADE_IN_MS = 3000   -- the music fades back in this slowly after a ditty
+local fade_start
 
 -- Lua has no timers, so a fade is a few volume steps a short delay apart.
 local function fade_music(from, to, ms)
@@ -224,17 +226,33 @@ function sc.victory_ditty()
 	local race = tostring(killer.race):match("^sc_(.+)$")
 	if not race or not DITTY_MS[race] then return end
 	wesnoth.audio.play("sc/ditty-" .. race .. ".ogg")
-	if not duck_until then fade_music(100, 0, 200) end
+	if not duck_until then
+		fade_music(100, 0, 200)
+	elseif fade_start then          -- a new ditty while the music was fading in
+		wesnoth.audio.music_list.volume = 0
+	end
+	fade_start = nil
 	duck_until = math.max(duck_until or 0, wesnoth.ms_since_init() + DITTY_MS[race])
 end
 
--- The music fades back in at the first move, selection, attack or turn
--- change after the ditty has finished.
+-- Once the ditty is over the music fades back in over FADE_IN_MS. A long
+-- blocking fade would freeze the game, so the volume is raised a step at a
+-- time whenever the mouse moves or a game event (move, selection, attack,
+-- turn change) fires.
 function sc.unduck()
-	if duck_until and wesnoth.ms_since_init() >= duck_until then
-		duck_until = nil
-		fade_music(0, 100, 300)
-	end
+	if not duck_until then return end
+	local now = wesnoth.ms_since_init()
+	if now < duck_until then return end
+	fade_start = fade_start or now
+	local v = math.min(100, math.floor((now - fade_start) * 100 / FADE_IN_MS))
+	wesnoth.audio.music_list.volume = math.max(v, 1)
+	if v >= 100 then duck_until, fade_start = nil, nil end
+end
+
+local previous_mouse_move = wesnoth.game_events.on_mouse_move
+function wesnoth.game_events.on_mouse_move(...)
+	if previous_mouse_move then previous_mouse_move(...) end
+	sc.unduck()
 end
 
 ------------------------------------------------------------- Pkunk rebirth
