@@ -62,7 +62,7 @@ Each player hears their own faction's playlist, shuffled:
   Zoq-Fot-Pik ("Frungy Party"), Pkunk ("Pkunks Not Dead"), Supox ("Shake
   Yer Rootz"), Utwig ("Mask of Ultimate Embarrassment and Shame", "The
   Ultron"), Commander ("Corridor Nine"), Arilou ("Welcome to
-  Falayalaralfali"), the opening ("Into the Void"), the ending ("Awaking
+  Falayalaralfali"), Syreen ("Close Encounters of the Seventh Kind"), the opening ("Into the Void"), the ending ("Awaking
   Dreams"), Starbase ("Under a Red Sky") and Outfit ("Outfit the
   Vindicator").
 - **Death March:** only the Precursors' remixes: Kohr-Ah ("Cleansing

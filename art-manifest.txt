@@ -347,6 +347,7 @@ music/sc/remix-outfit.ogg
 music/sc/remix-pkunk.ogg
 music/sc/remix-starbase.ogg
 music/sc/remix-supox.ogg
+music/sc/remix-syreen.ogg
 music/sc/remix-utwig-ultron.ogg
 music/sc/remix-utwig.ogg
 music/sc/remix-zoqfotpik.ogg

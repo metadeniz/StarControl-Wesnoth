@@ -460,6 +460,7 @@ REMIXES = {
     "remix-utwig-ultron": "remix/4/11_-_Utwig_-_The_Ultron.ogg",
     "remix-commander": "remix/1/02_-_Starbase_Commander_-_Corridor_Nine.ogg",
     "remix-arilou": "remix/2/02_-_Arilou_-_Welcome_to_Falayalaralfali.ogg",
+    "remix-syreen": "remix/4/05_-_Syreen_-_Close_Encounters_of_the_Seventh_Kind.ogg",
     "remix-intro": "remix/4/02_-_Intro_-_Into_the_Void.ogg",
     "remix-ending": "remix/4/16_-_Outro_-_Awaking_Dreams.ogg",
     "remix-starbase": "remix/1/01_-_Starbase_-_Under_a_Red_Sky.ogg",
