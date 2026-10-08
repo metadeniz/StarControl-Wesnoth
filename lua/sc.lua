@@ -171,7 +171,7 @@ local PLAYLISTS = {
 	-- re-imagined Melnorme theme
 	SC_DeathMarch = { "kohrah-cleansing-required", "kohrah-eternal-doctrine", "kohrah-battle",
 		"druuge-crimson-corporation", "thraddash-culture-19", "slylandro-we-come-in-peace",
-		"orz-squeezing-the-juice", "yehat-years-late", "samatra-battle", "melnorme-lipavsky",
+		"orz-squeezing-the-juice", "samatra-battle", "melnorme-lipavsky",
 		"remix-starbase" },
 	SC_Hierarchy = { "urquan", "urquan-now-and-forever", "mycon", "spathi", "umgah", "vux", "ilwrath", "thraddash",
 		"androsynth-duoled", "starbase" },

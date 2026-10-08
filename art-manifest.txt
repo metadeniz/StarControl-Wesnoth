@@ -319,13 +319,6 @@ images/units/sc/vux-intruder-s.png
 images/units/sc/vux-intruder-se.png
 images/units/sc/vux-intruder-sw.png
 images/units/sc/vux-intruder.png
-images/units/sc/yehat-loyalist-n.png
-images/units/sc/yehat-loyalist-ne.png
-images/units/sc/yehat-loyalist-nw.png
-images/units/sc/yehat-loyalist-s.png
-images/units/sc/yehat-loyalist-se.png
-images/units/sc/yehat-loyalist-sw.png
-images/units/sc/yehat-loyalist.png
 images/units/sc/yehat-terminator-n.png
 images/units/sc/yehat-terminator-ne.png
 images/units/sc/yehat-terminator-nw.png
@@ -390,7 +383,6 @@ music/sc/urquan.ogg
 music/sc/victory-fanfare.ogg
 music/sc/victory.ogg
 music/sc/vux.ogg
-music/sc/yehat-years-late.ogg
 music/sc/yehat.ogg
 sounds/sc/androsynth-blazer.wav
 sounds/sc/androsynth-bubbles.wav

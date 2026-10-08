@@ -349,21 +349,6 @@ def build_samatra(uqm, out):
         save(orb, out, f"images/projectiles/sc/sentinel-{facing}.png", False)
 
 
-def build_loyalist_yehat(out):
-    """The Queen's loyalist Yehat: the Terminator in blood red and black."""
-    for facing in list(FACINGS) + [None]:
-        suffix = f"-{facing}" if facing else ""
-        im = Image.open(os.path.join(out, f"images/units/sc/yehat-terminator{suffix}.png")).convert("RGBA")
-        a = np.array(im).astype(float)
-        lum = a[..., :3] @ np.array([0.30, 0.59, 0.11])
-        lum = np.clip((lum / 255.0) ** 1.4, 0, 1)          # deeper shadows
-        a[..., 0] = 40 + 215 * lum
-        a[..., 1] = 10 + 40 * lum ** 2
-        a[..., 2] = 25 + 90 * lum ** 2.5
-        save(Image.fromarray(a.clip(0, 255).astype("uint8")), out,
-             f"images/units/sc/yehat-loyalist{suffix}.png", True)
-
-
 # race id -> the ship's victory ditty (a tracker module) in the UQM content
 DITTIES = {
     "earthling": "human/cruiser.mod", "chenjesu": "chenjesu/broodhome.mod",
@@ -446,7 +431,6 @@ MUSIC_GAIN_DB = {"starbase": 4, "quasispace": -2}   # match the other tracks' lo
 REMIX_LOUDNESS = -16.7   # mean volume, dB, like the other music
 REMIXES = {
     # Death March
-    "yehat-years-late": "remix/4/06_-_Yehat_-_Years_Late_Mix.ogg",
     "kohrah-eternal-doctrine": "extras3/aliens/blackur-the_eternal_doctrine.ogg",
     "kohrah-battle": "extras3/battle/battle-Kohr-Ah.ogg",
     "kohrah-cleansing-required": "remix/3/07_-_Kohr-Ah_-_Cleansing_Required.ogg",
@@ -1217,7 +1201,6 @@ def main():
 
     build_ships(args.uqm, args.out)
     build_samatra(args.uqm, args.out)
-    build_loyalist_yehat(args.out)
     build_projectiles(args.uqm, args.out)
     build_lasers(args.out)
     build_attack_icons(args.out)
