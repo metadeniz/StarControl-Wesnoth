@@ -2,7 +2,7 @@
 
 A total conversion of Battle for Wesnoth into the wars of Star Control: the
 Alliance of Free Stars against the Ur-Quan Hierarchy (Star Control 1), and
-the New Alliance of Free Stars against the Kohr-Ah Death March (Star
+the New Alliance of Free Stars against the Agents of Chaos (Star
 Control II), fought over space maps with nebulae, asteroid fields, planets
 and stars. Any faction can fight any other.
 
@@ -64,11 +64,11 @@ Each player hears their own faction's playlist, shuffled:
   Zoq-Fot-Pik ("Frungy Party"), Pkunk ("Pkunks Not Dead"), Supox ("Shake
   Yer Rootz"), Utwig ("Mask of Ultimate Embarrassment and Shame", "The
   Ultron"), Commander ("Corridor Nine"), Arilou ("Welcome to
-  Falayalaralfali"), Syreen ("Close Encounters of the Seventh Kind"),
+  Falayalaralfali"), Melnorme ("Turning Purple"), Syreen ("Close Encounters of the Seventh Kind"),
   quasispace ("Mystic Shadows", "Through the Angles of Space"), the opening ("Into the Void"), the ending ("Awaking
   Dreams"), Starbase ("Under a Red Sky") and Outfit ("Outfit the
   Vindicator").
-- **Death March:** modern versions only: the Melnorme theme re-imagined by
+- **Agents of Chaos:** modern versions only: the Melnorme theme re-imagined by
   DJ Yan Yan Lipavsky, and the Precursors' remixes: Kohr-Ah ("Cleansing
   Required", "The Eternal Doctrine", "Kohr-Ah" battle remix), Druuge
   ("Property of the Crimson Corporation"), Thraddash ("Culture 19"),
@@ -78,7 +78,7 @@ Each player hears their own faction's playlist, shuffled:
 
 When you win, the old Alliance and the Hierarchy hear Star Control 1's
 victory theme for their side, the New Alliance hears Star Control II's
-victory fanfare, and the Death March (for now) the Precursors' remix of the
+victory fanfare, and the Agents of Chaos (for now) the Precursors' remix of the
 Kohr-Ah victory ditty. When a ship destroys
 another, its race's victory ditty plays: the music fades out for it and
 fades back in slowly (about 3 seconds) afterwards.
@@ -95,16 +95,16 @@ fades back in slowly (about 3 seconds) afterwards.
 | Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison), Blazer ram |
 | Shofixti Scout | dart gun; **Glory Device**: one unavoidable fire strike (16 / 20 / 24 by level) on one ship, destroying the Scout | Ilwrath Avenger | Hellfire, cloaking device |
 
-| New Alliance of Free Stars | | Kohr-Ah Death March | |
+| New Alliance of Free Stars | | Agents of Chaos | |
 |---|---|---|---|
-| **Precursor Flagship** (leader only) | fast: 6 moves and a Precursor drive (like the Chmmr's); fusion blaster, point-defense, self-repair, heals +4, leadership | **Sa-Matra** (leader only) | red plasma, homing sentinels, self-repair, cures and heals +8, leadership; 3 moves |
+| **Precursor Flagship** (leader only) | 4 moves, a Precursor drive (like the Chmmr's) and **hyperjump** between planets; fusion blaster, point-defense, self-repair, heals +4, leadership | **Sa-Matra** (leader only) | red plasma, homing sentinels, self-repair, cures and heals +8, leadership; 3 moves |
 | Earthling Cruiser | as in the Alliance | Kohr-Ah Marauder | 4 moves; spinning blades; F.R.I.E.D. plasma ring (**magical**) |
 | Chmmr Avatar | 4 moves, and a drive that handles nebulae, dust, badlands and asteroids better than other large hulls; close-range megawatt laser and ZapSats (**first strike**); ranged tractor beam + laser (**slows** from Veteran); point-defense | Druuge Mauler | 4 moves; long-range mass driver (**marksman**); nothing up close |
 | Zoq-Fot-Pik Stinger | cheap; acid spit, hard-hitting tongue | Thraddash Torch | fast; afterburner (**charge**), horn blasters |
 | Pkunk Fury | fast triple gun; **reincarnation**: reborn at full HP when destroyed, 80% the first time, halving with each rebirth | Slylandro Probe | 7 moves; seeking lightning (**magical**); repairs 8 HP a turn in asteroid fields |
 | Supox Blade | **skirmisher**; globs of goo | Orz Nemesis | howitzer; space marines (**drains**) |
 | Utwig Jugger | six-lance volleys; absorbing shield (+30% resistance when attacked) | Yehat Loyalist Terminator | the Queen's Yehat: Terminator in red and black |
-| Arilou Skiff | as in the Alliance | Melnorme Trader | 4-shot blaster up close; one heavy charged shot and a confusion ray (**slows**) at range; heals +4 (Veteran +8, Elite cures) |
+| Melnorme Trader | 4-shot blaster up close; one heavy charged shot and a confusion ray (**slows**) at range; heals +4 (Veteran +8, Elite cures) | | |
 
 **Hull size.** Every ship shows its hull class (large, medium, small or
 tiny) as a trait in the side panel; hover over it for that hull's moves and

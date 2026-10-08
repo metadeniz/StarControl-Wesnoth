@@ -467,6 +467,7 @@ REMIXES = {
     "remix-utwig-ultron": "remix/4/11_-_Utwig_-_The_Ultron.ogg",
     "remix-commander": "remix/1/02_-_Starbase_Commander_-_Corridor_Nine.ogg",
     "remix-arilou": "remix/2/02_-_Arilou_-_Welcome_to_Falayalaralfali.ogg",
+    "remix-melnorme": "remix/2/10_-_Melnorme_-_Turning_Purple.ogg",
     "remix-syreen": "remix/4/05_-_Syreen_-_Close_Encounters_of_the_Seventh_Kind.ogg",
     "remix-mystic-shadows": "extras2/extraspack/Bonus/arispace_bonus.ogg",   # quasispace
     "remix-quasispace": "remix/2/01_-_Quasispace_-_Through_the_Angles_of_Space.ogg",

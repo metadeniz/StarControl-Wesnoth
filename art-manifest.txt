@@ -365,6 +365,7 @@ music/sc/remix-chmmr.ogg
 music/sc/remix-commander.ogg
 music/sc/remix-ending.ogg
 music/sc/remix-intro.ogg
+music/sc/remix-melnorme.ogg
 music/sc/remix-mystic-shadows.ogg
 music/sc/remix-outfit.ogg
 music/sc/remix-pkunk.ogg

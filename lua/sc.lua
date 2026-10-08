@@ -164,10 +164,10 @@ local PLAYLISTS = {
 		"intro", "victory", "starbase", "outfit" },
 	-- the New Alliance hears the Precursors' remixes
 	SC_NewAlliance = { "remix-chmmr", "remix-zoqfotpik", "remix-pkunk", "remix-supox", "remix-utwig",
-		"remix-utwig-ultron", "remix-commander", "remix-arilou", "remix-syreen", "remix-mystic-shadows", "remix-quasispace",
-		"remix-intro",
-		"remix-ending", "remix-starbase", "remix-outfit" },
-	-- the Death March hears modern versions: the Precursors' remixes and a
+		"remix-utwig-ultron", "remix-commander", "remix-arilou", "remix-melnorme", "remix-syreen",
+		"remix-mystic-shadows", "remix-quasispace", "remix-intro", "remix-ending", "remix-starbase",
+		"remix-outfit" },
+	-- the Agents of Chaos hear modern versions: the Precursors' remixes and a
 	-- re-imagined Melnorme theme
 	SC_DeathMarch = { "kohrah-cleansing-required", "kohrah-eternal-doctrine", "kohrah-battle",
 		"druuge-crimson-corporation", "thraddash-culture-19", "slylandro-we-come-in-peace",
