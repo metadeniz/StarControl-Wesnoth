@@ -416,6 +416,7 @@ MUSIC = {
     "intro": "base/cutscene/intro/introx.mod",          # SC2 opening
     "victory": "base/cutscene/ending/victoryf.mod",     # SC2 final victory
     "victory-fanfare": "base/cutscene/ending/victory1.mod",
+    "quasispace": "base/nav/quasispace.mod",
     # Alliance and Hierarchy
     "starbase": "base/ui/starbase.mod",
     "outfit": "base/ui/outfit.mod",
@@ -431,7 +432,7 @@ MUSIC = {
     # (the New Alliance and the Death March play Precursors remixes: REMIXES)
 }
 
-MUSIC_GAIN_DB = {"starbase": 4}   # brings it up to the other tracks' loudness
+MUSIC_GAIN_DB = {"starbase": 4, "quasispace": -2}   # match the other tracks' loudness
 
 # Precursors' UQM Remix Packs (sourceforge.net/projects/sc2, "UQM Remix
 # Packs"): the disc .uqm files unzipped into one directory, and packs 2 and
@@ -471,10 +472,18 @@ REMIXES = {
 }
 
 
-def build_remixes(remix, out, only=None):
+# Star Control II's 3DO soundtrack (UQM's "3domusic" add-on,
+# uqm-0.8.0-3domusic.uqm), unzipped into one directory.
+THREEDO = {
+    "quasispace-3do": "3domusic/quasispace.ogg",
+}
+
+
+def build_remixes(remix, out, only=None, table=None):
+    """Remixes (or, with table=THREEDO, 3DO tracks) at REMIX_LOUDNESS."""
     import re
     import subprocess
-    for name, rel in REMIXES.items():
+    for name, rel in (table or REMIXES).items():
         if only and name not in only:
             continue
         src = os.path.join(remix, rel)
@@ -1189,6 +1198,7 @@ def main():
     ap.add_argument("--uqm", required=True, help="UQM-MegaMod-Content checkout")
     ap.add_argument("--out", required=True, help="add-on directory")
     ap.add_argument("--remix", help="unzipped UQM Remix Packs (optional)")
+    ap.add_argument("--threedo", help="unzipped UQM 3DO music add-on (optional)")
     ap.add_argument("--wesnoth-data", default="/usr/share/games/wesnoth/1.16/data")
     ap.add_argument("--seed", type=int, default=1990)
     args = ap.parse_args()
@@ -1210,6 +1220,8 @@ def main():
     build_music(args.uqm, args.out)
     if args.remix:
         build_remixes(args.remix, args.out)
+    if args.threedo:
+        build_remixes(args.threedo, args.out, table=THREEDO)
 
     build_space(rng, mask, args.out)
     build_nebula(rng, mask, tmasks, args.out)

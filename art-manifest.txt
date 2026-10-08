@@ -338,6 +338,8 @@ music/sc/mmrnmhrm-titus.ogg
 music/sc/mycon.ogg
 music/sc/orz-squeezing-the-juice.ogg
 music/sc/outfit.ogg
+music/sc/quasispace-3do.ogg
+music/sc/quasispace.ogg
 music/sc/remix-arilou.ogg
 music/sc/remix-chmmr.ogg
 music/sc/remix-commander.ogg
