@@ -25,7 +25,11 @@ Terrain is translated by role, so a converted map plays like the original:
 
 Starting positions are kept.
 
-Usage: convert_map.py <wesnoth .map> <output .map>
+Usage: convert_map.py <wesnoth .map> <output .map> [X,Y=CODE ...]
+
+Each X,Y=CODE puts that terrain on hex X,Y (game coordinates) afterwards,
+for things the original scenario placed as units: Caves of the Basilisk's
+statues became Precursor ruins (Ys^Ypr).
 """
 
 import collections
@@ -98,6 +102,10 @@ def main():
     for x, y in star:
         if any(n in star for n in neighbours(x, y)):
             grid[y][x][1] = "Ys^Yw"
+    for arg in sys.argv[3:]:
+        xy, code = arg.split("=")
+        x, y = (int(v) for v in xy.split(","))
+        grid[y][x][1] = code
     rows = []
     counts = collections.Counter()
     for row in grid:

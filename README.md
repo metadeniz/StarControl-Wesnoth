@@ -46,7 +46,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | 2p — The Freelands (Deep Space) | 1 vs 1 |
 | 2p — Weldyn Channel (Deep Space) | 1 vs 1 |
 | 2p — Fallenstar Lake (Deep Space) | 1 vs 1 |
-| 2p — Caves of the Basilisk (Deep Space) | 1 vs 1; the statues are petrified derelict ships |
+| 2p — Caves of the Basilisk (Deep Space) | 1 vs 1; Precursor ruins stand where the statues were |
 
 ## Music
 
@@ -212,7 +212,11 @@ heat-proof Chenjesu (2 / 50%) are at home in red nebulae.
   badlands, ford → thin badlands, castles (also ruins in water or swamp)
   → docking rings, villages → planets, impassable → star (touching impassable hexes →
   asteroid wall). Isar's Cross, The Freelands, Weldyn Channel, Fallenstar
-  Lake and Caves of the Basilisk were made this way.
+  Lake and Caves of the Basilisk were made this way. Extra `X,Y=CODE`
+  arguments place terrain afterwards; the Caves' statues became Precursor
+  ruins: `27,14=Ys^Ypr 40,8=Ys^Ypr 39,8=Ys^Ypr 2,11=Ys^Ypr 8,18=Ys^Ypr
+  8,13=Ys^Ypr 22,12=Ys^Ypr 37,17=Ys^Ypr 5,8=Ys^Ypr 25,14=Ys^Ypr
+  34,6=Ys^Ypr 34,11=Ys^Ypr 15,11=Ys^Ypr 20,12=Ys^Ypr 17,11=Ys^Ypr`.
 - `tools/ai_battles.sh [games] [jobs] [faction] [faction] [first seed]`
   plays headless AI-vs-AI games and prints win rates. Factions:
   `SC_Alliance`, `SC_Hierarchy`, `SC_NewAlliance`, `SC_DeathMarch`.

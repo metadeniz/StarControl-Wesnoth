@@ -336,11 +336,29 @@ function sc.check_artifact()
 	})
 	wesnoth.audio.play("sc/artifact.wav")
 	wesnoth.interface.float_label(x, y, "<span color='#ffd84a'>" .. tostring(_ "Precursor artifact!") .. "</span>\n" .. tostring(a.description))
-	wesnoth.interface.add_chat_message(tostring(_ "Precursor artifact"),
-		tostring(u.name) .. ": " .. tostring(a.description))
+	-- The floating text fades within a second or two, so a label naming the
+	-- find stays on the planet until the finder's next turn starts.
+	wesnoth.map.add_label { x = x, y = y, color = "255,216,74", immutable = true,
+		text = tostring(_ "Precursor artifact: ") .. tostring(a.name) }
+	local labels = wml.array_access.get("sc_artifact_labels")
+	labels[#labels + 1] = { x = x, y = y, side = u.side }
+	wml.array_access.set("sc_artifact_labels", labels)
 
 	u.experience = u.experience + ARTIFACT_XP
 	if u.experience >= u.max_experience then u:advance(true, true) end
+end
+
+-- Start of a side's turn: clear the artifact labels it put up last turn.
+function sc.expire_artifact_labels()
+	local keep = {}
+	for _, l in ipairs(wml.array_access.get("sc_artifact_labels")) do
+		if l.side == wesnoth.current.side then
+			wesnoth.map.remove_label(l.x, l.y)
+		else
+			keep[#keep + 1] = l
+		end
+	end
+	wml.array_access.set("sc_artifact_labels", keep)
 end
 
 -------------------------------------------------------------------- reporting
