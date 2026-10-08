@@ -434,8 +434,8 @@ MUSIC = {
 MUSIC_GAIN_DB = {"starbase": 4}   # brings it up to the other tracks' loudness
 
 # Precursors' UQM Remix Packs (sourceforge.net/projects/sc2, "UQM Remix
-# Packs"): the disc .uqm files unzipped into one directory, and pack 3's
-# extras zip into its "extras3" subdirectory. They are mastered louder than
+# Packs"): the disc .uqm files unzipped into one directory, and packs 2 and
+# 3's extras zips into its "extras2" and "extras3" subdirectories. They are mastered louder than
 # the tracker modules, so each is brought to the same loudness.
 REMIX_LOUDNESS = -16.7   # mean volume, dB, like the other music
 REMIXES = {
@@ -461,6 +461,8 @@ REMIXES = {
     "remix-commander": "remix/1/02_-_Starbase_Commander_-_Corridor_Nine.ogg",
     "remix-arilou": "remix/2/02_-_Arilou_-_Welcome_to_Falayalaralfali.ogg",
     "remix-syreen": "remix/4/05_-_Syreen_-_Close_Encounters_of_the_Seventh_Kind.ogg",
+    "remix-mystic-shadows": "extras2/extraspack/Bonus/arispace_bonus.ogg",   # quasispace
+
     "remix-intro": "remix/4/02_-_Intro_-_Into_the_Void.ogg",
     "remix-ending": "remix/4/16_-_Outro_-_Awaking_Dreams.ogg",
     "remix-starbase": "remix/1/01_-_Starbase_-_Under_a_Red_Sky.ogg",
