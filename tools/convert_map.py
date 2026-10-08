@@ -11,11 +11,13 @@ Terrain is translated by role, so a converted map plays like the original:
     dunes (sandy hills)                    -> asteroids in dust   Yd^Ya
     forested hills                         -> asteroids in nebula Yn^Ya
     mountains                              -> dense asteroids     Ys^Yad
-    shallow water, swamp, deep water       -> badlands           Yi
+    deep water                             -> badlands           Yi
+    shallow water, reef, swamp             -> light badlands     Yis
     ford                                   -> thin badlands      Yif
     bridge                                 -> deep space (a lane) Ys
     village                                -> planet              ^Vyp
-    castle / keep                          -> docking ring / base Yc / Yk
+    castle / keep (also ruins in water or  -> docking ring / base Yc / Yk
+      swamp: no penalty for anyone)
     impassable (walls, ^Xm...), chasm      -> star                Ys^Yx
         ...but where impassable hexes touch,  -> asteroid wall       Ys^Yw
         so a wall doesn't become a row of suns
@@ -50,8 +52,10 @@ def convert(code):
     if base.startswith("Wwf"):                 # ford
         return "Yif^Vyp" if overlay.startswith("V") else "Yif"
 
-    if b in "WS":
+    if base.startswith("Wo"):                  # deep water
         new_base = "Yi"
+    elif b in "WS":                            # shallow water, reef, swamp
+        new_base = "Yis"
     elif b == "D" or base.startswith("Hd"):    # sand, dunes
         new_base = "Yd"
     else:
@@ -59,7 +63,7 @@ def convert(code):
     if overlay.startswith("T") or b == "T":    # mushroom grove
         new_base = "Yr"
     elif overlay.startswith("F"):              # forest
-        new_base = "Yi" if new_base == "Yi" else "Yn"
+        new_base = new_base if new_base in ("Yi", "Yis") else "Yn"
 
     if overlay.startswith("V"):
         return new_base + "^Vyp"

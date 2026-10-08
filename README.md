@@ -185,6 +185,7 @@ rings are castles, stars block movement. Terrain, by hull size
 | Red nebula (hot plasma) | 2 / 40% | 3 / 50% | 3 / 60% | 2 / 60% |
 | Dust cloud | 2 / 20% | 2 / 30% | 2 / 40% | 1 / 50% |
 | Badlands | 3 / 10% | 3 / 20% | 3 / 30% | 2 / 40% |
+| Light badlands | 2 / 20% | 2 / 30% | 2 / 40% | 1 / 50% |
 | Thin badlands | the better of open space and badlands |||| 
 | Asteroid field | can't enter | 3 / 60% | 2 / 70% | 2 / 70% |
 | Dense asteroids | can't enter | 3 / 70% | 3 / 70% | 2 / 70% |
@@ -202,8 +203,9 @@ heat-proof Chenjesu (2 / 50%) are at home in red nebulae.
 - `tools/convert_map.py <wesnoth .map> <out .map>` turns any regular
   Wesnoth map into a space map hex for hex: forest → nebula, mushroom
   grove → red nebula, sand → dust cloud, hills → asteroids, mountains →
-  dense asteroids, water and swamp → badlands, ford → thin badlands,
-  villages → planets, impassable → star (touching impassable hexes →
+  dense asteroids, deep water → badlands, shallow water and swamp → light
+  badlands, ford → thin badlands, castles (also ruins in water or swamp)
+  → docking rings, villages → planets, impassable → star (touching impassable hexes →
   asteroid wall). Isar's Cross, The Freelands, Weldyn Channel, Fallenstar
   Lake and Caves of the Basilisk were made this way.
 - `tools/ai_battles.sh [games] [jobs] [faction] [faction] [first seed]`

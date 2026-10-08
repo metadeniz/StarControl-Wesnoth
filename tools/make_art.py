@@ -801,6 +801,24 @@ def build_thin_ionstorm(rng, out):
             save(apply_mask(base, hex_mask_cache), out, "images/terrain/sc/ionstorm-thin-tile.png", False)
 
 
+def build_light_ionstorm(rng, out, strength=0.65):
+    """Light badlands (shallow water, swamp): the badlands at about two
+    thirds strength, with matching soft borders."""
+    def thinned(rel):
+        a = np.array(Image.open(os.path.join(out, "images/terrain/sc", rel)).convert("RGBA")).astype(np.float32)
+        a[:, :, 3] *= strength
+        return Image.fromarray(a.astype(np.uint8), "RGBA")
+    for v in range(6):
+        base = starfield(rng, 0.7)
+        base.alpha_composite(thinned(f"ionstorm{'' if v == 0 else v + 1}.png"))
+        name = "ionstorm-light" if v == 0 else f"ionstorm-light{v + 1}"
+        save(apply_mask(base, hex_mask_cache), out, f"images/terrain/sc/{name}.png", False)
+        if v == 0:
+            save(apply_mask(base, hex_mask_cache), out, "images/terrain/sc/ionstorm-light-tile.png", False)
+    for combo in TRANSITION_COMBOS:
+        save(thinned(f"ionstorm-{combo}.png"), out, f"images/terrain/sc/ionstorm-light-{combo}.png", False)
+
+
 def build_dense_asteroids(rng, out):
     """Mountains: a packed field of big rocks."""
     for v in range(6):
@@ -1105,6 +1123,7 @@ def main():
         build_gas_nebula(np.random.default_rng(args.seed + 10 + i), args.out, name, colours)
     build_ionstorm_v2(np.random.default_rng(args.seed + 3), args.out)
     build_thin_ionstorm(np.random.default_rng(args.seed + 4), args.out)
+    build_light_ionstorm(np.random.default_rng(args.seed + 7), args.out)
     build_dense_asteroids(np.random.default_rng(args.seed + 5), args.out)
     build_asteroid_wall(np.random.default_rng(args.seed + 6), args.out)
 
