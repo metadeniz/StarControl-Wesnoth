@@ -174,10 +174,20 @@ local PLAYLISTS = {
 	SC_Hierarchy = { "urquan", "urquan-now-and-forever", "mycon", "spathi", "umgah", "vux", "ilwrath", "thraddash", "starbase" },
 }
 
+-- Music played when you win; factions not listed keep the scenario's
+-- victory fanfare.
+local VICTORY_MUSIC = {
+	SC_Hierarchy = "sc/hierarchy-victory.ogg",   -- Star Control 1's Hierarchy victory theme
+}
+
 function sc.set_music()
 	for _, side in ipairs(wesnoth.sides) do
 		if side.is_local and side.controller == "human" then
-			local list = PLAYLISTS[side.__cfg.faction]
+			local faction = side.__cfg.faction
+			if VICTORY_MUSIC[faction] then
+				wesnoth.scenario.victory_music = { VICTORY_MUSIC[faction] }
+			end
+			local list = PLAYLISTS[faction]
 			if list then
 				for i, track in ipairs(list) do
 					wesnoth.wml_actions.music {

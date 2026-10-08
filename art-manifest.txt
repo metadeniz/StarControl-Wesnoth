@@ -328,6 +328,7 @@ music/sc/arilou.ogg
 music/sc/chenjesu-titus.ogg
 music/sc/commander.ogg
 music/sc/druuge-crimson-corporation.ogg
+music/sc/hierarchy-victory.ogg
 music/sc/ilwrath.ogg
 music/sc/intro.ogg
 music/sc/kohrah-battle.ogg
