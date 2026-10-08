@@ -324,6 +324,7 @@ images/units/sc/zoqfotpik-stinger-s.png
 images/units/sc/zoqfotpik-stinger-se.png
 images/units/sc/zoqfotpik-stinger-sw.png
 images/units/sc/zoqfotpik-stinger.png
+music/sc/alliance-victory.ogg
 music/sc/arilou.ogg
 music/sc/chenjesu-titus.ogg
 music/sc/commander.ogg

@@ -177,6 +177,7 @@ local PLAYLISTS = {
 -- Music played when you win; factions not listed keep the scenario's
 -- victory fanfare.
 local VICTORY_MUSIC = {
+	SC_Alliance = "sc/alliance-victory.ogg",     -- Star Control 1's Alliance victory theme
 	SC_Hierarchy = "sc/hierarchy-victory.ogg",   -- Star Control 1's Hierarchy victory theme
 }
 

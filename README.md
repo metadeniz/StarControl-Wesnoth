@@ -74,8 +74,9 @@ Each player hears their own faction's playlist, shuffled:
   ("Years Late"), "The Battle of the Sa-Matra" and Starbase ("Under a Red
   Sky").
 
-When you win, the victory fanfare plays, or, if you lead the
-Hierarchy, Star Control 1's Hierarchy victory theme. When a ship destroys
+When you win, the old Alliance and the Hierarchy hear Star Control 1's
+victory theme for their side; the New Alliance and the Death March hear
+Star Control II's victory fanfare. When a ship destroys
 another, its race's victory ditty plays: the music fades out for it and
 fades back in slowly (about 3 seconds) afterwards.
 
