@@ -428,7 +428,6 @@ MUSIC = {
     "vux": "base/comm/vux/vux.mod",
     "ilwrath": "base/comm/ilwrath/ilwrath.mod",
     "thraddash": "base/comm/thraddash/thraddash.mod",
-    "druuge": "base/comm/druuge/druuge.mod",
     # (the New Alliance and the Death March play Precursors remixes: REMIXES)
 }
 
