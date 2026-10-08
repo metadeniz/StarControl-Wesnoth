@@ -376,6 +376,7 @@ music/sc/shofixti.ogg
 music/sc/slylandro-we-come-in-peace.ogg
 music/sc/spathi.ogg
 music/sc/starbase.ogg
+music/sc/syreen-ramen-rider.ogg
 music/sc/syreen.ogg
 music/sc/thraddash-culture-19.ogg
 music/sc/thraddash.ogg

@@ -1240,6 +1240,8 @@ def main():
     # ...an Androsynth theme by TheMisterCat (DUOLED), and the Melnorme theme
     # re-imagined by DJ Yan Yan Lipavsky (MP3s).
     manifest.extend(["music/sc/androsynth-duoled.ogg", "music/sc/melnorme-lipavsky.ogg"])
+    # ...and Ramen Rider's cover of the Syreen theme (MP3).
+    manifest.append("music/sc/syreen-ramen-rider.ogg")
     with open(os.path.join(args.out, "art-manifest.txt"), "w") as f:
         f.write("# Files derived from The Ur-Quan Masters content (CC BY-NC-SA 2.5).\n")
         f.write("# A published build must replace every one of these.\n")

@@ -60,7 +60,8 @@ Each player hears their own faction's playlist, shuffled:
   Thraddash themes, an Androsynth theme by TheMisterCat (DUOLED), the
   Precursors' "Now and Forever" (Ur-Quan) remix,
   and Starbase.
-- **New Alliance:** only the Precursors' remixes: Chmmr ("Photosynthesis"),
+- **New Alliance:** Ramen Rider's cover of the Syreen theme, and the
+  Precursors' remixes: Chmmr ("Photosynthesis"),
   Zoq-Fot-Pik ("Frungy Party"), Pkunk ("Pkunks Not Dead"), Supox ("Shake
   Yer Rootz"), Utwig ("Mask of Ultimate Embarrassment and Shame", "The
   Ultron"), Commander ("Corridor Nine"), Arilou ("Welcome to
