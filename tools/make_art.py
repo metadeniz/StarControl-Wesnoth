@@ -16,6 +16,7 @@ Usage:
 """
 
 import argparse
+import colorsys
 import math
 import os
 import shutil
@@ -247,18 +248,54 @@ def ship_scale(uqm, ship_dir, stem, hd):
     return scale
 
 
+# A ship's level shows on its sprite: it grows, and from level 2 it glows.
+# level -> (size relative to the level-3 sprite, glow (blur radius, strength))
+LEVELS = {1: (0.82, None), 2: (0.91, (2.5, 1.0)), 3: (1.0, (3.5, 1.6))}
+# Level 3 is up to this much bigger than the ship's base size, if it fits.
+LEVEL_GROWTH = 1.12
+
+
+def glow_colour(img):
+    """The ship's own dominant hue, made light: its glow colour."""
+    a = np.array(img).astype(float) / 255
+    rgb, alpha = a[..., :3], a[..., 3]
+    mx, mn = rgb.max(axis=2), rgb.min(axis=2)
+    sat = (mx - mn) / np.maximum(mx, 1e-6)
+    w = alpha * (sat > 0.35) * (mx > 0.25) * sat
+    if w.sum() < 20:  # grey hull: a pale blue-white glow
+        return (200, 220, 255)
+    mean = (rgb * w[..., None]).sum(axis=(0, 1)) / w.sum()
+    h, _, _ = colorsys.rgb_to_hsv(*mean)
+    return tuple(round(c * 255) for c in colorsys.hsv_to_rgb(h, 0.55, 1.0))
+
+
+def with_glow(img, colour, radius, strength):
+    halo = img.getchannel("A").filter(ImageFilter.GaussianBlur(radius))
+    halo = halo.point(lambda v: min(255, round(v * strength)))
+    out = Image.new("RGBA", img.size, colour + (0,))
+    out.putalpha(halo)
+    out.alpha_composite(img)
+    return out
+
+
 def build_ships(uqm, out):
     for uid, (ship_dir, stem) in SHIPS.items():
         hd = hd_sprite(uqm, ship_dir, stem)
-        scale = ship_scale(uqm, ship_dir, stem, hd)
-        for facing, angle in FACINGS.items():
-            r = trim(rotated(hd, angle))
-            w = max(1, round(r.width * scale))
-            h = max(1, round(r.height * scale))
-            img = centred(r.resize((w, h), Image.LANCZOS))
-            save(img, out, f"images/units/sc/{uid}-{facing}.png", True)
-            if facing == "ne":
-                save(img, out, f"images/units/sc/{uid}.png", True)
+        fit = min(70.0 / max(trim(rotated(hd, a)).size) for a in FACINGS.values())
+        top = min(ship_scale(uqm, ship_dir, stem, hd) * LEVEL_GROWTH, fit)
+        colour = glow_colour(hd)
+        for level, (size, glow) in LEVELS.items():
+            scale = top * size
+            for facing, angle in FACINGS.items():
+                r = trim(rotated(hd, angle))
+                w = max(1, round(r.width * scale))
+                h = max(1, round(r.height * scale))
+                img = centred(r.resize((w, h), Image.LANCZOS))
+                if glow:
+                    img = with_glow(img, colour, *glow)
+                save(img, out, f"images/units/sc/{uid}-l{level}-{facing}.png", True)
+                if facing == "ne":
+                    save(img, out, f"images/units/sc/{uid}-l{level}.png", True)
 
 
 def build_projectiles(uqm, out):
@@ -1169,7 +1206,7 @@ def build_attack_icons(out):
     """60x60 attack icons: the projectile on a dark disc."""
     sources = {pid: (f"images/projectiles/sc/{pid}-ne.png", True) for pid in PROJECTILES}
     sources.update({lid: (f"images/projectiles/sc/{lid}-ne.png", False) for lid in LASERS})
-    sources["blazer"] = ("images/units/sc/androsynth-blazer-ne.png", True)
+    sources["blazer"] = ("images/units/sc/androsynth-blazer-l1-ne.png", True)
     sources["sentinel"] = ("images/projectiles/sc/sentinel-ne.png", False)
     for iid, (rel, uqm) in sources.items():
         item = trim(Image.open(os.path.join(out, rel)).convert("RGBA"))
