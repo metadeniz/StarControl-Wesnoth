@@ -81,8 +81,8 @@ When you win, the old Alliance and the Hierarchy hear Star Control 1's
 victory theme for their side, the New Alliance hears Star Control II's
 victory fanfare, and the Agents of Chaos (for now) the Precursors' remix of the
 Kohr-Ah victory ditty. When a ship destroys
-another, its race's victory ditty plays: the music fades out for it and
-fades back in slowly (about 3 seconds) afterwards.
+another, its race's victory ditty plays over the music, which keeps going at
+full volume.
 
 ## The ships
 

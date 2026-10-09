@@ -211,66 +211,25 @@ end
 
 ---------------------------------------------------------------- victory ditties
 
--- When a ship destroys another, its race's Star Control victory ditty plays:
--- the music fades out quickly (the ditty file starts with 0.4 s of silence,
--- so it is gone by then), and fades back in once the ditty is over. Nothing
--- here is game state (music and sound are local), so it is safe in
--- multiplayer.
-local DITTY_MS = {   -- length of sounds/sc/ditty-<race>.ogg
-	androsynth = 4740, arilou = 3380, chenjesu = 2380, chmmr = 4560,
-	druuge = 3980, earthling = 3200, ilwrath = 5000, kohrah = 5660,
-	mmrnmhrm = 3800, mycon = 4100, orz = 4460, pkunk = 3620,
-	precursor = 3740, shofixti = 4180, slylandro = 4000, spathi = 3540,
-	supox = 2880, syreen = 4100, thraddash = 2500, umgah = 3620,
-	urquan = 5140, utwig = 6000, vux = 4220, yehat = 2660,
-	zoqfotpik = 5180, melnorme = 3400,
+-- When a ship destroys another, its race's Star Control victory ditty plays
+-- over the music, which keeps playing at full volume. Nothing here is game
+-- state (sound is local), so it is safe in multiplayer.
+local DITTIES = {   -- races with a sounds/sc/ditty-<race>.ogg
+	androsynth = true, arilou = true, chenjesu = true, chmmr = true,
+	druuge = true, earthling = true, ilwrath = true, kohrah = true,
+	mmrnmhrm = true, mycon = true, orz = true, pkunk = true,
+	precursor = true, shofixti = true, slylandro = true, spathi = true,
+	supox = true, syreen = true, thraddash = true, umgah = true,
+	urquan = true, utwig = true, vux = true, yehat = true,
+	zoqfotpik = true, melnorme = true,
 }
-local duck_until
-local FADE_IN_MS = 3000   -- the music fades back in this slowly after a ditty
-local fade_start
-
--- Lua has no timers, so a fade is a few volume steps a short delay apart.
-local function fade_music(from, to, ms)
-	local steps = 6
-	for i = 1, steps do
-		wesnoth.audio.music_list.volume = from + (to - from) * i / steps
-		if i < steps then wesnoth.interface.delay(ms // steps) end
-	end
-end
 
 function sc.victory_ditty()
 	local killer = wesnoth.units.get(wml.variables["x2"], wml.variables["y2"])
 	if not killer then return end
 	local race = tostring(killer.race):match("^sc_(.+)$")
-	if not race or not DITTY_MS[race] then return end
+	if not race or not DITTIES[race] then return end
 	wesnoth.audio.play("sc/ditty-" .. race .. ".ogg")
-	if not duck_until then
-		fade_music(100, 0, 200)
-	elseif fade_start then          -- a new ditty while the music was fading in
-		wesnoth.audio.music_list.volume = 0
-	end
-	fade_start = nil
-	duck_until = math.max(duck_until or 0, wesnoth.ms_since_init() + DITTY_MS[race])
-end
-
--- Once the ditty is over the music fades back in over FADE_IN_MS. A long
--- blocking fade would freeze the game, so the volume is raised a step at a
--- time whenever the mouse moves or a game event (move, selection, attack,
--- turn change) fires.
-function sc.unduck()
-	if not duck_until then return end
-	local now = wesnoth.ms_since_init()
-	if now < duck_until then return end
-	fade_start = fade_start or now
-	local v = math.min(100, math.floor((now - fade_start) * 100 / FADE_IN_MS))
-	wesnoth.audio.music_list.volume = math.max(v, 1)
-	if v >= 100 then duck_until, fade_start = nil, nil end
-end
-
-local previous_mouse_move = wesnoth.game_events.on_mouse_move
-function wesnoth.game_events.on_mouse_move(...)
-	if previous_mouse_move then previous_mouse_move(...) end
-	sc.unduck()
 end
 
 ------------------------------------------------------------- Pkunk rebirth
@@ -434,5 +393,6 @@ function sc.report_result()
 		table.concat(recruits, " ")))
 end
 
--- A game saved while a ditty played must not load with the music turned down.
+-- Older versions turned the music down during a ditty; a game saved then
+-- must not load with the music turned down.
 wesnoth.audio.music_list.volume = 100
