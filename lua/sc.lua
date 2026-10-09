@@ -348,7 +348,7 @@ function sc.expire_artifact_labels()
 	local keep = {}
 	for _, l in ipairs(wml.array_access.get("sc_artifact_labels")) do
 		if l.side == wesnoth.current.side then
-			wesnoth.map.remove_label(l.x, l.y)
+			wesnoth.map.add_label { x = l.x, y = l.y, text = "" }
 		else
 			keep[#keep + 1] = l
 		end
