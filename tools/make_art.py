@@ -332,10 +332,12 @@ def build_samatra(uqm, out):
     keep = (sat > 0.35) & (mx > 30) & inside & (yy < 235)   # grey rocks and the shield bar go
     a[..., 3] = np.where(keep, a[..., 3], 0)
     body = trim(Image.fromarray(a.astype("uint8")))
-    k = 96 / body.width                     # wider than a hex: it is huge
-    body = body.resize((96, round(body.height * k)), Image.LANCZOS)
-    canvas = Image.new("RGBA", (96, 72), (0, 0, 0, 0))
-    canvas.alpha_composite(body, (0, (72 - body.height) // 2))
+    # Three hexes wide: it is huge, and spills over its neighbours.
+    # Wesnoth centres an oversized sprite on its hex.
+    w = 216
+    body = body.resize((w, round(body.height * w / body.width)), Image.LANCZOS)
+    canvas = Image.new("RGBA", (w, max(HEX, body.height)), (0, 0, 0, 0))
+    canvas.alpha_composite(body, (0, (canvas.height - body.height) // 2))
     for facing in FACINGS:
         save(canvas, out, f"images/units/sc/samatra-{facing}.png", True)
     save(canvas, out, "images/units/sc/samatra.png", True)
