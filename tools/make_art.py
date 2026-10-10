@@ -802,9 +802,9 @@ BANK_VARIATIONS = 2
 # The outer region has no bank line: its white plasma just fades in across
 # the border. The deep badlands get a bank that glows inward and fades out.
 BANKS = {
-    "shallow": ("Yi,Yi^*,Yi^Vyp,Yis,Yis^*,Yis^Vyp", (150, 205, 245), (70, 140, 220), (50, 110, 200),
+    "shallow": ("Yi,Yi^*,Yi^Vyp,Yi^Vys,Yis,Yis^*,Yis^Vyp,Yis^Vys", (150, 205, 245), (70, 140, 220), (50, 110, 200),
                 0.0, 0.0, 0.05, [], -300, 21, (0.45, 0.24)),
-    "deep": ("Yi,Yi^*,Yi^Vyp", (225, 245, 255), (110, 200, 255), (70, 150, 230),
+    "deep": ("Yi,Yi^*,Yi^Vyp,Yi^Vys", (225, 245, 255), (110, 200, 255), (70, 150, 230),
              0.42, 0.26, 0.10, [], -299, 31, None),
 }
 
@@ -1000,7 +1000,7 @@ def build_badlands(rng, out):
 
 
 def build_planet_halos(rng, out, count=3):
-    """Planets in badlands: a crackling ring of white plasma just outside the
+    """Sea planets (^Vys, out in the badlands): a crackling ring of white plasma just outside the
     planet (drawn behind it), so they stand apart from planets in open space."""
     yy, xx = np.mgrid[0:HEX, 0:HEX].astype(np.float32) + 0.5
     dx, dy = xx - HEX / 2, yy - HEX / 2

@@ -287,7 +287,7 @@ local function artifact_key(x, y) return "sc_artifact_" .. x .. "_" .. y end
 function sc.place_artifacts()
 	local map = wesnoth.current.map
 	local planets = wesnoth.map.find {
-		terrain = "*^Vyp",
+		terrain = "*^Vyp,*^Vys",
 		T["not"] { T.filter_adjacent_location { terrain = "Yk,Yc" } },
 		T["not"] { terrain = "Yk,Yc" },
 	}

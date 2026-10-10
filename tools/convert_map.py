@@ -16,6 +16,7 @@ Terrain is translated by role, so a converted map plays like the original:
     ford                                   -> thin badlands      Yif
     bridge                                 -> deep space (a lane) Ys
     village                                -> planet              ^Vyp
+    village in water (not swamp)           -> sea planet          ^Vys
     castle / keep (also ruins in water or  -> docking ring / base Yc / Yk
       swamp: no penalty for anyone)
     impassable (walls, ^Xm...), chasm      -> star                Ys^Yx
@@ -70,7 +71,7 @@ def convert(code):
         new_base = new_base if new_base in ("Yi", "Yis") else "Yn"
 
     if overlay.startswith("V"):
-        return new_base + "^Vyp"
+        return new_base + ("^Vys" if b == "W" else "^Vyp")
     if b == "M":
         return new_base + "^Yad"
     if b == "H":
