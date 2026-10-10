@@ -162,6 +162,17 @@ local function ai_glory(side)
 	end
 end
 
+-- Wesnoth's spread_poison step runs before normal combat and always fires
+-- the poison weapon, never weighing the ship's other guns. That made the
+-- Androsynth spit acid instead of ramming with the Blazer, and the L3 Mycon
+-- use its weak spore burst. Drop it: normal combat still counts poison when
+-- it picks the best weapon.
+function sc.ai_no_spread_poison()
+	for _, s in ipairs(wesnoth.sides) do
+		wesnoth.sides.delete_ai_component(s.side, "stage[main_loop].candidate_action[spread_poison]")
+	end
+end
+
 function sc.turn_end()
 	local side = wesnoth.current.side
 	if is_ai(side) then ai_glory(side) end
