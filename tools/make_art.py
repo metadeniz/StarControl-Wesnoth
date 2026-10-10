@@ -256,8 +256,23 @@ LEVELS = {1: (0.82, None), 2: (0.91, (2.5, 1.0)), 3: (1.0, (3.5, 1.6))}
 # Level 3 is up to this much bigger than the ship's base size, if it fits.
 LEVEL_GROWTH = 1.12
 # Ships whose level-1 sprite fills the whole hex instead (the Precursor
-# Flagship leads with it, so it should look huge).
+# Flagship leads with it, so it should look huge): facing north, its sides
+# touch the hex's slanted edges and its nose and tail poke out top and bottom.
 FILL_HEX = {"precursor-flagship"}
+
+
+def hex_filling_scale(img):
+    """Largest scale at which `img`, upright, stays inside the hex's slanted edges."""
+    scale = HEX / 2 / max(img.size)
+    for step in (0.1, 0.01, 0.001):
+        while True:
+            s = scale + step
+            w, h = round(img.width * s), round(img.height * s)
+            ys, xs = np.nonzero(np.array(img.resize((w, h), Image.LANCZOS))[..., 3] > 40)
+            if (np.abs(xs + 0.5 - w / 2) + np.abs(ys + 0.5 - h / 2) / 2 > HEX / 2).any():
+                break
+            scale = s
+    return scale
 
 
 def glow_colour(img):
@@ -292,12 +307,12 @@ def build_ships(uqm, out):
         for level, (size, glow) in LEVELS.items():
             scale = top * size
             if uid in FILL_HEX and level == 1:
-                scale = min(HEX / max(trim(rotated(hd, a)).size) for a in FACINGS.values())
+                scale = hex_filling_scale(trim(hd))
             for facing, angle in FACINGS.items():
                 r = trim(rotated(hd, angle))
                 w = max(1, round(r.width * scale))
                 h = max(1, round(r.height * scale))
-                img = centred(r.resize((w, h), Image.LANCZOS))
+                img = centred(r.resize((w, h), Image.LANCZOS), max(HEX, w + w % 2, h + h % 2))
                 if glow:
                     img = with_glow(img, colour, *glow)
                 save(img, out, f"images/units/sc/{uid}-l{level}-{facing}.png", True)
