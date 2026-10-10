@@ -90,7 +90,7 @@ full volume.
 |---|---|---|---|
 | Earthling Cruiser | homing nukes, point-defense (fighters hit it at most 50%) | Ur-Quan Dreadnought | close-range fusion blast; fighters at any range (**swarm**: fewer as crew is lost) |
 | Chenjesu Broodhome | photon crystal (ranged; lighter shards close up), DOGI (slows) | Mycon Podship | homing plasmoids at range, heavier plasmoids close up; regrows crew |
-| Mmrnmhrm X-Wing / Y-Wing | recruit either; lasers or torpedoes, transforms | Spathi Eluder | missiles, B.U.T.T. |
+| Mmrnmhrm X-Wing / Y-Wing | recruit either; lasers or torpedoes, transforms; X-Wing heals +4 | Spathi Eluder | missiles, B.U.T.T. |
 | Yehat Terminator | pulse cannons; armored hull (resists blade 40%, pierce 30%, impact 20%, arcane 10%); force shield | Umgah Drone | antimatter cone, skirmisher |
 | Syreen Penetrator | ranged particle dagger; close-range Syreen song (drains) | VUX Intruder | close-range laser (**first strike**); long-range limpets (slow) |
 | Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison), Blazer ram |
