@@ -428,32 +428,46 @@ DITTIES = {
 }
 
 
-DITTY_LOUDNESS = -11.0   # target mean volume, dB; the explosions are about -9
+DITTY_LUFS = -6.0        # target loudness (EBU R128); the music is about -12 to -15
+DITTY_MAX_BOOST = 12.0   # dB of gain at most past where the peaks reach the limiter
 DITTY_DELAY_MS = 400     # starts after the ship's explosion, not on top of it
 
 
 def build_ditties(uqm, out):
     """Victory ditties: rendered from the .mod files with ffmpeg (libopenmpt),
-    capped at 8 seconds in case a module loops, all brought to the same
-    loudness (a limiter catches the peaks) and delayed slightly so the
-    explosion doesn't mask the start."""
+    capped at 8 seconds in case a module loops, brought to the same loudness
+    and delayed slightly so the explosion doesn't mask the start. A limiter
+    catches the peaks, so the gain is corrected over a few passes; ditties
+    with sharp peaks stop short of the target rather than being crushed."""
     import re
     import subprocess
     os.makedirs(os.path.join(out, "sounds/sc"), exist_ok=True)
     base = ["ffmpeg", "-hide_banner", "-y"]
     fade = "afade=t=out:st=7:d=1"
+
+    def measure(path, af):
+        probe = subprocess.run(base + ["-i", path, "-t", "9", "-af", af + "volumedetect,ebur128=framelog=quiet",
+                                       "-f", "null", "-"], capture_output=True, text=True, check=True)
+        peak = float(re.search(r"max_volume: (-?[\d.]+) dB", probe.stderr).group(1))
+        lufs = float(re.findall(r"I:\s+(-?[\d.]+) LUFS", probe.stderr)[-1])
+        return peak, lufs
+
     for race, rel in DITTIES.items():
         src = os.path.join(uqm, "base/ships", rel)
-        probe = subprocess.run(base + ["-i", src, "-t", "8", "-af", fade + ",volumedetect",
-                                       "-f", "null", "-"], capture_output=True, text=True, check=True)
-        mean = float(re.search(r"mean_volume: (-?[\d.]+) dB", probe.stderr).group(1))
-        gain = DITTY_LOUDNESS - mean
         dest = f"sounds/sc/ditty-{race}.ogg"
-        subprocess.run(base + ["-loglevel", "error", "-i", src, "-t", "8", "-af",
-                               f"{fade},volume={gain:.1f}dB,alimiter=limit=0.95:level=disabled,"
-                               f"adelay={DITTY_DELAY_MS}|{DITTY_DELAY_MS}",
-                               "-ac", "2", "-ar", "44100", "-q:a", "4", os.path.join(out, dest)],
-                       check=True)
+        peak, lufs = measure(src, fade + ",")
+        max_gain = -1.0 - peak + DITTY_MAX_BOOST
+        gain = min(DITTY_LUFS - lufs, max_gain)
+        for _ in range(4):
+            subprocess.run(base + ["-loglevel", "error", "-i", src, "-t", "8", "-af",
+                                   f"{fade},volume={gain:.2f}dB,alimiter=limit=0.89:level=disabled,"
+                                   f"adelay={DITTY_DELAY_MS}|{DITTY_DELAY_MS}",
+                                   "-ac", "2", "-ar", "44100", "-q:a", "4", os.path.join(out, dest)],
+                           check=True)
+            miss = DITTY_LUFS - measure(os.path.join(out, dest), "")[1]
+            if miss < 0.2 or gain >= max_gain:
+                break
+            gain = min(gain + miss, max_gain)
         manifest.append(dest)
 
 
