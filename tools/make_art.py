@@ -776,17 +776,31 @@ def build_gas_nebula(rng, out, name, colours):
     field = (fractal_noise(rng, size, 5, 16), fractal_noise(rng, size, 4, 8),
              fractal_noise(rng, size, 4, 20))
     mask = hex_mask_cache
+    # Near its border every tile hands over from its own crop of the field to
+    # noise that repeats from hex to hex (as the badlands plasma does), so
+    # wisps and filaments run on across every hex edge, into neighbouring
+    # gas tiles and into the wisps spilt over open space, with no seam.
+    # Each crop is rescaled to the same spread, so all tiles look alike.
+    lrng = np.random.default_rng(int(rng.integers(1 << 30)))
+    lattice = [lattice_noise(lrng, k) for k in (5, 5, 8)]
+    # typical spread inside one tile, so the wisps keep their old contrast
+    spread = [float(np.mean([f[y:y + HEX, x:x + HEX].std() for y in range(0, size - HEX, 24)
+                             for x in range(0, size - HEX, 24)])) for f in field]
+    handover = _smoothstep(BORDER_DIST / 20.0)
+
+    def seamless(i, sl):
+        own = field[i][sl]
+        own = (own - own.mean()) / max(float(own.std()), 1e-4)
+        w = handover
+        z = (w * own + (1 - w) * lattice[i]) / np.sqrt(w * w + (1 - w) ** 2)
+        return np.clip(0.5 + spread[i] * z, 0, 1)
 
     def gas(x0, y0):
         sl = (slice(y0, y0 + HEX), slice(x0, x0 + HEX))
-        # Wisps run right to the hex edge: where two tiles meet, their thin
-        # wisps don't line up exactly, which shows far less than a seam of
-        # uniform haze (a honeycomb) would.
-        edge = 1.0
-        n1 = calm_edges(field[0][sl], 18)
-        n2 = calm_edges(field[1][sl], 18)
-        streak = (1 - np.abs(2 * field[0][sl] - 1)) ** 3 * edge       # soft wisps
-        fine = (1 - np.abs(2 * field[2][sl] - 1)) ** 22 * edge         # thin filaments
+        f0, f1, f2 = (seamless(i, sl) for i in range(3))
+        n1, n2 = f0, f1
+        streak = (1 - np.abs(2 * f0 - 1)) ** 3       # soft wisps
+        fine = (1 - np.abs(2 * f2 - 1)) ** 22         # thin filaments
         mix = 0.5 + 0.5 * (n2 - 0.5)
         rgb = col_a[None, None] * (1 - mix[..., None]) + col_b[None, None] * mix[..., None]
         rgb = rgb * (0.75 + 0.5 * (n1 - 0.5) + 0.35 * streak)[..., None]
@@ -1509,7 +1523,7 @@ def main():
     ap.add_argument("--threedo", help="unzipped UQM 3DO music add-on (optional)")
     ap.add_argument("--wesnoth-data", default="/usr/share/games/wesnoth/1.16/data")
     ap.add_argument("--seed", type=int, default=1990)
-    ap.add_argument("--only", choices=["badlands"], help="rebuild just this terrain")
+    ap.add_argument("--only", choices=["badlands", "gas"], help="rebuild just this terrain")
     args = ap.parse_args()
     if not args.only and not args.uqm:
         ap.error("--uqm is required unless --only is given")
@@ -1520,6 +1534,10 @@ def main():
     tmasks = transition_masks(args.wesnoth_data)
     if args.only == "badlands":
         build_badlands(np.random.default_rng(args.seed + 4), args.out)
+        return 0
+    if args.only == "gas":
+        for i, (name, colours) in enumerate(GAS_NEBULAE.items()):
+            build_gas_nebula(np.random.default_rng(args.seed + 10 + i), args.out, name, colours)
         return 0
 
     build_ships(args.uqm, args.out)
