@@ -131,7 +131,7 @@ Spathi and Shofixti, which only get it as Elites):
 | Yehat Terminator | pulse cannons ×6 | **first strike** |
 | Syreen Penetrator | song ×3 | song also **slows**, dagger ×4 |
 | Arilou Skiff | new **ranged** laser; close laser **backstab**; **ambush** | ambush, laser ×4 |
-| Shofixti Scout | stronger darts, 20-damage Glory | darts **backstab**, 24-damage Glory |
+| Shofixti Scout | stronger darts, 20-damage Glory | **skirmisher**, darts **backstab**, 24-damage Glory |
 | Ur-Quan Dreadnought | heavier fusion blast, fighters ×5 | fighters ×6, **leadership** |
 | Mycon Podship | bigger plasmoids, faster regrowth | homing plasmoids **marksman**, new melee **poison** spore burst |
 | Spathi Eluder | **skirmisher**, stronger B.U.T.T. | B.U.T.T. ×3, **backstab** |
