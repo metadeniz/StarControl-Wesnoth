@@ -790,12 +790,15 @@ BANK_OFFSETS = {"n": (0, -72), "ne": (54, -36), "se": (54, 36), "s": (0, 72), "s
 BANK_REACH = 68.0
 BANK_PAD = 4          # extra pixels round the hex so gradients are exact at its edge
 BANK_VARIATIONS = 2
-# name -> (terrains inside, line, glow, haze colour, line, glow, haze opacity, inner flow lines, layer, seed)
+# name -> (terrains inside, line, glow, haze colour, line, glow, haze opacity,
+#          inner flow lines, layer, seed, plasma inside (lightning, wisps) or None)
+# The outer region has no bank line: its white plasma just fades in across
+# the border. The deep badlands get a bank that glows inward and fades out.
 BANKS = {
-    "shallow": ("Yi,Yi^*,Yis,Yis^*", (150, 205, 245), (70, 140, 220), (50, 110, 200),
-                0.28, 0.11, 0.05, [], -300, 21),
-    "deep": ("Yi,Yi^*", (225, 245, 255), (110, 200, 255), (70, 150, 230),
-             0.95, 0.40, 0.10, [(7.0, 0.18)], -299, 31),
+    "shallow": ("Yi,Yi^*,Yi^Vyp,Yis,Yis^*,Yis^Vyp", (150, 205, 245), (70, 140, 220), (50, 110, 200),
+                0.0, 0.0, 0.05, [], -300, 21, (0.45, 0.24)),
+    "deep": ("Yi,Yi^*,Yi^Vyp", (225, 245, 255), (110, 200, 255), (70, 150, 230),
+             0.42, 0.26, 0.10, [], -299, 31, None),
 }
 
 
@@ -862,11 +865,14 @@ class _BankGeometry:
         return f / self.ksum
 
 
-def bank_layer(f, style):
-    """RGBA image of the bank, from the field f (positive inside)."""
+def bank_layer(f, style, plasma=None):
+    """RGBA image of the bank, from the field f (positive inside), with the
+    plasma alpha (if any) fading in across it."""
     line_c, glow_c, haze_c, line_a, glow_a, haze_a, flows = style
     gy, gx = np.gradient(f)
     d = f / np.maximum(np.sqrt(gx * gx + gy * gy), 1e-4)    # ~ pixels from the bank
+    p = BANK_PAD
+    d = d[p:-p, p:-p]
     rgb = np.zeros(d.shape + (3,), np.float32)
     a = np.zeros(d.shape, np.float32)
 
@@ -879,12 +885,14 @@ def bank_layer(f, style):
         a = out_a
 
     over(haze_c, haze_a * _smoothstep(d / 6.0))
-    over(glow_c, glow_a * np.exp(-np.abs(d) / 3.0))
+    if plasma is not None:
+        over(PLASMA_COLOUR, plasma * _smoothstep((d + 2) / 9.0))
+    # glow reaches well inside the bank and only a little outside it
+    over(glow_c, glow_a * np.exp(-np.abs(d) / np.where(d > 0, 7.0, 2.0)))
     for offset, alpha in flows:
         over(line_c, alpha * np.exp(-((d - offset) / 0.8) ** 2))
-    over(line_c, line_a * np.exp(-(d / 1.0) ** 2))
-    p = BANK_PAD
-    img = np.dstack([rgb[p:-p, p:-p], a[p:-p, p:-p] * 255 * hex_mask_cache])
+    over(line_c, line_a * np.exp(-(d / 1.4) ** 2))
+    img = np.dstack([rgb, a * 255 * hex_mask_cache])
     return Image.fromarray(img.clip(0, 255).astype(np.uint8), "RGBA")
 
 
@@ -901,22 +909,32 @@ def bank_code(centre, neighbours):
     return ("in" if centre else "out") + "-" + "".join("1" if v else "0" for v in neighbours)
 
 
-def crackle(rng, field, strength, wisps=0.0):
-    """White plasma inside the badlands: soft wisps that run right to the
-    hex edge (like the gas nebulae, so neighbours blend), and sharp crackle
-    that fades out before it."""
+PLASMA_COLOUR = (200, 228, 255)
+DEEP_PLASMA = (0.5, 0.26)    # extra lightning and wisps in deep badlands
+
+
+def plasma_alpha(rng, field, strength, wisps):
+    """Alpha of the white plasma inside badlands: soft wisps plus sharp
+    lightning. Both are scaled to the same average in every tile, so tiles
+    look equally stormy, and the wisps settle to that average at the hex
+    border (the lightning fades out before it), so neighbours meet evenly."""
     size = field[0].shape[0]
     x0, y0 = rng.integers(0, size - HEX, 2)
     a = field[0][y0:y0 + HEX, x0:x0 + HEX]
     b = field[1][y0:y0 + HEX, x0:x0 + HEX]
     ridge = (1 - np.abs(2 * a - 1)) ** 6 * np.clip(BORDER_DIST / 14, 0, 1)
+    ridge = ridge * 0.08 / max(float(ridge.mean()), 1e-4)
     streak = (1 - np.abs(2 * b - 1)) ** 3
-    rgb = np.zeros((HEX, HEX, 3), np.float32)
-    rgb[..., 0] = 180 + 50 * ridge
-    rgb[..., 1] = 215 + 35 * ridge
-    rgb[..., 2] = 255
-    alpha = np.clip(0.75 * ridge * strength + streak * wisps, 0, 1) * 255
-    return Image.fromarray(np.dstack([rgb, alpha]).clip(0, 255).astype(np.uint8), "RGBA")
+    streak = streak * 0.5 / max(float(streak.mean()), 1e-4)
+    streak = 0.5 + (streak - 0.5) * np.clip(BORDER_DIST / 16, 0, 1)
+    return np.clip(0.75 * ridge * strength + streak * wisps, 0, 1)
+
+
+def crackle(rng, field, strength, wisps=0.0):
+    """White plasma as an image (see plasma_alpha)."""
+    alpha = plasma_alpha(rng, field, strength, wisps)
+    rgb = np.broadcast_to(np.array(PLASMA_COLOUR, np.float32), (HEX, HEX, 3))
+    return Image.fromarray(np.dstack([rgb, alpha * 255]).clip(0, 255).astype(np.uint8), "RGBA")
 
 
 def build_badlands(rng, out):
@@ -924,37 +942,37 @@ def build_badlands(rng, out):
     geo = _BankGeometry()
     rules = []
     tiles = {}
+    field = (fractal_noise(rng, 512, 5, 10), fractal_noise(rng, 512, 4, 12))
     for name, (inside, *style) in BANKS.items():
-        style, layer, seed = tuple(style[:7]), style[7], style[8]
+        style, layer, seed, plasma = tuple(style[:7]), style[7], style[8], style[9]
         brng = np.random.default_rng(seed)
         wobble = geo.edge_wobble(brng, 0.25)
         meanders = [geo.meander(brng, 0.35) for _ in range(BANK_VARIATIONS)]
+        plasmas = [plasma_alpha(brng, field, *plasma) if plasma else None for _ in range(BANK_VARIATIONS)]
         outside = "!," + inside
         for centre, neighbours in bank_patterns():
             code = bank_code(centre, neighbours)
             f = geo.field(centre, neighbours) + wobble
-            for v, m in enumerate(meanders):
-                save(bank_layer(f + m, style), out, f"{sc}/badlands/{name}-{code}-{v + 1}.png", False)
+            for v, (m, pl) in enumerate(zip(meanders, plasmas)):
+                save(bank_layer(f + m, style, pl), out, f"{sc}/badlands/{name}-{code}-{v + 1}.png", False)
             types = [inside if centre else outside] + [inside if n else outside for n in neighbours]
             rules.append(f"{{SC_BANK sc_bank_{name} {layer} sc/badlands/{name}-{code} "
                          + " ".join(f"({t})" for t in types) + "}")
-        tiles[name] = bank_layer(geo.field(True, (False,) * 6) + wobble, style)
+        tiles[name] = bank_layer(geo.field(True, (False,) * 6) + wobble, style, plasmas[0])
 
     # Symbol images for the editor and help: one lone hex of each kind.
-    field = (fractal_noise(rng, 512, 5, 10), fractal_noise(rng, 512, 4, 12))
-    for rel, banks, strength, wisps in (("ionstorm-tile", ("shallow", "deep"), 0.8, 0.5),
-                                        ("ionstorm-light-tile", ("shallow",), 0.45, 0.22)):
+    for rel, banks, extra in (("ionstorm-tile", ("shallow", "deep"), True),
+                              ("ionstorm-light-tile", ("shallow",), False)):
         img = starfield(rng)
-        img.alpha_composite(crackle(rng, field, strength, wisps))
         for b in banks:
             img.alpha_composite(tiles[b])
+        if extra:
+            img.alpha_composite(crackle(rng, field, *DEEP_PLASMA))
         save(apply_mask(img, hex_mask_cache), out, f"{sc}/{rel}.png", False)
 
-    # Underneath the banks: open space filled with white wisps and lightning,
-    # so it is plain you are in different terrain; strongest in the deep
-    # badlands. Thin badlands (fords) get only a trace, and no bank.
-    for stem, count, strength, wisps in (("ionstorm", 11, 0.8, 0.5), ("ionstorm-light", 6, 0.45, 0.22),
-                                         ("ionstorm-thin", 6, 0.24, 0.08)):
+    # Deep badlands add more plasma on top of the light badlands' (which the
+    # outer bank layer draws). Thin badlands (fords) get only a trace, no bank.
+    for stem, count, (strength, wisps) in (("ionstorm", 11, DEEP_PLASMA), ("ionstorm-thin", 6, (0.24, 0.08))):
         for v in range(count):
             img = starfield(rng)
             img.alpha_composite(crackle(rng, field, strength, wisps))
@@ -963,6 +981,8 @@ def build_badlands(rng, out):
             if stem == "ionstorm-thin" and v == 0:
                 save(apply_mask(img, hex_mask_cache), out, f"{sc}/ionstorm-thin-tile.png", False)
 
+    build_planet_halos(rng, out)
+
     with open(os.path.join(out, "terrain/badlands-banks.cfg"), "w") as f:
         f.write("#textdomain wesnoth-Star_Control_TC\n")
         f.write("# Generated by tools/make_art.py (build_badlands); do not edit by hand.\n")
@@ -970,6 +990,32 @@ def build_badlands(rng, out):
         f.write("# its n, ne, se, s, sw and nw neighbours.\n\n")
         f.write(BANK_MACRO)
         f.write("\n".join(rules) + "\n\n#undef SC_BANK\n")
+
+
+def build_planet_halos(rng, out, count=3):
+    """Planets in badlands: a crackling ring of white plasma just outside the
+    planet (drawn behind it), so they stand apart from planets in open space."""
+    yy, xx = np.mgrid[0:HEX, 0:HEX].astype(np.float32) + 0.5
+    dx, dy = xx - HEX / 2, yy - HEX / 2
+    r = np.sqrt(dx * dx + dy * dy)
+    ang = (np.arctan2(dy, dx) + np.pi) / (2 * np.pi)          # 0..1 round the ring
+    for v in range(count):
+        n = fractal_noise(rng, 256, 4, 6)
+        # sample the noise along the ring (wrapping), so the flicker is seamless
+        idx = (ang * 255).astype(int) % 256
+        flick = n[idx, (np.clip(r, 0, 35) * 7).astype(int) % 256]
+        wobble = 5.0 * (n[idx, 40] - 0.5)
+        ridge = (1 - np.abs(2 * flick - 1)) ** 3
+        ring = np.exp(-((r - 30 - wobble) / 1.3) ** 2)
+        glow = np.exp(-((r - 29) / 4.0) ** 2)
+        alpha = np.clip(ring * (0.1 + 0.9 * ridge) + glow * 0.22, 0, 1)
+        rgb = np.zeros((HEX, HEX, 3), np.float32)
+        rgb[..., 0] = 170 + 80 * ring
+        rgb[..., 1] = 210 + 45 * ring
+        rgb[..., 2] = 255
+        img = np.dstack([rgb, alpha * 255 * hex_mask_cache])
+        name = "planet-halo" if v == 0 else f"planet-halo{v + 1}"
+        save(Image.fromarray(img.clip(0, 255).astype(np.uint8), "RGBA"), out, f"images/terrain/sc/{name}.png", False)
 
 
 BANK_MACRO = """#define SC_BANK FLAG LAYER IMAGESTEM C N NE SE S SW NW
