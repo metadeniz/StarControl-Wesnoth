@@ -217,7 +217,9 @@ heat-proof Chenjesu (2 / 50%) are at home in red nebulae.
   regenerates all images and sounds. `art-manifest.txt`
   lists every UQM-derived file (what a published version must replace).
 - `tools/make_maps.py .` regenerates the 2p maps.
-- `tools/make_understanding_power.py .` regenerates Understanding Power.
+- `tools/make_understanding_power.py .` regenerates Understanding Power, and
+  `maps/default-terrain/2p_Understanding_Power.map`, the same map in default
+  Wesnoth terrain.
 - `tools/convert_map.py <wesnoth .map> <out .map>` turns any regular
   Wesnoth map into a space map hex for hex: forest → nebula, mushroom
   grove → red nebula, sand → dust cloud, hills → asteroids, mountains →
