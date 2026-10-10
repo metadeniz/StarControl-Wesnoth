@@ -13,10 +13,12 @@ Two kinds of art come out of this script:
 Usage:
     make_art.py --uqm <UQM-MegaMod-Content checkout> --out <add-on dir>
                 [--wesnoth-data /usr/share/games/wesnoth/1.16/data]
+    make_art.py --only badlands --out <add-on dir>    (badlands art and rules only)
 """
 
 import argparse
 import colorsys
+import itertools
 import math
 import os
 import shutil
@@ -703,40 +705,6 @@ def build_nebula(rng, mask, tmasks, out):
         save(apply_mask(layer, soft * 0.9), out, f"images/terrain/sc/nebula-{combo}.png", False)
 
 
-def ion_layer(field, x0, y0):
-    """Electric filaments for the ion storm: ridged noise, cyan on blue."""
-    n1, n2 = field
-    a = n1[y0:y0 + HEX, x0:x0 + HEX]
-    b = n2[y0:y0 + HEX, x0:x0 + HEX]
-    ridge = (1 - np.abs(2 * a - 1)) ** 6           # thin bright lines
-    haze = 0.35 + 0.25 * b
-    rgb = np.zeros((HEX, HEX, 3), np.float32)
-    rgb[..., 0] = 20 + 160 * ridge
-    rgb[..., 1] = 45 + 170 * ridge + 30 * haze
-    rgb[..., 2] = 90 + 150 * np.maximum(ridge, haze * 0.8)
-    alpha = np.clip(0.3 + 0.2 * haze + 0.55 * ridge, 0, 1) * 255
-    return Image.fromarray(np.dstack([rgb, alpha]).clip(0, 255).astype(np.uint8), "RGBA")
-
-
-def build_ionstorm(rng, mask, tmasks, out):
-    size = 512
-    field = (fractal_noise(rng, size, 5, 10), fractal_noise(rng, size, 3, 8))
-    for v in range(11):
-        x0, y0 = rng.integers(0, size - HEX, 2)
-        img = starfield(rng, 0.5)
-        img.alpha_composite(ion_layer(field, x0, y0))
-        name = "ionstorm" if v == 0 else f"ionstorm{v + 1}"
-        save(apply_mask(img, mask), out, f"images/terrain/sc/{name}.png", False)
-        if v == 0:
-            save(apply_mask(img, mask), out, "images/terrain/sc/ionstorm-tile.png", False)
-    for combo, m in tmasks.items():
-        x0, y0 = rng.integers(0, size - HEX, 2)
-        soft = np.array(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(2.0)),
-                        np.float32) / 255.0
-        save(apply_mask(ion_layer(field, x0, y0), soft * 0.85), out,
-             f"images/terrain/sc/ionstorm-{combo}.png", False)
-
-
 NEBULA_EDGE = 0.5   # gas strength exactly on a nebula/space hex edge
 GAS_DENSITY = 0.7   # overall opacity of nebulae and dust (1 = original); lower shows more space
 
@@ -795,74 +763,251 @@ def build_gas_nebula(rng, out, name, colours):
              f"images/terrain/sc/{name}-edge-{combo}.png", False)
 
 
-def build_ionstorm_v2(rng, out):
-    """Ion storm tiles that join without seams (lightning fades out before
-    the hex edge, where every tile shares one haze colour), plus the same
-    two-sided wavy border as the nebula. Overwrites build_ionstorm()."""
-    size = 512
-    field = (fractal_noise(rng, size, 5, 10), fractal_noise(rng, size, 3, 8))
-    mask = hex_mask_cache
+# ---- badlands: plasma rivers over open space ----
+#
+# Badlands hexes show plain open space. What marks them is a glowing bank
+# line around each stretch of badlands, which runs on from hex to hex so a
+# channel of badlands hexes reads as one river with a continuous outline.
+#
+# Every hex near badlands draws its piece of a smooth field
+#   f(p) = sum_k w(|p - c_k|) s_k / sum_k w(|p - c_k|)
+# over the hex centres c_k around it, with s_k = +1 for badlands and -1 for
+# anything else, and the bank is the line f = 0. The kernel w reaches 68px,
+# less than the 72px from any point of a hex to the nearest centre beyond its
+# six neighbours, so a hex can work out f exactly from itself and its
+# neighbours, and two hexes agree on f along the edge they share: the lines
+# join. One image per pattern of badlands neighbours (127 per bank), picked
+# by the rules in terrain/badlands-banks.cfg, which this script also writes.
+#
+# The banks wobble two ways without breaking the joins: a fixed wiggle along
+# each kind of hex edge (the same on both sides of every edge), and random
+# meanders inside the hex that fade out before its border.
+# Two banks: a faint outer one around all badlands (Yi and light badlands
+# Yis), and a bright inner one around the deep badlands (Yi).
 
-    def storm(x0, y0):
-        a = field[0][y0:y0 + HEX, x0:x0 + HEX]
-        b = calm_edges(field[1][y0:y0 + HEX, x0:x0 + HEX], 18)
-        ridge = (1 - np.abs(2 * a - 1)) ** 6 * np.clip(BORDER_DIST / 14, 0, 1)
-        haze = 0.35 + 0.25 * b
-        rgb = np.zeros((HEX, HEX, 3), np.float32)
-        rgb[..., 0] = 20 + 160 * ridge
-        rgb[..., 1] = 45 + 170 * ridge + 30 * haze
-        rgb[..., 2] = 90 + 150 * np.maximum(ridge, haze * 0.8)
-        # a faint haze (more space shows through) around bright filaments
-        alpha = np.clip(0.12 + 0.16 * haze + 0.6 * ridge, 0, 1) * 255
-        return Image.fromarray(np.dstack([rgb, alpha]).clip(0, 255).astype(np.uint8), "RGBA")
-
-    for v in range(11):
-        x0, y0 = rng.integers(0, size - HEX, 2)
-        img = starfield(rng, 0.5)
-        img.alpha_composite(storm(x0, y0))
-        name = "ionstorm" if v == 0 else f"ionstorm{v + 1}"
-        save(apply_mask(img, mask), out, f"images/terrain/sc/{name}.png", False)
-        if v == 0:
-            save(apply_mask(img, mask), out, "images/terrain/sc/ionstorm-tile.png", False)
-    for combo in TRANSITION_COMBOS:
-        x0, y0 = rng.integers(0, size - HEX, 2)
-        save(apply_mask(storm(x0, y0), wavy_mask(rng, combo, 0.5) * mask), out,
-             f"images/terrain/sc/ionstorm-{combo}.png", False)
-        save(apply_mask(starfield(rng, 0.5), wavy_mask(rng, combo, 0.5) * mask), out,
-             f"images/terrain/sc/ionstorm-edge-{combo}.png", False)
+BANK_DIRS = ["n", "ne", "se", "s", "sw", "nw"]
+BANK_OFFSETS = {"n": (0, -72), "ne": (54, -36), "se": (54, 36), "s": (0, 72), "sw": (-54, 36), "nw": (-54, -36)}
+BANK_REACH = 68.0
+BANK_PAD = 4          # extra pixels round the hex so gradients are exact at its edge
+BANK_VARIATIONS = 2
+# name -> (terrains inside, line, glow, haze colour, line, glow, haze opacity, inner flow lines, layer, seed)
+BANKS = {
+    "shallow": ("Yi,Yi^*,Yis,Yis^*", (150, 205, 245), (70, 140, 220), (50, 110, 200),
+                0.55, 0.22, 0.05, [], -300, 21),
+    "deep": ("Yi,Yi^*", (225, 245, 255), (110, 200, 255), (70, 150, 230),
+             0.95, 0.40, 0.10, [(7.0, 0.18)], -299, 31),
+}
 
 
-def build_thin_ionstorm(rng, out):
-    """Fords: the ion storm thinned out to a faint crackle over open space."""
-    storm_tiles = [f"ionstorm{'' if v == 0 else v + 1}.png" for v in range(11)]
+def _smoothstep(x):
+    x = np.clip(x, 0, 1)
+    return x * x * (3 - 2 * x)
+
+
+class _BankGeometry:
+    def __init__(self):
+        p = BANK_PAD
+        yy, xx = np.mgrid[-p:HEX + p, -p:HEX + p].astype(np.float32) + 0.5
+        self.px, self.py = xx - HEX / 2, yy - HEX / 2
+
+        def kern(dx, dy):
+            r2 = ((self.px - dx) ** 2 + (self.py - dy) ** 2) / BANK_REACH ** 2
+            return np.clip(1 - r2, 0, None) ** 2
+        self.kc = kern(0, 0)
+        self.kn = {d: kern(*o) for d, o in BANK_OFFSETS.items()}
+        self.ksum = self.kc + sum(self.kn.values())
+        verts = [(-18, -36), (18, -36), (36, 0), (18, 36), (-18, 36), (-36, 0)]
+        self.edist, self.et = {}, {}
+        for d, (i, j) in HEX_EDGES.items():
+            a, b = verts[i], verts[j]
+            # measure along the edge from its upper (then left) end, so the
+            # two hexes sharing an edge agree on where along it a point is
+            if (a[1], a[0]) > (b[1], b[0]):
+                a, b = b, a
+            (x1, y1), (x2, y2) = a, b
+            dx, dy = x2 - x1, y2 - y1
+            t = np.clip(((self.px - x1) * dx + (self.py - y1) * dy) / (dx * dx + dy * dy), 0, 1)
+            self.edist[d] = np.sqrt((self.px - x1 - t * dx) ** 2 + (self.py - y1 - t * dy) ** 2)
+            self.et[d] = t
+        self.border = np.minimum.reduce(list(self.edist.values()))
+
+    def edge_wobble(self, rng, amp, width=9.0):
+        """The same wiggle on every edge of one orientation (n/s, ne/sw,
+        nw/se). Zero near the corners and flat across the edge itself."""
+        out = np.zeros_like(self.px)
+        waves = [(rng.uniform(1.0, 2.0), rng.uniform(2.0, 3.5), *rng.uniform(0, 2 * np.pi, 2),
+                  rng.choice([-1, 1])) for _ in range(3)]
+        kind = {"n": 0, "s": 0, "ne": 1, "sw": 1, "nw": 2, "se": 2}
+        for d in BANK_DIRS:
+            k1, k2, p1, p2, sign = waves[kind[d]]
+            t = self.et[d]
+            bump = _smoothstep((t - 0.2) / 0.15) * _smoothstep((0.8 - t) / 0.15)
+            g = sign * (0.7 * np.sin(np.pi * k1 * t + p1) + 0.3 * np.sin(np.pi * k2 * t + p2)) * bump
+            band = np.where(self.edist[d] < width, 0.5 * (1 + np.cos(np.pi * self.edist[d] / width)), 0)
+            out += band * g
+        return out * amp
+
+    def meander(self, rng, amp):
+        """Random wobble inside the hex, gone (with a flat slope) at its border."""
+        size, n = 200, HEX + 2 * BANK_PAD
+        noise = fractal_noise(rng, size, 2, 3)
+        x0, y0 = rng.integers(0, size - n, 2)
+        noise = noise[y0:y0 + n, x0:x0 + n] - 0.5
+        return noise * 2 * amp * _smoothstep((self.border - 2) / 16) ** 2
+
+    def field(self, centre, neighbours):
+        f = self.kc * (1 if centre else -1)
+        for d, inside in zip(BANK_DIRS, neighbours):
+            f = f + self.kn[d] * (1 if inside else -1)
+        return f / self.ksum
+
+
+def bank_layer(f, style):
+    """RGBA image of the bank, from the field f (positive inside)."""
+    line_c, glow_c, haze_c, line_a, glow_a, haze_a, flows = style
+    gy, gx = np.gradient(f)
+    d = f / np.maximum(np.sqrt(gx * gx + gy * gy), 1e-4)    # ~ pixels from the bank
+    rgb = np.zeros(d.shape + (3,), np.float32)
+    a = np.zeros(d.shape, np.float32)
+
+    def over(colour, alpha):
+        nonlocal rgb, a
+        alpha = np.clip(alpha, 0, 1)
+        out_a = alpha + a * (1 - alpha)
+        rgb = (np.array(colour, np.float32) * alpha[..., None] + rgb * (a * (1 - alpha))[..., None]) \
+            / np.maximum(out_a, 1e-6)[..., None]
+        a = out_a
+
+    over(haze_c, haze_a * _smoothstep(d / 6.0))
+    over(glow_c, glow_a * np.exp(-np.abs(d) / 3.0))
+    for offset, alpha in flows:
+        over(line_c, alpha * np.exp(-((d - offset) / 0.8) ** 2))
+    over(line_c, line_a * np.exp(-(d / 1.0) ** 2))
+    p = BANK_PAD
+    img = np.dstack([rgb[p:-p, p:-p], a[p:-p, p:-p] * 255 * hex_mask_cache])
+    return Image.fromarray(img.clip(0, 255).astype(np.uint8), "RGBA")
+
+
+def bank_patterns():
+    """(centre inside?, neighbours inside? n..nw) for every hex that has a
+    piece of a bank: badlands hexes, and other hexes next to badlands."""
+    for centre in (True, False):
+        for neighbours in itertools.product((False, True), repeat=6):
+            if centre or any(neighbours):
+                yield centre, neighbours
+
+
+def bank_code(centre, neighbours):
+    return ("in" if centre else "out") + "-" + "".join("1" if v else "0" for v in neighbours)
+
+
+def crackle(rng, field, strength):
+    """Faint white plasma crackle that fades out before the hex border."""
+    size = field[0].shape[0]
+    x0, y0 = rng.integers(0, size - HEX, 2)
+    a = field[0][y0:y0 + HEX, x0:x0 + HEX]
+    ridge = (1 - np.abs(2 * a - 1)) ** 6 * np.clip(BORDER_DIST / 14, 0, 1)
+    rgb = np.zeros((HEX, HEX, 3), np.float32)
+    rgb[..., 0] = 170 + 60 * ridge
+    rgb[..., 1] = 210 + 40 * ridge
+    rgb[..., 2] = 255
+    alpha = np.clip(0.75 * ridge, 0, 1) * strength * 255
+    return Image.fromarray(np.dstack([rgb, alpha]).clip(0, 255).astype(np.uint8), "RGBA")
+
+
+def build_badlands(rng, out):
+    sc = "images/terrain/sc"
+    geo = _BankGeometry()
+    rules = []
+    tiles = {}
+    for name, (inside, *style) in BANKS.items():
+        style, layer, seed = tuple(style[:7]), style[7], style[8]
+        brng = np.random.default_rng(seed)
+        wobble = geo.edge_wobble(brng, 0.25)
+        meanders = [geo.meander(brng, 0.35) for _ in range(BANK_VARIATIONS)]
+        outside = "!," + inside
+        for centre, neighbours in bank_patterns():
+            code = bank_code(centre, neighbours)
+            f = geo.field(centre, neighbours) + wobble
+            for v, m in enumerate(meanders):
+                save(bank_layer(f + m, style), out, f"{sc}/badlands/{name}-{code}-{v + 1}.png", False)
+            types = [inside if centre else outside] + [inside if n else outside for n in neighbours]
+            rules.append(f"{{SC_BANK sc_bank_{name} {layer} sc/badlands/{name}-{code} "
+                         + " ".join(f"({t})" for t in types) + "}")
+        tiles[name] = bank_layer(geo.field(True, (False,) * 6) + wobble, style)
+
+    # Symbol images for the editor and help: one lone hex of each kind.
+    for rel, banks in (("ionstorm-tile", ("shallow", "deep")), ("ionstorm-light-tile", ("shallow",))):
+        img = starfield(rng)
+        for b in banks:
+            img.alpha_composite(tiles[b])
+        save(apply_mask(img, hex_mask_cache), out, f"{sc}/{rel}.png", False)
+
+    # Thin badlands (fords): open space with a faint crackle, no bank.
+    field = (fractal_noise(rng, 512, 5, 10),)
     for v in range(6):
-        base = starfield(rng, 1.0)
-        storm = Image.open(os.path.join(out, "images/terrain/sc", storm_tiles[v])).convert("RGBA")
-        a = np.array(storm).astype(np.float32)
-        a[:, :, 3] *= 0.35
-        base.alpha_composite(Image.fromarray(a.astype(np.uint8), "RGBA"))
+        img = starfield(rng)
+        img.alpha_composite(crackle(rng, field, 0.45))
         name = "ionstorm-thin" if v == 0 else f"ionstorm-thin{v + 1}"
-        save(apply_mask(base, hex_mask_cache), out, f"images/terrain/sc/{name}.png", False)
+        save(apply_mask(img, hex_mask_cache), out, f"{sc}/{name}.png", False)
         if v == 0:
-            save(apply_mask(base, hex_mask_cache), out, "images/terrain/sc/ionstorm-thin-tile.png", False)
+            save(apply_mask(img, hex_mask_cache), out, f"{sc}/ionstorm-thin-tile.png", False)
+
+    with open(os.path.join(out, "terrain/badlands-banks.cfg"), "w") as f:
+        f.write("#textdomain wesnoth-Star_Control_TC\n")
+        f.write("# Generated by tools/make_art.py (build_badlands); do not edit by hand.\n")
+        f.write("# One rule per pattern of badlands around a hex: the hex itself, then\n")
+        f.write("# its n, ne, se, s, sw and nw neighbours.\n\n")
+        f.write(BANK_MACRO)
+        f.write("\n".join(rules) + "\n\n#undef SC_BANK\n")
 
 
-def build_light_ionstorm(rng, out, strength=0.65):
-    """Light badlands (shallow water, swamp): the badlands at about two
-    thirds strength, with matching soft borders."""
-    def thinned(rel):
-        a = np.array(Image.open(os.path.join(out, "images/terrain/sc", rel)).convert("RGBA")).astype(np.float32)
-        a[:, :, 3] *= strength
-        return Image.fromarray(a.astype(np.uint8), "RGBA")
-    for v in range(6):
-        base = starfield(rng, 0.7)
-        base.alpha_composite(thinned(f"ionstorm{'' if v == 0 else v + 1}.png"))
-        name = "ionstorm-light" if v == 0 else f"ionstorm-light{v + 1}"
-        save(apply_mask(base, hex_mask_cache), out, f"images/terrain/sc/{name}.png", False)
-        if v == 0:
-            save(apply_mask(base, hex_mask_cache), out, "images/terrain/sc/ionstorm-light-tile.png", False)
-    for combo in TRANSITION_COMBOS:
-        save(thinned(f"ionstorm-{combo}.png"), out, f"images/terrain/sc/ionstorm-light-{combo}.png", False)
+BANK_MACRO = """#define SC_BANK FLAG LAYER IMAGESTEM C N NE SE S SW NW
+    [terrain_graphics]
+        map="
+,  2
+7,   3
+,  1
+6,   4
+,  5"
+        [tile]
+            pos=1
+            type={C}
+            set_no_flag={FLAG}
+            [image]
+                name={IMAGESTEM}-@V.png
+                variations="1;2"
+                layer={LAYER}
+            [/image]
+        [/tile]
+        [tile]
+            pos=2
+            type={N}
+        [/tile]
+        [tile]
+            pos=3
+            type={NE}
+        [/tile]
+        [tile]
+            pos=4
+            type={SE}
+        [/tile]
+        [tile]
+            pos=5
+            type={S}
+        [/tile]
+        [tile]
+            pos=6
+            type={SW}
+        [/tile]
+        [tile]
+            pos=7
+            type={NW}
+        [/tile]
+    [/terrain_graphics]
+#enddef
+
+"""
 
 
 def build_dense_asteroids(rng, out):
@@ -1227,18 +1372,24 @@ hex_mask_cache = None
 def main():
     global hex_mask_cache
     ap = argparse.ArgumentParser()
-    ap.add_argument("--uqm", required=True, help="UQM-MegaMod-Content checkout")
+    ap.add_argument("--uqm", help="UQM-MegaMod-Content checkout (needed unless --only)")
     ap.add_argument("--out", required=True, help="add-on directory")
     ap.add_argument("--remix", help="unzipped UQM Remix Packs (optional)")
     ap.add_argument("--threedo", help="unzipped UQM 3DO music add-on (optional)")
     ap.add_argument("--wesnoth-data", default="/usr/share/games/wesnoth/1.16/data")
     ap.add_argument("--seed", type=int, default=1990)
+    ap.add_argument("--only", choices=["badlands"], help="rebuild just this terrain")
     args = ap.parse_args()
+    if not args.only and not args.uqm:
+        ap.error("--uqm is required unless --only is given")
 
     rng = np.random.default_rng(args.seed)
     mask = hex_mask(args.wesnoth_data)
     hex_mask_cache = mask
     tmasks = transition_masks(args.wesnoth_data)
+    if args.only == "badlands":
+        build_badlands(np.random.default_rng(args.seed + 4), args.out)
+        return 0
 
     build_ships(args.uqm, args.out)
     build_samatra(args.uqm, args.out)
@@ -1261,12 +1412,9 @@ def main():
     build_star(rng, args.out)
     build_starbase(rng, mask, args.out)
     # Added later with its own seed so the art above stays byte-identical.
-    build_ionstorm(np.random.default_rng(args.seed + 1), mask, tmasks, args.out)
     for i, (name, colours) in enumerate(GAS_NEBULAE.items()):
         build_gas_nebula(np.random.default_rng(args.seed + 10 + i), args.out, name, colours)
-    build_ionstorm_v2(np.random.default_rng(args.seed + 3), args.out)
-    build_thin_ionstorm(np.random.default_rng(args.seed + 4), args.out)
-    build_light_ionstorm(np.random.default_rng(args.seed + 7), args.out)
+    build_badlands(np.random.default_rng(args.seed + 4), args.out)
     build_precursor_ruins(np.random.default_rng(args.seed + 8), args.out)
     build_dense_asteroids(np.random.default_rng(args.seed + 5), args.out)
     build_asteroid_wall(np.random.default_rng(args.seed + 6), args.out)
