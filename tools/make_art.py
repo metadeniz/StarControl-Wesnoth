@@ -765,7 +765,7 @@ def build_gas_nebula(rng, out, name, colours):
 
 # ---- badlands: plasma rivers over open space ----
 #
-# Badlands hexes show plain open space. What marks them is a glowing bank
+# Badlands hexes show open space with a faint white crackle. What marks them is a glowing bank
 # line around each stretch of badlands, which runs on from hex to hex so a
 # channel of badlands hexes reads as one river with a continuous outline.
 #
@@ -937,21 +937,27 @@ def build_badlands(rng, out):
         tiles[name] = bank_layer(geo.field(True, (False,) * 6) + wobble, style)
 
     # Symbol images for the editor and help: one lone hex of each kind.
-    for rel, banks in (("ionstorm-tile", ("shallow", "deep")), ("ionstorm-light-tile", ("shallow",))):
+    field = (fractal_noise(rng, 512, 5, 10),)
+    for rel, banks, strength in (("ionstorm-tile", ("shallow", "deep"), 0.42),
+                                 ("ionstorm-light-tile", ("shallow",), 0.3)):
         img = starfield(rng)
+        img.alpha_composite(crackle(rng, field, strength))
         for b in banks:
             img.alpha_composite(tiles[b])
         save(apply_mask(img, hex_mask_cache), out, f"{sc}/{rel}.png", False)
 
-    # Thin badlands (fords): open space with a faint crackle, no bank.
-    field = (fractal_noise(rng, 512, 5, 10),)
-    for v in range(6):
-        img = starfield(rng)
-        img.alpha_composite(crackle(rng, field, 0.45))
-        name = "ionstorm-thin" if v == 0 else f"ionstorm-thin{v + 1}"
-        save(apply_mask(img, hex_mask_cache), out, f"{sc}/{name}.png", False)
-        if v == 0:
-            save(apply_mask(img, hex_mask_cache), out, f"{sc}/ionstorm-thin-tile.png", False)
+    # Underneath the banks: open space with a little of the white lightning,
+    # strongest in the deep badlands. Thin badlands (fords) get the faintest
+    # crackle and no bank.
+    for stem, count, strength in (("ionstorm", 11, 0.42), ("ionstorm-light", 6, 0.3),
+                                  ("ionstorm-thin", 6, 0.24)):
+        for v in range(count):
+            img = starfield(rng)
+            img.alpha_composite(crackle(rng, field, strength))
+            name = stem if v == 0 else f"{stem}{v + 1}"
+            save(apply_mask(img, hex_mask_cache), out, f"{sc}/{name}.png", False)
+            if stem == "ionstorm-thin" and v == 0:
+                save(apply_mask(img, hex_mask_cache), out, f"{sc}/ionstorm-thin-tile.png", False)
 
     with open(os.path.join(out, "terrain/badlands-banks.cfg"), "w") as f:
         f.write("#textdomain wesnoth-Star_Control_TC\n")
