@@ -375,11 +375,18 @@ def build_samatra(uqm, out):
     # Wesnoth centres an oversized sprite on its hex.
     w = 168
     body = body.resize((w, round(body.height * w / body.width)), Image.LANCZOS)
-    canvas = Image.new("RGBA", (w, max(HEX, body.height)), (0, 0, 0, 0))
-    canvas.alpha_composite(body, (0, (canvas.height - body.height) // 2))
-    for facing in FACINGS:
-        save(canvas, out, f"images/units/sc/samatra-{facing}.png", True)
-    save(canvas, out, "images/units/sc/samatra.png", True)
+    # Levels 1 and 2 shrink it like any other ship (LEVELS), on the same
+    # canvas; level 3 is the full picture, samatra.png.
+    height = max(HEX, body.height)
+    for level, (size, _) in LEVELS.items():
+        b = body if level == 3 else body.resize(
+            (round(body.width * size), round(body.height * size)), Image.LANCZOS)
+        canvas = Image.new("RGBA", (w, height), (0, 0, 0, 0))
+        canvas.alpha_composite(b, ((w - b.width) // 2, (height - b.height) // 2))
+        stem = "samatra" if level == 3 else f"samatra-l{level}"
+        for facing in FACINGS:
+            save(canvas, out, f"images/units/sc/{stem}-{facing}.png", True)
+        save(canvas, out, f"images/units/sc/{stem}.png", True)
     # its sentinels: glowing red orbs (UQM draws them from masks)
     orb = Image.new("RGBA", (22, 22), (0, 0, 0, 0))
     d = ImageDraw.Draw(orb)
