@@ -139,8 +139,6 @@ Spathi and Shofixti, which only get it as Elites):
 | VUX Intruder | stronger laser, limpets ×3, laser **backstab** | laser **marksman** |
 | Androsynth Guardian | hotter Blazer, stronger acid | acid ×4, **heals +4** |
 | Ilwrath Avenger | hotter Hellfire, **backstab** | Hellfire ×4 |
-| Precursor Flagship | more HP, stronger point-defense and blaster | point-defense ×4, strongest blaster |
-| Sa-Matra | more HP, hotter plasma, sentinels ×4 | strongest plasma and sentinels |
 
 **Ambush.** Some ships can hide in certain terrain: invisible to the enemy
 unless an enemy ship is next to them, and revealed for the rest of a turn
@@ -162,9 +160,8 @@ starbases.
 
 **Leaders** start promoted: Elite (level 3) if the ship costs 16 gold or
 less (Earthling Cruiser, Syreen, Arilou, Shofixti, Spathi, Umgah, VUX,
-Androsynth, Ilwrath), Veteran (level 2) otherwise. The Precursor Flagship
-and the Sa-Matra are the exception: they start at level 1 and have to earn
-their promotions. A leader can't use the Glory Device.
+Androsynth, Ilwrath), Veteran (level 2) otherwise. A leader can't use the
+Glory Device.
 
 **Precursor artifacts.** About one planet in five (never next to a
 starbase) hides a Precursor artifact; on mirrored maps they come in mirror
