@@ -88,6 +88,7 @@ full volume.
 
 | Alliance of Free Stars | | Ur-Quan Hierarchy | |
 |---|---|---|---|
+| | | **Hierarchy Starbase** (leader only) | 3 moves, 120 HP; defense turrets (**first strike**), fighter bays at range; repair dock (heals +8 and cures the ships next to it), slave shield (+20% resistance when attacked), leadership |
 | Earthling Cruiser | homing nukes, point-defense (fighters hit it at most 50%) | Ur-Quan Dreadnought | close-range fusion blast; fighters at any range (**swarm**: fewer as crew is lost) |
 | Chenjesu Broodhome | photon crystal (ranged; lighter shards close up), DOGI (slows) | Mycon Podship | homing plasmoids at range, heavier plasmoids close up; regrows crew |
 | Mmrnmhrm X-Wing / Y-Wing | recruit either; lasers or torpedoes, transforms; X-Wing heals +4 | Spathi Eluder | missiles, B.U.T.T. |

@@ -27,6 +27,8 @@ import sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
+from make_starbase import build_hierarchy_starbase
+
 HEX = 72
 # Screen angle (degrees clockwise from north) of each Wesnoth hex facing.
 # Neighbouring hex centres are 54px across and 36px up/down, not 60 degrees.
@@ -1511,6 +1513,7 @@ def main():
 
     build_ships(args.uqm, args.out)
     build_samatra(args.uqm, args.out)
+    build_hierarchy_starbase(args.out)   # original art
     build_projectiles(args.uqm, args.out)
     build_lasers(args.out)
     build_attack_icons(args.out)
