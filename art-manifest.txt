@@ -802,6 +802,7 @@ sounds/sc/ditty-mycon.ogg
 sounds/sc/ditty-orz.ogg
 sounds/sc/ditty-pkunk.ogg
 sounds/sc/ditty-precursor.ogg
+sounds/sc/ditty-samatra.ogg
 sounds/sc/ditty-shofixti.ogg
 sounds/sc/ditty-slylandro.ogg
 sounds/sc/ditty-spathi.ogg
