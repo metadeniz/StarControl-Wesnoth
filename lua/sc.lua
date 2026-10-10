@@ -443,7 +443,10 @@ local ambush = nil
 
 local BADLANDS = { Yi = true, Yis = true, Yif = true }
 local FULL_AMBUSH_IN_BADLANDS = {
-	-- e.g. SC_Ilwrath_Avenger = true,
+	SC_Arilou_Skiff = true,
+	SC_ZoqFotPik_Stinger = true,
+	SC_Androsynth_Guardian = true,
+	SC_Slylandro_Probe = true,
 }
 
 -- Whether the hidden ship e takes away all of its finder's movement.
