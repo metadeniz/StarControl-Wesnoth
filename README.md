@@ -132,7 +132,7 @@ Spathi and Shofixti, which only get it as Elites):
 | Chenjesu Broodhome | stronger crystals, DOGI ×3, **heals +4** | **cures** (heals +8 and cures poison) |
 | Mmrnmhrm X-Wing / Y-Wing | X-Wing lasers **backstab**; stronger torpedoes ×3 | lasers ×5 / heavy torpedoes, **self-repair** |
 | Yehat Terminator | pulse cannons ×6 | **first strike** |
-| Syreen Penetrator | song gets a 2nd shot | stronger song and hum ×3, dagger ×4 |
+| Syreen Penetrator | song gets a 2nd shot, hum ×3 | stronger song, hum ×5, dagger ×4 |
 | Arilou Skiff | new **ranged** laser; close laser **backstab**; **ambush** | ambush, laser ×4 |
 | Shofixti Scout | stronger darts, 20-damage Glory | **skirmisher**, darts **backstab**, 24-damage Glory |
 | Ur-Quan Dreadnought | heavier fusion blast, fighters ×5 | fighters ×6, **leadership** |
