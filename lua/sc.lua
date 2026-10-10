@@ -190,33 +190,39 @@ local PLAYLISTS = {
 		"androsynth-duoled", "starbase" },
 }
 
--- Music played when you win.
-local VICTORY_MUSIC = {
+-- Theme played when you win. It is a sound effect, not music, so it follows
+-- the sound volume like the victory ditties; the music stops for it (the
+-- engine "plays" a silent victory track).
+local VICTORY_THEME = {
 	SC_Alliance = "sc/alliance-victory.ogg",     -- Star Control 1's Alliance victory theme
 	SC_Hierarchy = "sc/hierarchy-victory.ogg",   -- Star Control 1's Hierarchy victory theme
 	SC_NewAlliance = "sc/victory-fanfare.ogg",   -- Star Control II's victory fanfare
 	SC_DeathMarch = "sc/kohrah-victory.ogg",     -- for now: the Precursors' Kohr-Ah ditty remix
 }
 
-function sc.set_music()
+local function local_human_side()
 	for _, side in ipairs(wesnoth.sides) do
-		if side.is_local and side.controller == "human" then
-			local faction = side.__cfg.faction
-			if VICTORY_MUSIC[faction] then
-				wesnoth.scenario.victory_music = { VICTORY_MUSIC[faction] }
-			end
-			local list = PLAYLISTS[faction]
-			if list then
-				for i, track in ipairs(list) do
-					wesnoth.wml_actions.music {
-						name = "sc/" .. track .. ".ogg",
-						append = i > 1,
-						immediate = i == 1,
-						shuffle = true,
-					}
-				end
-			end
-			return
+		if side.is_local and side.controller == "human" then return side end
+	end
+end
+
+function sc.victory_theme()
+	local side = local_human_side()
+	local theme = side and VICTORY_THEME[side.__cfg.faction]
+	if theme then wesnoth.audio.play(theme) end
+end
+
+function sc.set_music()
+	local side = local_human_side()
+	local list = side and PLAYLISTS[side.__cfg.faction]
+	if list then
+		for i, track in ipairs(list) do
+			wesnoth.wml_actions.music {
+				name = "sc/" .. track .. ".ogg",
+				append = i > 1,
+				immediate = i == 1,
+				shuffle = true,
+			}
 		end
 	end
 end

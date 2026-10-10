@@ -82,7 +82,9 @@ victory theme for their side, the New Alliance hears Star Control II's
 victory fanfare, and the Agents of Chaos (for now) the Precursors' remix of the
 Kohr-Ah victory ditty. When a ship destroys
 another, its race's victory ditty plays over the music, which keeps going at
-full volume.
+full volume. The victory themes and ditties are sound effects, so they
+follow the Sound volume, not the Music volume: turning the music down
+leaves them as loud as before.
 
 ## The ships
 

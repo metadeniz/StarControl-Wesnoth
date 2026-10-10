@@ -550,6 +550,15 @@ THREEDO = {
 }
 
 
+# Victory themes are played as sound effects (they follow the sound volume,
+# not the music volume), so they go with the sounds.
+VICTORY_THEMES = {"victory-fanfare", "kohrah-victory"}
+
+
+def music_dest(name):
+    return f"{'sounds' if name in VICTORY_THEMES else 'music'}/sc/{name}.ogg"
+
+
 def build_remixes(remix, out, only=None, table=None):
     """Remixes (or, with table=THREEDO, 3DO tracks) at REMIX_LOUDNESS."""
     import re
@@ -561,7 +570,7 @@ def build_remixes(remix, out, only=None, table=None):
         probe = subprocess.run(["ffmpeg", "-hide_banner", "-i", src, "-af", "volumedetect", "-f", "null", "-"],
                                capture_output=True, text=True, check=True)
         mean = float(re.search(r"mean_volume: (-?[\d.]+) dB", probe.stderr).group(1))
-        dest = f"music/sc/{name}.ogg"
+        dest = music_dest(name)
         subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", src,
                         "-af", f"volume={REMIX_LOUDNESS - mean:.1f}dB", "-q:a", "4",
                         os.path.join(out, dest)], check=True)
@@ -571,8 +580,9 @@ def build_remixes(remix, out, only=None, table=None):
 def build_music(uqm, out):
     import subprocess
     os.makedirs(os.path.join(out, "music/sc"), exist_ok=True)
+    os.makedirs(os.path.join(out, "sounds/sc"), exist_ok=True)
     for name, rel in MUSIC.items():
-        dest = f"music/sc/{name}.ogg"
+        dest = music_dest(name)
         gain = MUSIC_GAIN_DB.get(name, 0)
         subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
                         "-i", os.path.join(uqm, rel), "-t", "600", "-af", f"volume={gain}dB", "-q:a", "4",
@@ -1545,8 +1555,9 @@ def main():
     # Added by hand, not built here: Chenjesu and Mmrnmhrm themes by Titus
     # (supplied as MP3s, loudness-matched to the other music).
     manifest.extend(["music/sc/chenjesu-titus.ogg", "music/sc/mmrnmhrm-titus.ogg"])
-    # ...and Star Control 1's Alliance and Hierarchy victory themes (MP3s).
-    manifest.extend(["music/sc/alliance-victory.ogg", "music/sc/hierarchy-victory.ogg"])
+    # ...and Star Control 1's Alliance and Hierarchy victory themes (MP3s;
+    # played as sound effects).
+    manifest.extend(["sounds/sc/alliance-victory.ogg", "sounds/sc/hierarchy-victory.ogg"])
     # ...an Androsynth theme by TheMisterCat (DUOLED), and the Melnorme theme
     # re-imagined by DJ Yan Yan Lipavsky (MP3s).
     manifest.extend(["music/sc/androsynth-duoled.ogg", "music/sc/melnorme-lipavsky.ogg"])
