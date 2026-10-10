@@ -78,6 +78,18 @@ function sc.disarm_leaders()
 	end
 end
 
+-- [sc_name_leaders] [captain] faction= type= name= [/captain]: a leader of
+-- that ship (any level) on a side of that faction gets that name.
+function wesnoth.wml_actions.sc_name_leaders(cfg)
+	for _, c in ipairs(wml.child_array(cfg, "captain")) do
+		for _, u in ipairs(wesnoth.units.find_on_map { type = all_levels(c.type), canrecruit = true }) do
+			if wesnoth.sides[u.side].__cfg.faction == c.faction then
+				u.name = c.name
+			end
+		end
+	end
+end
+
 --------------------------------------------------------------- Mmrnmhrm X <-> Y
 
 function wesnoth.wml_actions.sc_transform(cfg)
