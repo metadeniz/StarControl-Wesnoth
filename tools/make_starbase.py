@@ -20,6 +20,7 @@ LIGHT = np.array([-0.55, 0.45, 0.70])      # x right, y toward viewer, z up
 LIGHT /= np.linalg.norm(LIGHT)
 RIM = np.array([-0.95, -0.1, 0.1])         # red slave-shield glow from the left
 RIM /= np.linalg.norm(RIM)
+RIM_COL = np.array([255, 40, 30])          # colour of that rim light
 
 img = np.zeros((H * S, W * S, 4), float)
 yy, xx = np.mgrid[0:H * S, 0:W * S].astype(float)
@@ -44,7 +45,7 @@ def shade(nx, ny, nz, col, spec=0.35, emissive=None):
     s = np.clip(n @ half, 0, 1) ** 24 * spec
     c = np.asarray(col, float)
     out = c * (0.22 + 0.85 * d)[..., None] + s[..., None] * 255
-    out += np.array([255, 40, 30]) * (0.30 * r)[..., None]
+    out += RIM_COL * (0.30 * r)[..., None]
     if emissive is not None:
         out = np.maximum(out, emissive)
     return np.clip(out, 0, 255)
@@ -146,6 +147,9 @@ def arms(base, h, r0, r1, front, n=6, rot=0.3):
 
 
 def build():
+    global RIM_COL
+    img[:] = 0
+    RIM_COL = np.array([255, 40, 30])
     base = 88   # screen y of world h=0 (the mid collar)
     # --- purple sensor spines under the bottom (behind everything)
     layer = Image.new("RGBA", (W * S, H * S))
