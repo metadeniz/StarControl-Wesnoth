@@ -255,6 +255,9 @@ def ship_scale(uqm, ship_dir, stem, hd):
 LEVELS = {1: (0.82, None), 2: (0.91, (2.5, 1.0)), 3: (1.0, (3.5, 1.6))}
 # Level 3 is up to this much bigger than the ship's base size, if it fits.
 LEVEL_GROWTH = 1.12
+# Ships whose level-1 sprite fills the whole hex instead (the Precursor
+# Flagship leads with it, so it should look huge).
+FILL_HEX = {"precursor-flagship"}
 
 
 def glow_colour(img):
@@ -288,6 +291,8 @@ def build_ships(uqm, out):
         colour = glow_colour(hd)
         for level, (size, glow) in LEVELS.items():
             scale = top * size
+            if uid in FILL_HEX and level == 1:
+                scale = min(HEX / max(trim(rotated(hd, a)).size) for a in FACINGS.values())
             for facing, angle in FACINGS.items():
                 r = trim(rotated(hd, angle))
                 w = max(1, round(r.width * scale))
