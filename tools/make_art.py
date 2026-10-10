@@ -14,6 +14,7 @@ Usage:
     make_art.py --uqm <UQM-MegaMod-Content checkout> --out <add-on dir>
                 [--wesnoth-data /usr/share/games/wesnoth/1.16/data]
     make_art.py --only badlands --out <add-on dir>    (badlands art and rules only)
+    make_art.py --only asteroids --out <add-on dir>   (asteroid fields, dense asteroids, walls)
 """
 
 import argparse
@@ -28,6 +29,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 from make_alliance_starbase import build_alliance_starbase
+from make_asteroids import build as build_asteroid_art
 from make_starbase import build_hierarchy_starbase
 
 HEX = 72
@@ -1155,56 +1157,6 @@ BANK_MACRO = """#define SC_BANK FLAG LAYER IMAGESTEM C N NE SE S SW NW
 """
 
 
-def build_dense_asteroids(rng, out):
-    """Mountains: a packed field of big rocks."""
-    for v in range(6):
-        canvas = Image.new("RGBA", (HEX, HEX), (0, 0, 0, 0))
-        placed = []
-        for _ in range(int(rng.integers(11, 15))):
-            size = int(rng.choice([8, 10, 12, 14, 16, 18], p=[0.15, 0.2, 0.2, 0.2, 0.15, 0.1]))
-            for _try in range(40):
-                x, y = rng.uniform(10, 62), rng.uniform(9, 63)
-                if abs(x - 36) + abs(y - 36) * 0.6 > 33:
-                    continue
-                if all((x - px) ** 2 + (y - py) ** 2 > (0.75 * (size + ps)) ** 2 for px, py, ps in placed):
-                    break
-            placed.append((x, y, size))
-        for x, y, size in sorted(placed, key=lambda p: p[1]):   # back to front
-            r = rock(rng, size, shade_k=0.55)
-            canvas.alpha_composite(r, (int(x - r.width / 2), int(y - r.height / 2)))
-        name = "asteroids-dense" if v == 0 else f"asteroids-dense{v + 1}"
-        save(canvas, out, f"images/terrain/sc/{name}.png", False)
-        if v == 0:
-            tile = starfield(rng)
-            tile.alpha_composite(canvas)
-            save(apply_mask(tile, hex_mask_cache), out, "images/terrain/sc/asteroids-dense-tile.png", False)
-
-
-def build_asteroid_wall(rng, out):
-    """Impassable: a wall of huge, tightly packed rocks reaching the hex
-    edges, so neighbouring wall hexes join into one barrier."""
-    for v in range(6):
-        canvas = Image.new("RGBA", (HEX, HEX), (0, 0, 0, 0))
-        placed = []
-        for _ in range(int(rng.integers(16, 21))):
-            size = int(rng.choice([12, 14, 16, 18, 20, 22], p=[0.1, 0.15, 0.2, 0.2, 0.2, 0.15]))
-            x, y = rng.uniform(4, 68), rng.uniform(4, 68)
-            placed.append((x, y, size))
-        for x, y, size in sorted(placed, key=lambda p: p[1]):   # back to front
-            r = rock(rng, size, shade_k=0.7)
-            a = np.array(r).astype(np.float32)
-            a[..., :3] *= 0.8                                    # a shade darker than asteroid fields
-            r = Image.fromarray(a.clip(0, 255).astype(np.uint8), "RGBA")
-            canvas.alpha_composite(r, (int(x - r.width / 2), int(y - r.height / 2)))
-        canvas = apply_mask(canvas, hex_mask_cache)
-        name = "asteroid-wall" if v == 0 else f"asteroid-wall{v + 1}"
-        save(canvas, out, f"images/terrain/sc/{name}.png", False)
-        if v == 0:
-            tile = starfield(rng)
-            tile.alpha_composite(canvas)
-            save(apply_mask(tile, hex_mask_cache), out, "images/terrain/sc/asteroid-wall-tile.png", False)
-
-
 def build_precursor_ruins(rng, out):
     """Impassable: wreckage of ancient Precursor structures, dull metal with
     a few glyphs still glowing. Three kinds: a broken ring, a cluster of
@@ -1376,47 +1328,29 @@ def build_planets(rng, out):
             save(canvas, out, "images/terrain/sc/planet-tile.png", False)
 
 
-def rock(rng, size, shade_k=1.4):
-    s = size * 2 + 4
-    pts = []
-    n = int(rng.integers(7, 11))
-    for k in range(n):
-        a = 2 * math.pi * k / n + rng.uniform(-0.2, 0.2)
-        rr = size * rng.uniform(0.65, 1.0)
-        pts.append((s / 2 + rr * math.cos(a), s / 2 + rr * 0.8 * math.sin(a)))
-    m = Image.new("L", (s, s), 0)
-    ImageDraw.Draw(m).polygon(pts, fill=255)
-    mask = np.asarray(m, np.float32) / 255
-    blurred = np.asarray(m.filter(ImageFilter.GaussianBlur(size / 3)), np.float32) / 255
-    gy, gx = np.gradient(blurred)
-    shade = np.clip(0.55 + (-gx - gy) * size * shade_k, 0.15, 1.2)
-    tex = fractal_noise(rng, s, 3, 2)
-    base = 85 + 50 * tex
-    rgb = np.dstack([base * shade * 1.0, base * shade * 0.95, base * shade * 0.9])
-    img = Image.fromarray(np.dstack([rgb, mask * 255]).clip(0, 255).astype(np.uint8), "RGBA")
-    return img.rotate(rng.uniform(0, 360), resample=Image.BICUBIC)
-
-
-def build_asteroids(rng, out):
-    for v in range(6):
-        canvas = Image.new("RGBA", (HEX, HEX), (0, 0, 0, 0))
+def spend_old_asteroid_draws(rng):
+    """The asteroid art now comes from make_asteroids.py with its own seed.
+    The first asteroid fields were drawn from the shared generator here, so
+    make the same random draws they did, keeping the star and starbase art
+    that is drawn after them byte-identical."""
+    for _v in range(6):
         placed = []
         for _ in range(int(rng.integers(7, 11))):
             size = int(rng.choice([5, 6, 8, 10, 12, 14], p=[0.15, 0.2, 0.2, 0.2, 0.15, 0.1]))
             for _try in range(30):
                 x, y = rng.uniform(10, 62), rng.uniform(9, 63)
-                # keep inside the hex and away from other rocks
                 if abs(x - 36) + abs(y - 36) * 0.6 > 32:
                     continue
                 if all((x - px) ** 2 + (y - py) ** 2 > (size + ps + 2) ** 2 for px, py, ps in placed):
                     break
             placed.append((x, y, size))
-            r = rock(rng, size)
-            canvas.alpha_composite(r, (int(x - r.width / 2), int(y - r.height / 2)))
-        name = "asteroids" if v == 0 else f"asteroids{v + 1}"
-        save(canvas, out, f"images/terrain/sc/{name}.png", False)
-        if v == 0:
-            save(canvas, out, "images/terrain/sc/asteroids-tile.png", False)
+            # the old rock(): outline points, texture noise, rotation
+            n = int(rng.integers(7, 11))
+            for _k in range(n):
+                rng.uniform(-0.2, 0.2)
+                rng.uniform(0.65, 1.0)
+            fractal_noise(rng, size * 2 + 4, 3, 2)
+            rng.uniform(0, 360)
 
 
 def build_star(rng, out):
@@ -1523,7 +1457,7 @@ def main():
     ap.add_argument("--threedo", help="unzipped UQM 3DO music add-on (optional)")
     ap.add_argument("--wesnoth-data", default="/usr/share/games/wesnoth/1.16/data")
     ap.add_argument("--seed", type=int, default=1990)
-    ap.add_argument("--only", choices=["badlands", "gas"], help="rebuild just this terrain")
+    ap.add_argument("--only", choices=["badlands", "gas", "asteroids"], help="rebuild just this terrain")
     args = ap.parse_args()
     if not args.only and not args.uqm:
         ap.error("--uqm is required unless --only is given")
@@ -1538,6 +1472,9 @@ def main():
     if args.only == "gas":
         for i, (name, colours) in enumerate(GAS_NEBULAE.items()):
             build_gas_nebula(np.random.default_rng(args.seed + 10 + i), args.out, name, colours)
+        return 0
+    if args.only == "asteroids":
+        build_asteroid_art(np.random.default_rng(args.seed + 20), args.out, save, TRANSITION_COMBOS, mask)
         return 0
 
     build_ships(args.uqm, args.out)
@@ -1559,7 +1496,7 @@ def main():
     build_space(rng, mask, args.out)
     build_nebula(rng, mask, tmasks, args.out)
     build_planets(rng, args.out)
-    build_asteroids(rng, args.out)
+    spend_old_asteroid_draws(rng)
     build_star(rng, args.out)
     build_starbase(rng, mask, args.out)
     # Added later with its own seed so the art above stays byte-identical.
@@ -1567,8 +1504,7 @@ def main():
         build_gas_nebula(np.random.default_rng(args.seed + 10 + i), args.out, name, colours)
     build_badlands(np.random.default_rng(args.seed + 4), args.out)
     build_precursor_ruins(np.random.default_rng(args.seed + 8), args.out)
-    build_dense_asteroids(np.random.default_rng(args.seed + 5), args.out)
-    build_asteroid_wall(np.random.default_rng(args.seed + 6), args.out)
+    build_asteroid_art(np.random.default_rng(args.seed + 20), args.out, save, TRANSITION_COMBOS, mask)
 
     # Added by hand, not built here: Chenjesu and Mmrnmhrm themes by Titus
     # (supplied as MP3s, loudness-matched to the other music).
