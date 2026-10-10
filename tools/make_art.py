@@ -910,29 +910,57 @@ def bank_code(centre, neighbours):
 
 
 PLASMA_COLOUR = (200, 228, 255)
-DEEP_PLASMA = (0.5, 0.26)    # extra lightning and wisps in deep badlands
+DEEP_PLASMA = (0.4, 0.16)    # extra lightning and wisps in deep badlands
+
+
+def lattice_noise(rng, max_k=4):
+    """72x72 noise that repeats exactly from one hex to the next: a sum of
+    waves whose wavelengths fit the hex lattice (steps of 54,36 and 0,72),
+    so it runs on across any hex border without a seam. Returns z-scores."""
+    yy, xx = np.mgrid[0:HEX, 0:HEX].astype(np.float32) + 0.5
+    out = np.zeros((HEX, HEX), np.float32)
+    for m in range(-max_k, max_k + 1):
+        for n in range(-max_k, max_k + 1):
+            kx, ky = 2 * np.pi * (m / 54 - n / 108), 2 * np.pi * n / 72
+            k = math.hypot(kx, ky)
+            if k == 0 or (m, n) < (0, 0):
+                continue
+            out += rng.normal() / k ** 1.3 * np.cos(kx * xx + ky * yy + rng.uniform(0, 2 * np.pi))
+    return (out - out.mean()) / out.std()
+
+
+_LATTICE = {}
 
 
 def plasma_alpha(rng, field, strength, wisps):
     """Alpha of the white plasma inside badlands: soft wisps plus sharp
-    lightning. Both are scaled to the same average in every tile, so tiles
-    look equally stormy, and the wisps settle to that average at the hex
-    border (the lightning fades out before it), so neighbours meet evenly."""
+    lightning. Each tile's own noise takes over from a shared noise that
+    repeats from hex to hex, so the plasma flows across hex borders with no
+    seam, and every tile's noise is scaled alike so all look equally stormy."""
+    if not _LATTICE:
+        lrng = np.random.default_rng(77)
+        _LATTICE["a"], _LATTICE["b"] = lattice_noise(lrng), lattice_noise(lrng)
     size = field[0].shape[0]
     x0, y0 = rng.integers(0, size - HEX, 2)
-    a = field[0][y0:y0 + HEX, x0:x0 + HEX]
-    b = field[1][y0:y0 + HEX, x0:x0 + HEX]
-    ridge = (1 - np.abs(2 * a - 1)) ** 6 * np.clip(BORDER_DIST / 14, 0, 1)
-    ridge = ridge * 0.08 / max(float(ridge.mean()), 1e-4)
+    w = _smoothstep(BORDER_DIST / 20.0)
+    blended = []
+    for f, key in ((field[0], "a"), (field[1], "b")):
+        own = f[y0:y0 + HEX, x0:x0 + HEX]
+        own = (own - own.mean()) / max(float(own.std()), 1e-4)
+        z = (w * own + (1 - w) * _LATTICE[key]) / np.sqrt(w * w + (1 - w) ** 2)
+        blended.append(np.clip(0.5 + 0.17 * z, 0, 1))
+    a, b = blended
+    ridge = (1 - np.abs(2 * a - 1)) ** 6
     streak = (1 - np.abs(2 * b - 1)) ** 3
-    streak = streak * 0.5 / max(float(streak.mean()), 1e-4)
-    streak = 0.5 + (streak - 0.5) * np.clip(BORDER_DIST / 16, 0, 1)
-    return np.clip(0.75 * ridge * strength + streak * wisps, 0, 1)
+    return np.clip(0.75 * ridge * strength + streak * wisps * 1.25, 0, 1)
 
 
-def crackle(rng, field, strength, wisps=0.0):
-    """White plasma as an image (see plasma_alpha)."""
+def crackle(rng, field, strength, wisps=0.0, fade=False):
+    """White plasma as an image (see plasma_alpha). With fade, it thins out
+    towards the hex border, for tiles with no bank layer to blend them."""
     alpha = plasma_alpha(rng, field, strength, wisps)
+    if fade:
+        alpha = alpha * _smoothstep((BORDER_DIST - 2) / 18.0)
     rgb = np.broadcast_to(np.array(PLASMA_COLOUR, np.float32), (HEX, HEX, 3))
     return Image.fromarray(np.dstack([rgb, alpha * 255]).clip(0, 255).astype(np.uint8), "RGBA")
 
@@ -975,7 +1003,7 @@ def build_badlands(rng, out):
     for stem, count, (strength, wisps) in (("ionstorm", 11, DEEP_PLASMA), ("ionstorm-thin", 6, (0.24, 0.08))):
         for v in range(count):
             img = starfield(rng)
-            img.alpha_composite(crackle(rng, field, strength, wisps))
+            img.alpha_composite(crackle(rng, field, strength, wisps, fade=stem == "ionstorm-thin"))
             name = stem if v == 0 else f"{stem}{v + 1}"
             save(apply_mask(img, hex_mask_cache), out, f"{sc}/{name}.png", False)
             if stem == "ionstorm-thin" and v == 0:
