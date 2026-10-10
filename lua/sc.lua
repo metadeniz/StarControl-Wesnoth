@@ -430,14 +430,27 @@ wesnoth.audio.music_list.volume = 100
 ------------------------------------------------------------------ Ambushes
 
 -- The engine stops a ship that stumbles onto a hidden enemy and takes away
--- the rest of its movement. We give the movement back: the ship still stops
--- where it found the enemy, but can then move on.
+-- the rest of its movement. Where the hidden ship sits in the badlands we
+-- give the movement back: the finder still stops where it found the enemy,
+-- but can then move on. Ships listed in FULL_AMBUSH_IN_BADLANDS keep the
+-- full ambush there too.
 --
 -- exit_hex fires just before each step, while the hidden ships around the
 -- next hex are still hidden (the engine's own ambush test); enter_hex fires
 -- after the step, with the ship's moves for that hex already paid; moveto
 -- fires after the engine has zeroed them.
 local ambush = nil
+
+local BADLANDS = { Yi = true, Yis = true, Yif = true }
+local FULL_AMBUSH_IN_BADLANDS = {
+	-- e.g. SC_Ilwrath_Avenger = true,
+}
+
+-- Whether the hidden ship e takes away all of its finder's movement.
+local function full_ambush(e)
+	local base = wesnoth.current.map[{ e.x, e.y }]:match("^[^^]*")
+	return not BADLANDS[base] or FULL_AMBUSH_IN_BADLANDS[base_type(e.type)] == true
+end
 
 local function hidden_from(side, x, y)
 	return wesnoth.units.find_on_map {
@@ -466,7 +479,10 @@ function sc.ambush_exit_hex()
 	for _, e in ipairs(hidden_from(u.side, c.x2, c.y2)) do
 		-- The filter also counts ships merely lost in the fog, which the
 		-- engine does not treat as an ambush.
-		if not wesnoth.sides.is_fogged(u.side, e.x, e.y) or hides(e) then hidden = true end
+		if not wesnoth.sides.is_fogged(u.side, e.x, e.y) or hides(e) then
+			if full_ambush(e) then return end
+			hidden = true
+		end
 	end
 	if not hidden then return end
 	-- A ship entering a known enemy's zone of control, or capturing a
