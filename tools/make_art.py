@@ -769,43 +769,77 @@ GAS_NEBULAE = {
 }
 
 
+GAS_PERIOD = (6, 4)    # gas clouds repeat every 6 columns and 4 rows of hexes
+GAS_TERRAIN = {"nebula": "Yn", "rednebula": "Yr", "dust": "Yd"}
+# hex offsets of each neighbour, for even and odd columns (odd ones sit lower)
+NEIGHBOUR_OFFSETS = {
+    0: {"n": (0, -1), "ne": (1, -1), "se": (1, 0), "s": (0, 1), "sw": (-1, 0), "nw": (-1, -1)},
+    1: {"n": (0, -1), "ne": (1, 0), "se": (1, 1), "s": (0, 1), "sw": (-1, 1), "nw": (-1, 0)},
+}
+
+
+def _spill_wedges(soft=4.0):
+    """Split the hex into soft wedges, one per edge, adding up to 1. A hex
+    with several gas neighbours stacks one spill per neighbour; keeping each
+    to its own wedge stops them adding up to a bright rim round the hex."""
+    e = {d: np.exp(-EDGE_DIST[d] / soft) for d in HEX_EDGES}
+    total = sum(e.values())
+    return {d: e[d] / total for d in HEX_EDGES}
+
+
+SPILL_WEDGE = _spill_wedges()
+
+
+def periodic_fractal_noise(rng, width, height, octaves, cell):
+    """fractal_noise over a width x height field that wraps round at its
+    edges, with cells of about `cell` pixels in its coarsest octave."""
+    total = np.zeros((height, width), np.float32)
+    amp, norm = 1.0, 0.0
+    cx, cy = max(1, round(width / cell)), max(1, round(height / cell))
+    for o in range(octaves):
+        grid = rng.random((cy << o, cx << o)).astype(np.float32)
+        tiled = np.tile(grid, (3, 3))
+        layer = Image.fromarray((tiled * 255).astype(np.uint8)).resize((3 * width, 3 * height), Image.BICUBIC)
+        total += amp * np.asarray(layer, np.float32)[height:2 * height, width:2 * width] / 255.0
+        norm += amp
+        amp *= 0.5
+    total /= norm
+    total -= total.min()
+    total /= max(total.max(), 1e-6)
+    return total
+
+
+def gas_hex_slice(col, row):
+    """Pixel rows and columns of hex (col, row) of the gas field, wrapping."""
+    w, h = GAS_PERIOD[0] * 54, GAS_PERIOD[1] * 72
+    x0, y0 = 54 * col, 72 * row + (36 if col % 2 else 0)
+    return np.ix_((np.arange(HEX) + y0) % h, (np.arange(HEX) + x0) % w)
+
+
 def build_gas_nebula(rng, out, name, colours):
     """Thin, wispy nebula: mostly transparent haze with brighter streaks and
     fine highlight filaments, so the dark of space shows through.
 
-    Seamless: all noise is pulled to its mean at the hex border and the
-    streaks fade out before it, so neighbouring tiles meet on the same thin
-    haze. Edges facing open space fade on both sides with a wavy depth.
+    Seamless: the gas is one big cloud that wraps round every GAS_PERIOD hexes,
+    and each hex of a gas terrain shows the piece of it at its own place on
+    the map (picked by the mod_x/mod_y rules in terrain/gas-tiles.cfg, which
+    this script also writes). Neighbouring hexes are neighbouring pieces, so
+    wisps run on across every hex edge, and no edge pattern repeats from hex
+    to hex. Where gas meets anything else its edge thins out (the *-edge
+    images) and wisps of it spill onto the neighbour, again cut from the
+    cloud at the neighbour's place.
     """
     col_a, col_b, col_hi = (np.array(c, np.float32) for c in colours)
-    size = 530
-    field = (fractal_noise(rng, size, 5, 16), fractal_noise(rng, size, 4, 8),
-             fractal_noise(rng, size, 4, 20))
+    pc, pr = GAS_PERIOD
+    w, h = pc * 54, pr * 72
+    field = (periodic_fractal_noise(rng, w, h, 5, 33), periodic_fractal_noise(rng, w, h, 4, 66),
+             periodic_fractal_noise(rng, w, h, 4, 26.5))
     mask = hex_mask_cache
-    # Near its border every tile hands over from its own crop of the field to
-    # noise that repeats from hex to hex (as the badlands plasma does), so
-    # wisps and filaments run on across every hex edge, into neighbouring
-    # gas tiles and into the wisps spilt over open space, with no seam.
-    # Each crop is rescaled to the same spread, so all tiles look alike.
-    lrng = np.random.default_rng(int(rng.integers(1 << 30)))
-    lattice = [lattice_noise(lrng, k) for k in (5, 5, 8)]
-    # typical spread inside one tile, so the wisps keep their old contrast
-    spread = [float(np.mean([f[y:y + HEX, x:x + HEX].std() for y in range(0, size - HEX, 24)
-                             for x in range(0, size - HEX, 24)])) for f in field]
-    handover = _smoothstep(BORDER_DIST / 20.0)
 
-    def seamless(i, sl):
-        own = field[i][sl]
-        own = (own - own.mean()) / max(float(own.std()), 1e-4)
-        w = handover
-        z = (w * own + (1 - w) * lattice[i]) / np.sqrt(w * w + (1 - w) ** 2)
-        return np.clip(0.5 + spread[i] * z, 0, 1)
-
-    def gas(x0, y0):
-        sl = (slice(y0, y0 + HEX), slice(x0, x0 + HEX))
-        f0, f1, f2 = (seamless(i, sl) for i in range(3))
-        n1, n2 = f0, f1
-        streak = (1 - np.abs(2 * f0 - 1)) ** 3       # soft wisps
+    def gas(col, row):
+        sl = gas_hex_slice(col, row)
+        n1, n2, f2 = (f[sl] for f in field)
+        streak = (1 - np.abs(2 * n1 - 1)) ** 3       # soft wisps
         fine = (1 - np.abs(2 * f2 - 1)) ** 22         # thin filaments
         mix = 0.5 + 0.5 * (n2 - 0.5)
         rgb = col_a[None, None] * (1 - mix[..., None]) + col_b[None, None] * mix[..., None]
@@ -814,20 +848,86 @@ def build_gas_nebula(rng, out, name, colours):
         alpha = np.clip(0.3 + 0.12 * (n1 - 0.5) + 0.3 * streak + 0.22 * fine, 0, 0.85) * GAS_DENSITY * 255
         return Image.fromarray(np.dstack([rgb, alpha]).clip(0, 255).astype(np.uint8), "RGBA")
 
-    for v in range(11):
-        x0, y0 = rng.integers(0, size - HEX - 14, 2)
-        img = starfield(rng, 0.9)
-        img.alpha_composite(gas(x0, y0))
-        stem = name if v == 0 else f"{name}{v + 1}"
-        save(apply_mask(img, mask), out, f"images/terrain/sc/{stem}.png", False)
-        if v == 0:
-            save(apply_mask(img, mask), out, f"images/terrain/sc/{name}-tile.png", False)
+    code = GAS_TERRAIN[name]
+    others = ",".join(f"{t}*^*" for t in GAS_TERRAIN.values() if t != code)
+    others = f"Ys*^*,Yif*^*,Yis*^*,Yk,Yc,Yi,Yi^*,{others}"
+    layer = {"nebula": -310, "rednebula": -305, "dust": -320}[name]
+    rules = []
+    for col in range(pc):
+        for row in range(pr):
+            img = starfield(rng, 0.9)
+            img.alpha_composite(gas(col, row))
+            stem = f"sc/gas/{name}-{col}-{row}"
+            save(apply_mask(img, mask), out, f"images/terrain/{stem}.png", False)
+            if (col, row) == (0, 0):
+                save(apply_mask(img, mask), out, f"images/terrain/sc/{name}-tile.png", False)
+            rules.append(f"{{SC_GAS_BASE ({code}*^*) {col} {row} {stem}.png}}")
+            layer_img = gas(col, row)
+            for d, (dx, dy) in NEIGHBOUR_OFFSETS[col % 2].items():
+                save(apply_mask(layer_img, wavy_mask(rng, d, NEBULA_EDGE) * SPILL_WEDGE[d] * mask), out,
+                     f"images/terrain/{stem}-{d}.png", False)
+                # one period on, so no position is negative (the rules
+                # don't match with negative positions)
+                rules.append(f"{{SC_GAS_SPILL ({others}) ({code}*^*) {col + pc} {row + pr} "
+                             f"{col + pc + dx} {row + pr + dy} "
+                             f"{name}_spill_{d} {layer} {stem}-{d}.png}}")
     for combo in TRANSITION_COMBOS:
-        x0, y0 = rng.integers(0, size - HEX - 14, 2)
-        save(apply_mask(gas(x0, y0), wavy_mask(rng, combo, NEBULA_EDGE) * mask), out,
-             f"images/terrain/sc/{name}-{combo}.png", False)
         save(apply_mask(starfield(rng, 0.9), wavy_mask(rng, combo, NEBULA_EDGE) * mask), out,
              f"images/terrain/sc/{name}-edge-{combo}.png", False)
+    return rules
+
+
+GAS_MACROS = """#define SC_GAS_BASE TERRAIN X Y IMAGE
+    [terrain_graphics]
+        mod_x={pc}
+        mod_y={pr}
+        [tile]
+            x,y={{X}},{{Y}}
+            type={{TERRAIN}}
+            set_no_flag=base
+            [image]
+                name={{IMAGE}}
+                layer=-1000
+            [/image]
+        [/tile]
+    [/terrain_graphics]
+#enddef
+
+#define SC_GAS_SPILL OTHERS GAS X Y NX NY FLAG LAYER IMAGE
+    [terrain_graphics]
+        mod_x={pc}
+        mod_y={pr}
+        [tile]
+            x,y={{X}},{{Y}}
+            type={{OTHERS}}
+            set_no_flag={{FLAG}}
+            [image]
+                name={{IMAGE}}
+                layer={{LAYER}}
+            [/image]
+        [/tile]
+        [tile]
+            x,y={{NX}},{{NY}}
+            type={{GAS}}
+        [/tile]
+    [/terrain_graphics]
+#enddef
+
+"""
+
+
+def build_gas(seed, out):
+    rules = []
+    for i, (name, colours) in enumerate(GAS_NEBULAE.items()):
+        rules += build_gas_nebula(np.random.default_rng(seed + 10 + i), out, name, colours)
+    with open(os.path.join(out, "terrain/gas-tiles.cfg"), "w") as f:
+        f.write("#textdomain wesnoth-Star_Control_TC\n")
+        f.write("# Generated by tools/make_art.py (build_gas); do not edit by hand.\n")
+        f.write("# Nebulae and dust: each hex shows the piece of the cloud at its own place\n")
+        f.write("# on the map, and spills wisps onto its neighbours, so clouds run on across\n")
+        f.write("# hex edges.\n\n")
+        f.write(GAS_MACROS.format(pc=GAS_PERIOD[0], pr=GAS_PERIOD[1]))
+        f.write("\n".join(rules) + "\n\n#undef SC_GAS_BASE\n#undef SC_GAS_SPILL\n")
 
 
 # ---- badlands: plasma rivers over open space ----
@@ -1474,8 +1574,7 @@ def main():
         build_badlands(np.random.default_rng(args.seed + 4), args.out)
         return 0
     if args.only == "gas":
-        for i, (name, colours) in enumerate(GAS_NEBULAE.items()):
-            build_gas_nebula(np.random.default_rng(args.seed + 10 + i), args.out, name, colours)
+        build_gas(args.seed, args.out)
         return 0
     if args.only == "asteroids":
         build_asteroid_art(np.random.default_rng(args.seed + 20), args.out, save, TRANSITION_COMBOS, mask)
@@ -1504,8 +1603,7 @@ def main():
     build_star(rng, args.out)
     build_starbase(rng, mask, args.out)
     # Added later with its own seed so the art above stays byte-identical.
-    for i, (name, colours) in enumerate(GAS_NEBULAE.items()):
-        build_gas_nebula(np.random.default_rng(args.seed + 10 + i), args.out, name, colours)
+    build_gas(args.seed, args.out)
     build_badlands(np.random.default_rng(args.seed + 4), args.out)
     build_precursor_ruins(np.random.default_rng(args.seed + 8), args.out)
     build_asteroid_art(np.random.default_rng(args.seed + 20), args.out, save, TRANSITION_COMBOS, mask)
