@@ -765,7 +765,7 @@ def build_gas_nebula(rng, out, name, colours):
 
 # ---- badlands: plasma rivers over open space ----
 #
-# Badlands hexes show open space with a faint white crackle. What marks them is a glowing bank
+# Badlands hexes show open space full of white plasma wisps. What outlines them is a glowing bank
 # line around each stretch of badlands, which runs on from hex to hex so a
 # channel of badlands hexes reads as one river with a continuous outline.
 #
@@ -793,7 +793,7 @@ BANK_VARIATIONS = 2
 # name -> (terrains inside, line, glow, haze colour, line, glow, haze opacity, inner flow lines, layer, seed)
 BANKS = {
     "shallow": ("Yi,Yi^*,Yis,Yis^*", (150, 205, 245), (70, 140, 220), (50, 110, 200),
-                0.55, 0.22, 0.05, [], -300, 21),
+                0.28, 0.11, 0.05, [], -300, 21),
     "deep": ("Yi,Yi^*", (225, 245, 255), (110, 200, 255), (70, 150, 230),
              0.95, 0.40, 0.10, [(7.0, 0.18)], -299, 31),
 }
@@ -901,17 +901,21 @@ def bank_code(centre, neighbours):
     return ("in" if centre else "out") + "-" + "".join("1" if v else "0" for v in neighbours)
 
 
-def crackle(rng, field, strength):
-    """Faint white plasma crackle that fades out before the hex border."""
+def crackle(rng, field, strength, wisps=0.0):
+    """White plasma inside the badlands: soft wisps that run right to the
+    hex edge (like the gas nebulae, so neighbours blend), and sharp crackle
+    that fades out before it."""
     size = field[0].shape[0]
     x0, y0 = rng.integers(0, size - HEX, 2)
     a = field[0][y0:y0 + HEX, x0:x0 + HEX]
+    b = field[1][y0:y0 + HEX, x0:x0 + HEX]
     ridge = (1 - np.abs(2 * a - 1)) ** 6 * np.clip(BORDER_DIST / 14, 0, 1)
+    streak = (1 - np.abs(2 * b - 1)) ** 3
     rgb = np.zeros((HEX, HEX, 3), np.float32)
-    rgb[..., 0] = 170 + 60 * ridge
-    rgb[..., 1] = 210 + 40 * ridge
+    rgb[..., 0] = 180 + 50 * ridge
+    rgb[..., 1] = 215 + 35 * ridge
     rgb[..., 2] = 255
-    alpha = np.clip(0.75 * ridge, 0, 1) * strength * 255
+    alpha = np.clip(0.75 * ridge * strength + streak * wisps, 0, 1) * 255
     return Image.fromarray(np.dstack([rgb, alpha]).clip(0, 255).astype(np.uint8), "RGBA")
 
 
@@ -937,23 +941,23 @@ def build_badlands(rng, out):
         tiles[name] = bank_layer(geo.field(True, (False,) * 6) + wobble, style)
 
     # Symbol images for the editor and help: one lone hex of each kind.
-    field = (fractal_noise(rng, 512, 5, 10),)
-    for rel, banks, strength in (("ionstorm-tile", ("shallow", "deep"), 0.42),
-                                 ("ionstorm-light-tile", ("shallow",), 0.3)):
+    field = (fractal_noise(rng, 512, 5, 10), fractal_noise(rng, 512, 4, 12))
+    for rel, banks, strength, wisps in (("ionstorm-tile", ("shallow", "deep"), 0.8, 0.5),
+                                        ("ionstorm-light-tile", ("shallow",), 0.45, 0.22)):
         img = starfield(rng)
-        img.alpha_composite(crackle(rng, field, strength))
+        img.alpha_composite(crackle(rng, field, strength, wisps))
         for b in banks:
             img.alpha_composite(tiles[b])
         save(apply_mask(img, hex_mask_cache), out, f"{sc}/{rel}.png", False)
 
-    # Underneath the banks: open space with a little of the white lightning,
-    # strongest in the deep badlands. Thin badlands (fords) get the faintest
-    # crackle and no bank.
-    for stem, count, strength in (("ionstorm", 11, 0.42), ("ionstorm-light", 6, 0.3),
-                                  ("ionstorm-thin", 6, 0.24)):
+    # Underneath the banks: open space filled with white wisps and lightning,
+    # so it is plain you are in different terrain; strongest in the deep
+    # badlands. Thin badlands (fords) get only a trace, and no bank.
+    for stem, count, strength, wisps in (("ionstorm", 11, 0.8, 0.5), ("ionstorm-light", 6, 0.45, 0.22),
+                                         ("ionstorm-thin", 6, 0.24, 0.08)):
         for v in range(count):
             img = starfield(rng)
-            img.alpha_composite(crackle(rng, field, strength))
+            img.alpha_composite(crackle(rng, field, strength, wisps))
             name = stem if v == 0 else f"{stem}{v + 1}"
             save(apply_mask(img, hex_mask_cache), out, f"{sc}/{name}.png", False)
             if stem == "ionstorm-thin" and v == 0:
