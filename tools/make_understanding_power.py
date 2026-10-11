@@ -41,12 +41,13 @@ FEATURES = {
     "s": [(24, 9), (24, 10), (25, 10), (26, 11), (27, 11), (28, 11),
           (29, 11), (30, 12)],
     # pond in the north, the two long lakes on the flanks
-    "B": [(25, 3)]
-         + [(x, y) for x in (35, 36, 37) for y in range(8, 14)]
+    "B": [(22, 4), (23, 3), (24, 4), (25, 3)]
+         + [(x, y) for x in (35, 36, 37) for y in range(8, 14)
+            if (x, y) not in ((36, 9), (35, 8), (35, 9))]
          + [(x, y) for x in (0, 1, 2) for y in range(11, 14)],
-    "d": [(25, 4), (26, 3),
+    "d": [(21, 3), (21, 4), (22, 3), (23, 4), (24, 3), (25, 4), (26, 3),
           (35, 7), (36, 7), (37, 7), (1, 10)]
-         + [(34, y) for y in range(8, 14)] + [(3, y) for y in range(10, 14)]
+         + [(34, y) for y in range(11, 14)] + [(3, y) for y in range(10, 14)]
          ,
     "r": [(7, 7), (19, 1), (32, 4), (31, 9)],    # dirt patches
     # cliffs
@@ -73,12 +74,16 @@ FEATURES = {
     "p": [(10, 0), (10, 2), (4, 6), (14, 9), (22, 0), (22, 2), (32, 2),
           (33, 13), (2, 8), (20, 12),
           (37, 0), (28, 10)],                     # corner, gem patch
-    "K": [(5, 3)],
-    "c": [(4, 3), (4, 4), (5, 2), (6, 3), (6, 4)],
-    # a second, smaller castle standing in the pond (no starting side),
-    # with open space around it so it is easy to reach
-    "k": [(23, 3)],
-    "h": [(22, 4), (24, 4)],
+    "K": [(5, 3),
+          (15, 12)],                 # a small keep in the central woods
+
+    "c": [(4, 3), (4, 4), (5, 2), (6, 3), (6, 4),
+          (15, 13)],                 # its one recruit hex
+    # a second, smaller castle in the east lake (west lake in the south
+    # half, about hex 2,19 in game coordinates), no starting side; the
+    # shore beside it is open space so it is easy to reach
+    "k": [(36, 9)],
+    "h": [(35, 8), (35, 9)],
 }
 
 
