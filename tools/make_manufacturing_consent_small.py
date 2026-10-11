@@ -25,6 +25,14 @@ LAYERS = [".", "n", "m", "a", "s", "r", "B", "f", "w", "p", "K", "c"]
 JOINED = "nmasrBw"              # lines and patches that must stay joined
 
 
+# Changes asked for on the 29x18 map, west half (the east is its flip):
+# open space at in-game 13,15 and 13,4 (17,15 and 17,4 in the east)
+CLEAR = [(12, 14), (12, 3)]
+# planets moved from in-game 1,9 to 11,7 (29,9 to 19,7 in the east) and
+# from 12,9 to 11,11 (18,9 to 19,11)
+PLANET_MOVES = [((0, 8), (10, 6)), ((11, 8), (10, 10))]
+
+
 def pixel(x, y):
     return x * 54.0, y * 72.0 + (36 if x % 2 else 0)
 
@@ -142,6 +150,11 @@ def shrink(W, H):
         if src[v][u] != src[y][x]:
             put(src[v][u], flip(*moved.get((x, y)) or flip(*place(x, y))),
                 force=src[y][x] != ".")
+    if (W, H) == (29, 18):                  # asked for by hex, in-game
+        for x, y in CLEAR:                  # coordinates less 1
+            grid[y][x] = "."
+        for (x, y), (u, v) in PLANET_MOVES:
+            grid[y][x], grid[v][u] = ".", "p"
     for y in range(H):                      # flip the west half
         for x in range(W // 2):
             grid[y][W - 1 - x] = grid[y][x]
