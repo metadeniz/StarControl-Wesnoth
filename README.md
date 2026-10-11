@@ -42,6 +42,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 |---|---|
 | 2p — Procyon Front | 1 vs 1 |
 | 2p — Vela Nebula | 1 vs 1 |
+| 2p — Understanding Power | 1 vs 1 |
 | 4p — Isar’s Cross (Deep Space) | 2 vs 2 (players 1 & 4 vs 2 & 3) |
 | 2p — The Freelands (Deep Space) | 1 vs 1 |
 | 2p — Weldyn Channel (Deep Space) | 1 vs 1 |
@@ -81,8 +82,10 @@ When you win, the old Alliance and the Hierarchy hear Star Control 1's
 victory theme for their side, the New Alliance hears Star Control II's
 victory fanfare, and the Agents of Chaos (for now) the Precursors' remix of the
 Kohr-Ah victory ditty. When a ship destroys
-another, its race's victory ditty plays over the music, which keeps going at
-full volume. The victory themes and ditties are sound effects, so they
+another, its race's victory ditty plays over the music (the Sa-Matra, which has
+none in Star Control II, plays the Precursors' remix of the Kohr-Ah ditty), which keeps going at
+full volume. A Pkunk that is reborn gets Star Control II's "hallelujah"
+instead of its killer's ditty. The victory themes and ditties are sound effects, so they
 follow the Sound volume, not the Music volume: turning the music down
 leaves them as loud as before.
 
@@ -92,9 +95,9 @@ leaves them as loud as before.
 |---|---|---|---|
 | **Alliance Starbase** (leader only) | 3 moves, 110 HP; point-defense laser (**first strike**), missile battery (**marksman**); heals +4, defense grid (+10% resistance for the ships next to it), point-defense, leadership | **Hierarchy Starbase** (leader only) | 3 moves, 120 HP; defense turrets (**first strike**), fighter bays at range; repair dock (heals +8 and cures the ships next to it), slave shield (+20% resistance when attacked), leadership |
 | Earthling Cruiser | homing nukes, point-defense (fighters hit it at most 50%) | Ur-Quan Dreadnought | close-range fusion blast; fighters at any range (**swarm**: fewer as crew is lost) |
-| Chenjesu Broodhome | photon crystal (ranged; lighter shards close up), DOGI (slows) | Mycon Podship | homing plasmoids at range, heavier plasmoids close up; regrows crew |
+| Chenjesu Broodhome | photon crystal (ranged; lighter shards close up), DOGI (slows) | Mycon Podship | homing plasmoids at range, heavier plasmoids close up (both half damage against Yehat and Utwig shields); regrows crew |
 | Mmrnmhrm X-Wing / Y-Wing | recruit either; lasers or torpedoes, transforms; X-Wing heals +4 | Spathi Eluder | missiles, B.U.T.T. |
-| Yehat Terminator | pulse cannons; armored hull (resists blade 40%, pierce 30%, impact 20%, arcane 10%); force shield | Umgah Drone | antimatter cone, skirmisher |
+| Yehat Terminator | pulse cannons, rail cannons (pierce); armored hull (resists blade 40%, pierce 30%, impact 20%, arcane 10%); force shield (+40% when attacked, +50% against ranged) | Umgah Drone | antimatter cone, skirmisher |
 | Syreen Penetrator | ranged particle dagger; close range: one-shot Syreen song (**lures crew**: heals the full damage dealt) and an entrancing hum (**slows**) | VUX Intruder | close-range laser (**first strike**); long-range limpets (slow) |
 | Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison), Blazer ram |
 | Shofixti Scout | dart gun; **Glory Device**: one unavoidable fire strike (16 / 20 / 24 by level) on one ship, destroying the Scout | Ilwrath Avenger | Hellfire, cloaking device |
@@ -106,7 +109,7 @@ leaves them as loud as before.
 | Chmmr Avatar | 4 moves, and a drive that handles nebulae, dust, badlands and asteroids better than other large hulls; close-range megawatt laser and ZapSats (**first strike**); ranged tractor beam + laser (**marksman**; **slows** from Veteran); point-defense | Druuge Mauler | 4 moves; long-range mass driver (**marksman**); nothing up close |
 | Zoq-Fot-Pik Stinger | cheap; acid spit, hard-hitting tongue | Thraddash Torch | fast; afterburner (**charge**), horn blasters |
 | Pkunk Fury | fast triple gun; **reincarnation**: reborn at full HP when destroyed, 80% the first time, halving with each rebirth | Slylandro Probe | 7 moves; seeking lightning (**magical**); repairs 8 HP a turn in asteroid fields |
-| Supox Blade | **skirmisher**; globs of goo | Orz Nemesis | howitzer; space marines (**drains**) |
+| Supox Blade | **skirmisher**; globs of goo | Orz Nemesis | hard-hitting space marines (**boarding**: ignore armour and shields); light howitzer |
 | Utwig Jugger | six-lance volleys; absorbing shield (+30% resistance when attacked) | Mycon Podship | as in the Hierarchy |
 | Melnorme Trader | 4-shot blaster up close; one heavy charged shot and a confusion ray (**slows**) at range; heals +4 (Veteran +8, Elite cures) | Ilwrath Avenger | as in the Hierarchy |
 
@@ -115,10 +118,14 @@ tiny) as a trait in the side panel; hover over it for that hull's moves and
 defense on every terrain.
 
 **Promotions.** Every ship can rise from level 1 to **Veteran** (level 2)
-and **Elite** (level 3) by gaining experience. Cheap, small ships promote
-fastest, the powerful ones slowest: the Veteran threshold is 1.6 × recruit
-cost (8 XP for a Shofixti Scout, 45 for an Ur-Quan Dreadnought, 48 for a
-Chenjesu Broodhome), Elite is twice that.
+and **Elite** (level 3) by gaining experience, at roughly mainline pace:
+40 XP to Veteran and 100 to Elite. Fast learners need 28 / 70 (Shofixti,
+Earthling, Umgah, VUX, Zoq-Fot-Pik, Thraddash, Syreen, Ilwrath, Supox).
+The big capital ships and the Arilou Skiff, whose promoted forms are
+especially strong, need 50 / 125 (Ur-Quan, Kohr-Ah, Chmmr, Chenjesu,
+Arilou). A promotion that brings healing, curing or leadership comes one
+step sooner (Melnorme 28 / 70, Chenjesu 40 / 100, Androsynth Elite at 70,
+Ur-Quan, Kohr-Ah and Chmmr Elite at 100).
 (Wesnoth's multiplayer *Experience modifier* setting, 70% by default, scales
 these further.) Each promotion adds HP and some mix of stronger or more
 frequent attacks, new attacks and new abilities. **Backstab** (double
@@ -131,7 +138,7 @@ Spathi and Shofixti, which only get it as Elites):
 | Earthling Cruiser | heavier nukes, stronger point-defense, **heals +4** | nukes ×3, **leadership** |
 | Chenjesu Broodhome | stronger crystals, DOGI ×3, **heals +4** | **cures** (heals +8 and cures poison) |
 | Mmrnmhrm X-Wing / Y-Wing | X-Wing lasers **backstab**; stronger torpedoes ×3 | lasers ×5 / heavy torpedoes, **self-repair** |
-| Yehat Terminator | pulse cannons ×6 | **first strike** |
+| Yehat Terminator | pulse cannons ×6, rail cannons ×5 | **first strike** |
 | Syreen Penetrator | song gets a 2nd shot, hum ×3 | stronger song, hum ×5, dagger ×4 |
 | Arilou Skiff | new **ranged** laser; close laser **backstab**; **ambush** | ambush, laser ×4 |
 | Shofixti Scout | stronger darts, 20-damage Glory | **skirmisher**, darts **backstab**, 24-damage Glory |
@@ -162,7 +169,7 @@ starbases.
 | Shofixti Scout | asteroid fields, green and red nebulae | Elite |
 
 **Leaders** start promoted: Elite (level 3) if the ship costs 16 gold or
-less (Earthling Cruiser, Syreen, Arilou, Shofixti, Spathi, Umgah, VUX,
+less (Earthling Cruiser, Syreen, Arilou, Shofixti, Umgah, VUX,
 Androsynth, Ilwrath), Veteran (level 2) otherwise. A leader can't use the
 Glory Device.
 
@@ -215,6 +222,9 @@ heat-proof Chenjesu (2 / 50%) are at home in red nebulae.
   regenerates all images and sounds. `art-manifest.txt`
   lists every UQM-derived file (what a published version must replace).
 - `tools/make_maps.py .` regenerates the 2p maps.
+- `tools/make_understanding_power.py .` regenerates Understanding Power, and
+  `maps/default-terrain/2p_Understanding_Power.map`, the same map in default
+  Wesnoth terrain.
 - `tools/convert_map.py <wesnoth .map> <out .map>` turns any regular
   Wesnoth map into a space map hex for hex: forest → nebula, mushroom
   grove → red nebula, sand → dust cloud, hills → asteroids, mountains →

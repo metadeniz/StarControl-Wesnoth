@@ -251,6 +251,7 @@ local DITTIES = {   -- races with a sounds/sc/ditty-<race>.ogg
 	supox = true, syreen = true, thraddash = true, umgah = true,
 	urquan = true, utwig = true, vux = true, yehat = true,
 	zoqfotpik = true, melnorme = true,
+	samatra = true,     -- the Precursors' remix of the Kohr-Ah ditty
 }
 
 function sc.victory_ditty()
@@ -267,7 +268,8 @@ end
 -- where it died, unable to act until its next turn. The first time the
 -- chance is 80%, and it halves with every rebirth (40%, 20%, ...).
 -- Replacing the dying unit inside its "die" event tells Wesnoth not to
--- remove it.
+-- remove it. The SC2 reincarnation "hallelujah" plays instead of the
+-- killer's victory ditty. Returns true if the ship was reborn.
 local REBIRTH_CHANCE = 80
 function sc.pkunk_rebirth()
 	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
@@ -288,6 +290,7 @@ function sc.pkunk_rebirth()
 	reborn:to_map(x, y)
 	wesnoth.audio.play("sc/pkunk-rebirth.wav")
 	wesnoth.interface.float_label(x, y, "<span color='#ffe680'>" .. tostring(_ "Reborn!") .. "</span>")
+	return true
 end
 
 ------------------------------------------------------------ Precursor artifacts
@@ -425,3 +428,98 @@ end
 -- Older versions turned the music down during a ditty; a game saved then
 -- must not load with the music turned down.
 wesnoth.audio.music_list.volume = 100
+
+------------------------------------------------------------------ Ambushes
+
+-- The engine stops a ship that stumbles onto a hidden enemy and takes away
+-- the rest of its movement. Where the hidden ship sits in the badlands we
+-- give the movement back: the finder still stops where it found the enemy,
+-- but can then move on. Ships listed in FULL_AMBUSH_IN_BADLANDS keep the
+-- full ambush there too.
+--
+-- exit_hex fires just before each step, while the hidden ships around the
+-- next hex are still hidden (the engine's own ambush test); enter_hex fires
+-- after the step, with the ship's moves for that hex already paid; moveto
+-- fires after the engine has zeroed them.
+local ambush = nil
+
+local BADLANDS = { Yi = true, Yis = true, Yif = true }
+local FULL_AMBUSH_IN_BADLANDS = {
+	SC_Arilou_Skiff = true,
+	SC_ZoqFotPik_Stinger = true,
+	SC_Androsynth_Guardian = true,
+	SC_Slylandro_Probe = true,
+}
+
+-- Whether the hidden ship e takes away all of its finder's movement.
+local function full_ambush(e)
+	local base = wesnoth.current.map[{ e.x, e.y }]:match("^[^^]*")
+	return not BADLANDS[base] or FULL_AMBUSH_IN_BADLANDS[base_type(e.type)] == true
+end
+
+local function hidden_from(side, x, y)
+	return wesnoth.units.find_on_map {
+		T.filter_side { T.enemy_of { side = side } },
+		T.filter_vision { side = side, visible = false },
+		T.filter_location { T.filter_adjacent_location { x = x, y = y } },
+	}
+end
+
+-- Whether e is hiding: the engine's test, before the mover gets next to it.
+local function hides(e)
+	if e.status.uncovered or not e:ability("hides") then return false end
+	return #wesnoth.units.find_on_map {
+		T.filter_side { T.enemy_of { side = e.side } },
+		T.filter_adjacent { id = e.id },
+		T["not"] { status = "petrified" },
+	} == 0
+end
+
+function sc.ambush_exit_hex()
+	local c = wesnoth.current.event_context
+	local u = wesnoth.units.get(c.x1, c.y1)
+	ambush = nil
+	if not u then return end
+	local hidden = false
+	for _, e in ipairs(hidden_from(u.side, c.x2, c.y2)) do
+		-- The filter also counts ships merely lost in the fog, which the
+		-- engine does not treat as an ambush.
+		if not wesnoth.sides.is_fogged(u.side, e.x, e.y) or hides(e) then
+			if full_ambush(e) then return end
+			hidden = true
+		end
+	end
+	if not hidden then return end
+	-- A ship entering a known enemy's zone of control, or capturing a
+	-- planet, would stop with nothing left anyway.
+	local zoc = false
+	for _, e in ipairs(wesnoth.units.find_on_map {
+		T.filter_side { T.enemy_of { side = u.side } },
+		T.filter_vision { side = u.side, visible = true },
+		T.filter_location { T.filter_adjacent_location { x = c.x2, y = c.y2 } },
+	}) do
+		if e.zoc then zoc = true end
+	end
+	local capture = wesnoth.terrain_types[wesnoth.current.map[{ c.x2, c.y2 }]].village
+		and wesnoth.map.get_owner(c.x2, c.y2) ~= u.side
+	ambush = { id = u.id, x = c.x2, y = c.y2, zoc = zoc, capture = capture }
+end
+
+function sc.ambush_enter_hex()
+	local c = wesnoth.current.event_context
+	if not ambush or ambush.x ~= c.x1 or ambush.y ~= c.y1 then return end
+	local u = wesnoth.units.get(c.x1, c.y1)
+	if not u or u.id ~= ambush.id then ambush = nil; return end
+	ambush.moves = u.moves
+	if ambush.zoc and u:ability("skirmisher") then ambush.zoc = false end
+end
+
+function sc.ambush_moveto()
+	local a = ambush
+	ambush = nil
+	local c = wesnoth.current.event_context
+	if not a or not a.moves or a.x ~= c.x1 or a.y ~= c.y1 then return end
+	if a.zoc or a.capture then return end
+	local u = wesnoth.units.get(c.x1, c.y1)
+	if u and u.id == a.id and u.moves == 0 then u.moves = a.moves end
+end

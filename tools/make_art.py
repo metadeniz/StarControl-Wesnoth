@@ -14,6 +14,7 @@ Usage:
     make_art.py --uqm <UQM-MegaMod-Content checkout> --out <add-on dir>
                 [--wesnoth-data /usr/share/games/wesnoth/1.16/data]
     make_art.py --only badlands --out <add-on dir>    (badlands art and rules only)
+    make_art.py --only asteroids --out <add-on dir>   (asteroid fields, dense asteroids, walls)
 """
 
 import argparse
@@ -28,6 +29,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 from make_alliance_starbase import build_alliance_starbase
+from make_asteroids import build as build_asteroid_art
 from make_starbase import build_hierarchy_starbase
 
 HEX = 72
@@ -436,12 +438,14 @@ DITTY_MAX_BOOST = 12.0   # dB of gain at most past where the peaks reach the lim
 DITTY_DELAY_MS = 400     # starts after the ship's explosion, not on top of it
 
 
-def build_ditties(uqm, out):
+def build_ditties(uqm, out, remix=None):
     """Victory ditties: rendered from the .mod files with ffmpeg (libopenmpt),
     capped at 8 seconds in case a module loops, brought to the same loudness
     and delayed slightly so the explosion doesn't mask the start. A limiter
     catches the peaks, so the gain is corrected over a few passes; ditties
-    with sharp peaks stop short of the target rather than being crushed."""
+    with sharp peaks stop short of the target rather than being crushed.
+    The Sa-Matra has no ditty of its own in UQM; it gets the Precursors'
+    remix of the Kohr-Ah ditty (the Death March's victory theme)."""
     import re
     import subprocess
     os.makedirs(os.path.join(out, "sounds/sc"), exist_ok=True)
@@ -455,8 +459,10 @@ def build_ditties(uqm, out):
         lufs = float(re.findall(r"I:\s+(-?[\d.]+) LUFS", probe.stderr)[-1])
         return peak, lufs
 
-    for race, rel in DITTIES.items():
-        src = os.path.join(uqm, "base/ships", rel)
+    sources = {race: os.path.join(uqm, "base/ships", rel) for race, rel in DITTIES.items()}
+    if remix:
+        sources["samatra"] = os.path.join(remix, REMIXES["kohrah-victory"])
+    for race, src in sources.items():
         dest = f"sounds/sc/ditty-{race}.ogg"
         peak, lufs = measure(src, fade + ",")
         max_gain = -1.0 - peak + DITTY_MAX_BOOST
@@ -763,43 +769,77 @@ GAS_NEBULAE = {
 }
 
 
+GAS_PERIOD = (6, 4)    # gas clouds repeat every 6 columns and 4 rows of hexes
+GAS_TERRAIN = {"nebula": "Yn", "rednebula": "Yr", "dust": "Yd"}
+# hex offsets of each neighbour, for even and odd columns (odd ones sit lower)
+NEIGHBOUR_OFFSETS = {
+    0: {"n": (0, -1), "ne": (1, -1), "se": (1, 0), "s": (0, 1), "sw": (-1, 0), "nw": (-1, -1)},
+    1: {"n": (0, -1), "ne": (1, 0), "se": (1, 1), "s": (0, 1), "sw": (-1, 1), "nw": (-1, 0)},
+}
+
+
+def _spill_wedges(soft=4.0):
+    """Split the hex into soft wedges, one per edge, adding up to 1. A hex
+    with several gas neighbours stacks one spill per neighbour; keeping each
+    to its own wedge stops them adding up to a bright rim round the hex."""
+    e = {d: np.exp(-EDGE_DIST[d] / soft) for d in HEX_EDGES}
+    total = sum(e.values())
+    return {d: e[d] / total for d in HEX_EDGES}
+
+
+SPILL_WEDGE = _spill_wedges()
+
+
+def periodic_fractal_noise(rng, width, height, octaves, cell):
+    """fractal_noise over a width x height field that wraps round at its
+    edges, with cells of about `cell` pixels in its coarsest octave."""
+    total = np.zeros((height, width), np.float32)
+    amp, norm = 1.0, 0.0
+    cx, cy = max(1, round(width / cell)), max(1, round(height / cell))
+    for o in range(octaves):
+        grid = rng.random((cy << o, cx << o)).astype(np.float32)
+        tiled = np.tile(grid, (3, 3))
+        layer = Image.fromarray((tiled * 255).astype(np.uint8)).resize((3 * width, 3 * height), Image.BICUBIC)
+        total += amp * np.asarray(layer, np.float32)[height:2 * height, width:2 * width] / 255.0
+        norm += amp
+        amp *= 0.5
+    total /= norm
+    total -= total.min()
+    total /= max(total.max(), 1e-6)
+    return total
+
+
+def gas_hex_slice(col, row):
+    """Pixel rows and columns of hex (col, row) of the gas field, wrapping."""
+    w, h = GAS_PERIOD[0] * 54, GAS_PERIOD[1] * 72
+    x0, y0 = 54 * col, 72 * row + (36 if col % 2 else 0)
+    return np.ix_((np.arange(HEX) + y0) % h, (np.arange(HEX) + x0) % w)
+
+
 def build_gas_nebula(rng, out, name, colours):
     """Thin, wispy nebula: mostly transparent haze with brighter streaks and
     fine highlight filaments, so the dark of space shows through.
 
-    Seamless: all noise is pulled to its mean at the hex border and the
-    streaks fade out before it, so neighbouring tiles meet on the same thin
-    haze. Edges facing open space fade on both sides with a wavy depth.
+    Seamless: the gas is one big cloud that wraps round every GAS_PERIOD hexes,
+    and each hex of a gas terrain shows the piece of it at its own place on
+    the map (picked by the mod_x/mod_y rules in terrain/gas-tiles.cfg, which
+    this script also writes). Neighbouring hexes are neighbouring pieces, so
+    wisps run on across every hex edge, and no edge pattern repeats from hex
+    to hex. Where gas meets anything else its edge thins out (the *-edge
+    images) and wisps of it spill onto the neighbour, again cut from the
+    cloud at the neighbour's place.
     """
     col_a, col_b, col_hi = (np.array(c, np.float32) for c in colours)
-    size = 530
-    field = (fractal_noise(rng, size, 5, 16), fractal_noise(rng, size, 4, 8),
-             fractal_noise(rng, size, 4, 20))
+    pc, pr = GAS_PERIOD
+    w, h = pc * 54, pr * 72
+    field = (periodic_fractal_noise(rng, w, h, 5, 33), periodic_fractal_noise(rng, w, h, 4, 66),
+             periodic_fractal_noise(rng, w, h, 4, 26.5))
     mask = hex_mask_cache
-    # Near its border every tile hands over from its own crop of the field to
-    # noise that repeats from hex to hex (as the badlands plasma does), so
-    # wisps and filaments run on across every hex edge, into neighbouring
-    # gas tiles and into the wisps spilt over open space, with no seam.
-    # Each crop is rescaled to the same spread, so all tiles look alike.
-    lrng = np.random.default_rng(int(rng.integers(1 << 30)))
-    lattice = [lattice_noise(lrng, k) for k in (5, 5, 8)]
-    # typical spread inside one tile, so the wisps keep their old contrast
-    spread = [float(np.mean([f[y:y + HEX, x:x + HEX].std() for y in range(0, size - HEX, 24)
-                             for x in range(0, size - HEX, 24)])) for f in field]
-    handover = _smoothstep(BORDER_DIST / 20.0)
 
-    def seamless(i, sl):
-        own = field[i][sl]
-        own = (own - own.mean()) / max(float(own.std()), 1e-4)
-        w = handover
-        z = (w * own + (1 - w) * lattice[i]) / np.sqrt(w * w + (1 - w) ** 2)
-        return np.clip(0.5 + spread[i] * z, 0, 1)
-
-    def gas(x0, y0):
-        sl = (slice(y0, y0 + HEX), slice(x0, x0 + HEX))
-        f0, f1, f2 = (seamless(i, sl) for i in range(3))
-        n1, n2 = f0, f1
-        streak = (1 - np.abs(2 * f0 - 1)) ** 3       # soft wisps
+    def gas(col, row):
+        sl = gas_hex_slice(col, row)
+        n1, n2, f2 = (f[sl] for f in field)
+        streak = (1 - np.abs(2 * n1 - 1)) ** 3       # soft wisps
         fine = (1 - np.abs(2 * f2 - 1)) ** 22         # thin filaments
         mix = 0.5 + 0.5 * (n2 - 0.5)
         rgb = col_a[None, None] * (1 - mix[..., None]) + col_b[None, None] * mix[..., None]
@@ -808,20 +848,86 @@ def build_gas_nebula(rng, out, name, colours):
         alpha = np.clip(0.3 + 0.12 * (n1 - 0.5) + 0.3 * streak + 0.22 * fine, 0, 0.85) * GAS_DENSITY * 255
         return Image.fromarray(np.dstack([rgb, alpha]).clip(0, 255).astype(np.uint8), "RGBA")
 
-    for v in range(11):
-        x0, y0 = rng.integers(0, size - HEX - 14, 2)
-        img = starfield(rng, 0.9)
-        img.alpha_composite(gas(x0, y0))
-        stem = name if v == 0 else f"{name}{v + 1}"
-        save(apply_mask(img, mask), out, f"images/terrain/sc/{stem}.png", False)
-        if v == 0:
-            save(apply_mask(img, mask), out, f"images/terrain/sc/{name}-tile.png", False)
+    code = GAS_TERRAIN[name]
+    others = ",".join(f"{t}*^*" for t in GAS_TERRAIN.values() if t != code)
+    others = f"Ys*^*,Yif*^*,Yis*^*,Yk,Yc,Yi,Yi^*,{others}"
+    layer = {"nebula": -310, "rednebula": -305, "dust": -320}[name]
+    rules = []
+    for col in range(pc):
+        for row in range(pr):
+            img = starfield(rng, 0.9)
+            img.alpha_composite(gas(col, row))
+            stem = f"sc/gas/{name}-{col}-{row}"
+            save(apply_mask(img, mask), out, f"images/terrain/{stem}.png", False)
+            if (col, row) == (0, 0):
+                save(apply_mask(img, mask), out, f"images/terrain/sc/{name}-tile.png", False)
+            rules.append(f"{{SC_GAS_BASE ({code}*^*) {col} {row} {stem}.png}}")
+            layer_img = gas(col, row)
+            for d, (dx, dy) in NEIGHBOUR_OFFSETS[col % 2].items():
+                save(apply_mask(layer_img, wavy_mask(rng, d, NEBULA_EDGE) * SPILL_WEDGE[d] * mask), out,
+                     f"images/terrain/{stem}-{d}.png", False)
+                # one period on, so no position is negative (the rules
+                # don't match with negative positions)
+                rules.append(f"{{SC_GAS_SPILL ({others}) ({code}*^*) {col + pc} {row + pr} "
+                             f"{col + pc + dx} {row + pr + dy} "
+                             f"{name}_spill_{d} {layer} {stem}-{d}.png}}")
     for combo in TRANSITION_COMBOS:
-        x0, y0 = rng.integers(0, size - HEX - 14, 2)
-        save(apply_mask(gas(x0, y0), wavy_mask(rng, combo, NEBULA_EDGE) * mask), out,
-             f"images/terrain/sc/{name}-{combo}.png", False)
         save(apply_mask(starfield(rng, 0.9), wavy_mask(rng, combo, NEBULA_EDGE) * mask), out,
              f"images/terrain/sc/{name}-edge-{combo}.png", False)
+    return rules
+
+
+GAS_MACROS = """#define SC_GAS_BASE TERRAIN X Y IMAGE
+    [terrain_graphics]
+        mod_x={pc}
+        mod_y={pr}
+        [tile]
+            x,y={{X}},{{Y}}
+            type={{TERRAIN}}
+            set_no_flag=base
+            [image]
+                name={{IMAGE}}
+                layer=-1000
+            [/image]
+        [/tile]
+    [/terrain_graphics]
+#enddef
+
+#define SC_GAS_SPILL OTHERS GAS X Y NX NY FLAG LAYER IMAGE
+    [terrain_graphics]
+        mod_x={pc}
+        mod_y={pr}
+        [tile]
+            x,y={{X}},{{Y}}
+            type={{OTHERS}}
+            set_no_flag={{FLAG}}
+            [image]
+                name={{IMAGE}}
+                layer={{LAYER}}
+            [/image]
+        [/tile]
+        [tile]
+            x,y={{NX}},{{NY}}
+            type={{GAS}}
+        [/tile]
+    [/terrain_graphics]
+#enddef
+
+"""
+
+
+def build_gas(seed, out):
+    rules = []
+    for i, (name, colours) in enumerate(GAS_NEBULAE.items()):
+        rules += build_gas_nebula(np.random.default_rng(seed + 10 + i), out, name, colours)
+    with open(os.path.join(out, "terrain/gas-tiles.cfg"), "w") as f:
+        f.write("#textdomain wesnoth-Star_Control_TC\n")
+        f.write("# Generated by tools/make_art.py (build_gas); do not edit by hand.\n")
+        f.write("# Nebulae and dust: each hex shows the piece of the cloud at its own place\n")
+        f.write("# on the map, and spills wisps onto its neighbours, so clouds run on across\n")
+        f.write("# hex edges.\n\n")
+        f.write(GAS_MACROS.format(pc=GAS_PERIOD[0], pr=GAS_PERIOD[1]))
+        f.write("\n".join(rules) + "\n\n#undef SC_GAS_BASE\n#undef SC_GAS_SPILL\n")
 
 
 # ---- badlands: plasma rivers over open space ----
@@ -1155,56 +1261,6 @@ BANK_MACRO = """#define SC_BANK FLAG LAYER IMAGESTEM C N NE SE S SW NW
 """
 
 
-def build_dense_asteroids(rng, out):
-    """Mountains: a packed field of big rocks."""
-    for v in range(6):
-        canvas = Image.new("RGBA", (HEX, HEX), (0, 0, 0, 0))
-        placed = []
-        for _ in range(int(rng.integers(11, 15))):
-            size = int(rng.choice([8, 10, 12, 14, 16, 18], p=[0.15, 0.2, 0.2, 0.2, 0.15, 0.1]))
-            for _try in range(40):
-                x, y = rng.uniform(10, 62), rng.uniform(9, 63)
-                if abs(x - 36) + abs(y - 36) * 0.6 > 33:
-                    continue
-                if all((x - px) ** 2 + (y - py) ** 2 > (0.75 * (size + ps)) ** 2 for px, py, ps in placed):
-                    break
-            placed.append((x, y, size))
-        for x, y, size in sorted(placed, key=lambda p: p[1]):   # back to front
-            r = rock(rng, size, shade_k=0.55)
-            canvas.alpha_composite(r, (int(x - r.width / 2), int(y - r.height / 2)))
-        name = "asteroids-dense" if v == 0 else f"asteroids-dense{v + 1}"
-        save(canvas, out, f"images/terrain/sc/{name}.png", False)
-        if v == 0:
-            tile = starfield(rng)
-            tile.alpha_composite(canvas)
-            save(apply_mask(tile, hex_mask_cache), out, "images/terrain/sc/asteroids-dense-tile.png", False)
-
-
-def build_asteroid_wall(rng, out):
-    """Impassable: a wall of huge, tightly packed rocks reaching the hex
-    edges, so neighbouring wall hexes join into one barrier."""
-    for v in range(6):
-        canvas = Image.new("RGBA", (HEX, HEX), (0, 0, 0, 0))
-        placed = []
-        for _ in range(int(rng.integers(16, 21))):
-            size = int(rng.choice([12, 14, 16, 18, 20, 22], p=[0.1, 0.15, 0.2, 0.2, 0.2, 0.15]))
-            x, y = rng.uniform(4, 68), rng.uniform(4, 68)
-            placed.append((x, y, size))
-        for x, y, size in sorted(placed, key=lambda p: p[1]):   # back to front
-            r = rock(rng, size, shade_k=0.7)
-            a = np.array(r).astype(np.float32)
-            a[..., :3] *= 0.8                                    # a shade darker than asteroid fields
-            r = Image.fromarray(a.clip(0, 255).astype(np.uint8), "RGBA")
-            canvas.alpha_composite(r, (int(x - r.width / 2), int(y - r.height / 2)))
-        canvas = apply_mask(canvas, hex_mask_cache)
-        name = "asteroid-wall" if v == 0 else f"asteroid-wall{v + 1}"
-        save(canvas, out, f"images/terrain/sc/{name}.png", False)
-        if v == 0:
-            tile = starfield(rng)
-            tile.alpha_composite(canvas)
-            save(apply_mask(tile, hex_mask_cache), out, "images/terrain/sc/asteroid-wall-tile.png", False)
-
-
 def build_precursor_ruins(rng, out):
     """Impassable: wreckage of ancient Precursor structures, dull metal with
     a few glyphs still glowing. Three kinds: a broken ring, a cluster of
@@ -1376,47 +1432,29 @@ def build_planets(rng, out):
             save(canvas, out, "images/terrain/sc/planet-tile.png", False)
 
 
-def rock(rng, size, shade_k=1.4):
-    s = size * 2 + 4
-    pts = []
-    n = int(rng.integers(7, 11))
-    for k in range(n):
-        a = 2 * math.pi * k / n + rng.uniform(-0.2, 0.2)
-        rr = size * rng.uniform(0.65, 1.0)
-        pts.append((s / 2 + rr * math.cos(a), s / 2 + rr * 0.8 * math.sin(a)))
-    m = Image.new("L", (s, s), 0)
-    ImageDraw.Draw(m).polygon(pts, fill=255)
-    mask = np.asarray(m, np.float32) / 255
-    blurred = np.asarray(m.filter(ImageFilter.GaussianBlur(size / 3)), np.float32) / 255
-    gy, gx = np.gradient(blurred)
-    shade = np.clip(0.55 + (-gx - gy) * size * shade_k, 0.15, 1.2)
-    tex = fractal_noise(rng, s, 3, 2)
-    base = 85 + 50 * tex
-    rgb = np.dstack([base * shade * 1.0, base * shade * 0.95, base * shade * 0.9])
-    img = Image.fromarray(np.dstack([rgb, mask * 255]).clip(0, 255).astype(np.uint8), "RGBA")
-    return img.rotate(rng.uniform(0, 360), resample=Image.BICUBIC)
-
-
-def build_asteroids(rng, out):
-    for v in range(6):
-        canvas = Image.new("RGBA", (HEX, HEX), (0, 0, 0, 0))
+def spend_old_asteroid_draws(rng):
+    """The asteroid art now comes from make_asteroids.py with its own seed.
+    The first asteroid fields were drawn from the shared generator here, so
+    make the same random draws they did, keeping the star and starbase art
+    that is drawn after them byte-identical."""
+    for _v in range(6):
         placed = []
         for _ in range(int(rng.integers(7, 11))):
             size = int(rng.choice([5, 6, 8, 10, 12, 14], p=[0.15, 0.2, 0.2, 0.2, 0.15, 0.1]))
             for _try in range(30):
                 x, y = rng.uniform(10, 62), rng.uniform(9, 63)
-                # keep inside the hex and away from other rocks
                 if abs(x - 36) + abs(y - 36) * 0.6 > 32:
                     continue
                 if all((x - px) ** 2 + (y - py) ** 2 > (size + ps + 2) ** 2 for px, py, ps in placed):
                     break
             placed.append((x, y, size))
-            r = rock(rng, size)
-            canvas.alpha_composite(r, (int(x - r.width / 2), int(y - r.height / 2)))
-        name = "asteroids" if v == 0 else f"asteroids{v + 1}"
-        save(canvas, out, f"images/terrain/sc/{name}.png", False)
-        if v == 0:
-            save(canvas, out, "images/terrain/sc/asteroids-tile.png", False)
+            # the old rock(): outline points, texture noise, rotation
+            n = int(rng.integers(7, 11))
+            for _k in range(n):
+                rng.uniform(-0.2, 0.2)
+                rng.uniform(0.65, 1.0)
+            fractal_noise(rng, size * 2 + 4, 3, 2)
+            rng.uniform(0, 360)
 
 
 def build_star(rng, out):
@@ -1523,7 +1561,7 @@ def main():
     ap.add_argument("--threedo", help="unzipped UQM 3DO music add-on (optional)")
     ap.add_argument("--wesnoth-data", default="/usr/share/games/wesnoth/1.16/data")
     ap.add_argument("--seed", type=int, default=1990)
-    ap.add_argument("--only", choices=["badlands", "gas"], help="rebuild just this terrain")
+    ap.add_argument("--only", choices=["badlands", "gas", "asteroids"], help="rebuild just this terrain")
     args = ap.parse_args()
     if not args.only and not args.uqm:
         ap.error("--uqm is required unless --only is given")
@@ -1536,8 +1574,10 @@ def main():
         build_badlands(np.random.default_rng(args.seed + 4), args.out)
         return 0
     if args.only == "gas":
-        for i, (name, colours) in enumerate(GAS_NEBULAE.items()):
-            build_gas_nebula(np.random.default_rng(args.seed + 10 + i), args.out, name, colours)
+        build_gas(args.seed, args.out)
+        return 0
+    if args.only == "asteroids":
+        build_asteroid_art(np.random.default_rng(args.seed + 20), args.out, save, TRANSITION_COMBOS, mask)
         return 0
 
     build_ships(args.uqm, args.out)
@@ -1549,7 +1589,7 @@ def main():
     build_attack_icons(args.out)
     nfire = build_effects(args.uqm, args.out)
     build_sounds(args.uqm, args.out)
-    build_ditties(args.uqm, args.out)
+    build_ditties(args.uqm, args.out, args.remix)
     build_music(args.uqm, args.out)
     if args.remix:
         build_remixes(args.remix, args.out)
@@ -1559,16 +1599,14 @@ def main():
     build_space(rng, mask, args.out)
     build_nebula(rng, mask, tmasks, args.out)
     build_planets(rng, args.out)
-    build_asteroids(rng, args.out)
+    spend_old_asteroid_draws(rng)
     build_star(rng, args.out)
     build_starbase(rng, mask, args.out)
     # Added later with its own seed so the art above stays byte-identical.
-    for i, (name, colours) in enumerate(GAS_NEBULAE.items()):
-        build_gas_nebula(np.random.default_rng(args.seed + 10 + i), args.out, name, colours)
+    build_gas(args.seed, args.out)
     build_badlands(np.random.default_rng(args.seed + 4), args.out)
     build_precursor_ruins(np.random.default_rng(args.seed + 8), args.out)
-    build_dense_asteroids(np.random.default_rng(args.seed + 5), args.out)
-    build_asteroid_wall(np.random.default_rng(args.seed + 6), args.out)
+    build_asteroid_art(np.random.default_rng(args.seed + 20), args.out, save, TRANSITION_COMBOS, mask)
 
     # Added by hand, not built here: Chenjesu and Mmrnmhrm themes by Titus
     # (supplied as MP3s, loudness-matched to the other music).
