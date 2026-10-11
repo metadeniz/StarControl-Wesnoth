@@ -13,7 +13,10 @@ Cliffs became asteroid walls, woods nebulae, tiberium fields asteroid
 fields with a planet at each tiberium tree, and the two buildings on the
 west and east edges and the one in the centre planets. Roads, houses and
 dirt are open space. Each team starts at the two player-start markers on
-its edge: a starbase with 5 docking rings.
+its edge: a starbase with 5 docking rings. Added on request: two nebulae
+inside the centre's ring of walls, a small starbase with 2 docking rings
+north and south of the ring on the centre column, and no wall touching the
+top or bottom edge.
 
 Also writes maps/default-terrain/4p_Man_Con.map: the same map in default
 Wesnoth terrain (grass, woods, hills, impassable ridges, roads, villages).
@@ -55,9 +58,10 @@ WALLS = [
 # each corner as in the screenshot: its north arc and its west arc
 RING = [(20, 10), (19, 10), (17, 11), (17, 12)]
 RING_WOODS = [(19, 12)]          # nebulae inside the ring, beside its planet
-# A small keep west of the ring (and east, by the flip) with 2 recruit
-# hexes, one north and one south; no side starts there
-MID_KEEP, MID_RINGS = (13, 12), [(13, 11)]
+# A small keep on the centre column north of the ring (and south, by the
+# flip), as far from the west starts as from the east, with 2 recruit
+# hexes, one west and one east; no side starts there
+MID_KEEP, MID_RINGS = (20, 8), [(19, 8)]
 ROADS = [                        # only drawn in the default-terrain map
     [(500, 30), (530, 55), (562, 75), (562, 290)],
 ]
