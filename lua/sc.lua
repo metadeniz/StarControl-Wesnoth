@@ -203,11 +203,10 @@ local PLAYLISTS = {
 		"remix-utwig-ultron", "remix-commander", "remix-arilou", "remix-melnorme", "remix-syreen", "syreen-ramen-rider",
 		"remix-mystic-shadows", "remix-quasispace", "remix-intro", "remix-ending", "remix-starbase",
 		"remix-outfit" },
-	-- the Agents of Chaos hear modern versions: the Precursors' remixes and a
-	-- re-imagined Melnorme theme
+	-- the Agents of Chaos hear modern versions: the Precursors' remixes
 	SC_DeathMarch = { "kohrah-cleansing-required", "kohrah-eternal-doctrine", "kohrah-battle",
 		"druuge-crimson-corporation", "thraddash-culture-19", "slylandro-we-come-in-peace",
-		"orz-squeezing-the-juice", "mycon-rebirth", "ilwrath-all-evil", "samatra-battle", "melnorme-lipavsky",
+		"orz-squeezing-the-juice", "mycon-rebirth", "ilwrath-all-evil", "samatra-battle",
 		"remix-starbase" },
 	SC_Hierarchy = { "urquan", "urquan-now-and-forever", "mycon", "spathi", "umgah", "vux", "ilwrath", "thraddash",
 		"androsynth-duoled", "starbase" },
