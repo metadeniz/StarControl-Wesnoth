@@ -5,11 +5,13 @@ copy).
 Manufacturing Consent shrunk to WxH: every hex of the full map's north-west
 quarter is moved to the nearest hex of the smaller grid (by its position on
 screen, so the shapes keep their proportions), lines that were joined stay
-joined (the centre's ring of walls is redrawn, to keep its gaps), and every castle keeps its rings in the same directions. The rest
+joined (the centre's ring of walls is redrawn, to keep its gaps), and
+every castle keeps its rings in the same directions. The rest
 is flipped as in the full map, west to east exactly and north to south to
 within half a hex; the few hexes the full map does not flip north to south
 (a planet beside a mushroom grove, the planets on the middle row, the
 recruit hex of the keep in the west ridge) are carried over one by one.
+Then a row is added along the top, as in the full map.
 
 Usage: make_manufacturing_consent_small.py <add-on dir> [W H]
 W must be odd, so the west-east flip is exact.
@@ -25,11 +27,12 @@ LAYERS = [".", "n", "m", "a", "s", "r", "B", "f", "w", "p", "K", "c"]
 JOINED = "nmasrBw"              # lines and patches that must stay joined
 
 
-# Changes asked for on the 29x18 map, west half (the east is its flip):
-# open space at in-game 13,15 and 13,4 (17,15 and 17,4 in the east)
+# Changes asked for on the 29x18 map, west half (the east is its flip), in
+# in-game coordinates from before pad_top added the top row (now 1 lower):
+# open space at 13,15 and 13,4 (17,15 and 17,4 in the east)
 CLEAR = [(12, 14), (12, 3)]
-# planets moved from in-game 1,9 to 11,7 (29,9 to 19,7 in the east) and
-# from 12,9 to 11,11 (18,9 to 19,11)
+# planets moved from 1,9 to 11,7 (29,9 to 19,7 in the east) and from 12,9
+# to 11,11 (18,9 to 19,11)
 PLANET_MOVES = [((0, 8), (10, 6)), ((11, 8), (10, 10))]
 
 
@@ -165,7 +168,7 @@ def shrink(W, H):
 if __name__ == "__main__":
     out = sys.argv[1]
     W, H = (int(v) for v in sys.argv[2:4]) if len(sys.argv) > 3 else (29, 18)
-    grid, keeps = shrink(W, H)
+    grid, keeps = full.pad_top(*shrink(W, H))
     full.write(grid, keeps,
                os.path.join(out, "maps/4p_Manufacturing_Consent_Small.map"))
     full.write(grid, keeps, os.path.join(

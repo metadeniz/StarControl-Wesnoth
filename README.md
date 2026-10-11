@@ -235,7 +235,7 @@ heat-proof Chenjesu (2 / 50%) are at home in red nebulae.
   (4p, west vs east), and `maps/default-terrain/4p_Manufacturing_Consent.map`,
   the same map in default Wesnoth terrain.
 - `tools/make_manufacturing_consent_small.py .` writes the small version
-  (29×18, both terrains) from the full one.
+  (29×19, both terrains) from the full one.
 - `tools/grid_overlay.py <map> <render.png> <out.png>` draws a hex grid with
   each hex's in-game coordinates over a `wesnoth --screenshot` render of the
   map, so changes can be asked for by hex.

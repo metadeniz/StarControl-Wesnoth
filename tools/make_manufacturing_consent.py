@@ -228,6 +228,15 @@ def build():
     return grid, keeps
 
 
+def pad_top(grid, keeps):
+    """Add a row along the top, a copy of the bottom one. The flip leaves the
+    bottom of the odd columns half a hex lower than the top of the even
+    ones, so the map looked roomier in the south; with this row the odd
+    columns flip exactly and the even ones reach half a hex higher at the
+    top instead. Every in-game row number goes up by 1."""
+    return [list(grid[-1])] + grid, [(x, y + 1) for x, y in keeps]
+
+
 def write(grid, keeps, path, table=T, base_only=("Yk", "Ys^Vyp")):
     H, W = len(grid), len(grid[0])
     (wx0, wy0), (wx1, wy1) = sorted(keeps, key=lambda k: k[1])
@@ -257,7 +266,7 @@ def write(grid, keeps, path, table=T, base_only=("Yk", "Ys^Vyp")):
 
 
 if __name__ == "__main__":
-    grid, keeps = build()
+    grid, keeps = pad_top(*build())
     write(grid, keeps,
           os.path.join(sys.argv[1], "maps/4p_Manufacturing_Consent.map"))
     write(grid, keeps, os.path.join(
