@@ -36,10 +36,14 @@ IW, IH = 1124, 971       # the screenshot
 
 T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
      "K": "Yk", "c": "Yc", "r": "Ys", "B": "Yi", "f": "Yif",
-     "s": "Yis", "m": "Yr"}
+     "s": "Yis", "m": "Yr",
+     # barriers that replace most of the asteroid walls (see BARRIERS)
+     "D": "Yqd", "R": "Yqr", "P": "Yqp", "E": "Yqe", "G": "Yqd^Ygg",
+     "H": "Yqr^Ygg", "X": "Yqe^Yxb", "U": "Yqr^Yxp", "S": "Ys^Yxs"}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "r": "Re", "B": "Wo", "f": "Wo^Bsb\\",
            "s": "Ss", "m": "Gg^Tf"}
+WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUS"})
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 
 # The north-west quarter, in screenshot pixels (x < 562, y < 485)
@@ -228,6 +232,42 @@ def build():
     return grid, keeps
 
 
+# Added on request: most asteroid walls became other barriers. In-game
+# coordinates (after pad_top), west half; the east half is the mirror
+# image, x -> 42 - x. Every hex listed must be a wall.
+BARRIERS = [
+    # the big north and south rock masses: a gas giant (4 hexes) wrapped
+    # in a dark nebula, and in a radiation zone
+    ("G", [(11, 4), (11, 5), (12, 4), (12, 5)]),
+    ("D", [(10, 3), (11, 3), (10, 6), (11, 6), (10, 7), (11, 7), (9, 7)]),
+    ("H", [(11, 23), (11, 24), (12, 23), (12, 24)]),
+    ("R", [(9, 22), (10, 21), (10, 22), (11, 22), (10, 25), (11, 25), (11, 26)]),
+    # beside the badlands channel: plasma storms
+    ("P", [(16, 3), (17, 3), (18, 3), (19, 4), (19, 5), (19, 6)]),
+    ("P", [(16, 25), (17, 26), (18, 25), (19, 23), (19, 24), (19, 25)]),
+    # the long diagonals: gravity eddies
+    ("E", [(14, 9), (15, 10), (16, 9), (17, 10), (18, 9), (19, 8), (19, 9)]),
+    ("E", [(14, 19), (15, 19), (16, 19), (17, 19), (18, 19), (19, 20), (19, 21)]),
+    # the centre ring's west arc: a pulsar in its own radiation
+    ("U", [(18, 14)]),
+    ("R", [(18, 13), (18, 15)]),
+    # lone rocks near the top and bottom: shielded planets
+    ("S", [(13, 3), (13, 26)]),
+]
+# the centre ring's north and south arcs: a black hole in its eddy
+CENTRE_BARRIERS = [("X", [(21, 12), (21, 17)]), ("E", [(20, 12), (22, 12), (20, 16), (22, 16)])]
+
+
+def barriers(grid):
+    W = len(grid[0])
+    for ch, hexes in BARRIERS + CENTRE_BARRIERS:
+        for X, Y in hexes:
+            for x in {X - 1, W - X}:       # 0-based, and its mirror
+                assert grid[Y - 1][x] in ("w", ch), (X, Y, grid[Y - 1][x])
+                grid[Y - 1][x] = ch
+    return grid
+
+
 def pad_top(grid, keeps):
     """Add a row along the top, a copy of the bottom one. The flip leaves the
     bottom of the odd columns half a hex lower than the top of the even
@@ -267,6 +307,7 @@ def write(grid, keeps, path, table=T, base_only=("Yk", "Ys^Vyp")):
 
 if __name__ == "__main__":
     grid, keeps = pad_top(*build())
+    grid = barriers(grid)
     write(grid, keeps,
           os.path.join(sys.argv[1], "maps/4p_Manufacturing_Consent.map"))
     write(grid, keeps, os.path.join(
