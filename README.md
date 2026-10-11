@@ -108,7 +108,7 @@ leaves them as loud as before.
 | **Precursor Flagship** (leader only) | 4 moves, a Precursor drive (like the Chmmr's) and **hyperjump** between planets; fusion blaster, point-defense, self-repair, heals +4, leadership | **Sa-Matra** (leader only) | red plasma, homing sentinels, self-repair, cures and heals +8, leadership; 3 moves |
 | Earthling Cruiser | as in the Alliance | Kohr-Ah Marauder | 4 moves; spinning blades; F.R.I.E.D. plasma ring (**magical**) |
 | Chmmr Avatar | 4 moves, and a drive that handles nebulae, dust, badlands and asteroids better than other large hulls; close-range tractor beam + laser and ZapSats (**first strike**); ranged megawatt laser (**marksman**; **slows** from Veteran); point-defense | Druuge Mauler | 4 moves; long-range mass driver (**marksman**); nothing up close |
-| Zoq-Fot-Pik Stinger | cheap; acid spit, hard-hitting tongue | Thraddash Torch | fast; afterburner (**charge**), horn blasters |
+| Zoq-Fot-Pik Stinger | cheap; acid spit, hard-hitting tongue | Thraddash Torch | fast; afterburner (**charge**, **backstab**), horn blasters (**backstab**) |
 | Pkunk Fury | fast triple gun; **reincarnation**: reborn at full HP when destroyed, 80% the first time, halving with each rebirth | Slylandro Probe | 7 moves; seeking lightning (**magical**); repairs 8 HP a turn in asteroid fields |
 | Supox Blade | **skirmisher**; globs of goo | Orz Nemesis | hard-hitting space marines (**boarding**: ignore armour and shields); light howitzer |
 | Utwig Jugger | six-lance volleys; absorbing shield (+30% resistance when attacked) | Mycon Podship | as in the Hierarchy |
@@ -131,8 +131,8 @@ Ur-Quan, Kohr-Ah and Chmmr Elite at 100).
 these further.) Each promotion adds HP and some mix of stronger or more
 frequent attacks, new attacks and new abilities. **Backstab** (double
 damage with an ally behind the target) comes with promotion, except the
-Syreen dagger and Androsynth acid, which have it from the start (and the
-Spathi and Shofixti, which only get it as Elites):
+Syreen dagger, Androsynth acid and both Thraddash attacks, which have it
+from the start (and the Spathi and Shofixti, which only get it as Elites):
 
 | Ship | Veteran | Elite |
 |---|---|---|
