@@ -436,6 +436,35 @@ function sc.syreen_after_advance()
 	u.variables.sc_pre_advance_start = nil
 end
 
+-- Healing (planets, healers, resting) only repairs a Syreen up to its
+-- level's starting HP; only stolen crew takes it above that. "side turn"
+-- fires before a side heals and "turn refresh" after.
+function sc.syreen_before_healing()
+	for _, u in ipairs(wesnoth.units.find_on_map { side = wesnoth.current.side, race = "sc_syreen" }) do
+		u.variables.sc_hp_before_healing = u.hitpoints
+	end
+end
+
+function sc.syreen_after_healing()
+	for _, u in ipairs(wesnoth.units.find_on_map { side = wesnoth.current.side, race = "sc_syreen" }) do
+		local before = u.variables.sc_hp_before_healing
+		u.variables.sc_hp_before_healing = nil
+		if before and u.hitpoints > before then
+			local cap = math.max(before, by_level(SYREEN_START_HP, u))
+			u.hitpoints = math.min(u.hitpoints, cap)
+		end
+	end
+end
+
+-- Capturing an enemy's planet: its colonists join the Syreen (full HP).
+function sc.syreen_captured()
+	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
+	local owner = wml.variables["owner_side"] or 0
+	if is_a(u, "SC_Syreen_Penetrator") and owner > 0 and wesnoth.sides.is_enemy(u.side, owner) then
+		u.hitpoints = u.max_hitpoints
+	end
+end
+
 -------------------------------------------------------------------- reporting
 
 function sc.note_levelup()
