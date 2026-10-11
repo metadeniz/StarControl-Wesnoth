@@ -101,7 +101,7 @@ leaves them as loud as before.
 | Yehat Terminator | pulse cannons, rail cannons (pierce); armored hull (resists blade 40%, pierce 30%, impact 20%, arcane 10%); force shield (+40% when attacked, +50% against ranged) | Umgah Drone | antimatter cone, skirmisher |
 | Syreen Penetrator | crew capacity as big as the Ur-Quan's (max HP 64 / 80 / 96) but always starts low (28 / 36 / 44 HP); promotion adds +8 HP instead of a full heal, or raises it to the new level's 36 / 44 if still below; planets, healers and resting only repair it up to that starting HP: only stolen crew (the song's drain, or capturing an enemy planet, which fills it to max) takes it higher; ranged particle dagger; close range: one-shot Syreen song (**lures crew**: heals the full damage dealt; **backstab**: one extra strike when flanking) and an entrancing hum (**slows**; **backstab**: double damage and one extra strike when flanking); neither works on the unmanned Slylandro Probe | VUX Intruder | close-range laser (**first strike**); long-range limpets (slow) |
 | Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison), Blazer ram |
-| Shofixti Scout | dart gun; **Glory Device**: one unavoidable fire strike (16 / 20 / 24 by level) on one ship, destroying the Scout | Ilwrath Avenger | Hellfire, cloaking device |
+| Shofixti Scout | dart gun; **Glory Device**: one unavoidable fire strike of 8–16 / 10–20 / 12–24 by level on one ship, destroying the Scout | Ilwrath Avenger | Hellfire, cloaking device |
 
 | New Alliance of Free Stars | | Agents of Chaos | |
 |---|---|---|---|
@@ -142,7 +142,7 @@ Spathi and Shofixti, which only get it as Elites):
 | Yehat Terminator | pulse cannons ×6, rail cannons ×5 | **first strike** |
 | Syreen Penetrator | song gets a 2nd shot, hum ×3 | stronger song, hum ×5, dagger ×4 |
 | Arilou Skiff | new **ranged** laser; close laser **backstab**; **ambush** | ambush, laser ×4 |
-| Shofixti Scout | stronger darts, 20-damage Glory | **skirmisher**, darts **backstab**, 24-damage Glory |
+| Shofixti Scout | stronger darts, 10–20 damage Glory | **skirmisher**, darts **backstab**, 12–24 damage Glory |
 | Ur-Quan Dreadnought | heavier fusion blast, fighters ×5 | fighters ×6, **leadership** |
 | Mycon Podship | bigger plasmoids, faster regrowth | homing plasmoids **marksman**, new melee **poison** spore burst |
 | Spathi Eluder | **skirmisher**, stronger B.U.T.T. | B.U.T.T. ×3, **backstab** |
