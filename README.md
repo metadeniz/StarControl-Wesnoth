@@ -52,7 +52,8 @@ maps below and the era **Star Control: The Ur-Quan War**.
 
 ## Music
 
-Each player hears their own faction's playlist, shuffled:
+Each player hears their own faction's playlist, shuffled so that every track plays
+once before any repeats:
 
 - **Alliance:** Star Control II's Commander (Earthlings), Yehat, Syreen,
   Arilou and Shofixti themes, Chenjesu and Mmrnmhrm themes by Titus, the

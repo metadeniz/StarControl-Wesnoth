@@ -235,16 +235,37 @@ function sc.victory_theme()
 	if theme then wesnoth.audio.play(theme) end
 end
 
+-- The engine's own shuffle only keeps a track from coming back within two
+-- others, so each playlist is dealt like a deck instead: shuffled once and
+-- then played in that order, looping, so every track plays before any repeats.
+-- The shuffle uses the synced random numbers, so every client shuffles every
+-- playlist (in the same order) to stay in sync, then plays only its own.
+local function shuffled(list)
+	local deck = {}
+	for i, track in ipairs(list) do deck[i] = track end
+	for i = #deck, 2, -1 do
+		local j = mathx.random(i)
+		deck[i], deck[j] = deck[j], deck[i]
+	end
+	return deck
+end
+
 function sc.set_music()
+	local factions = {}
+	for faction in pairs(PLAYLISTS) do table.insert(factions, faction) end
+	table.sort(factions)
+	local decks = {}
+	for _, faction in ipairs(factions) do decks[faction] = shuffled(PLAYLISTS[faction]) end
+
 	local side = local_human_side()
-	local list = side and PLAYLISTS[side.__cfg.faction]
+	local list = side and decks[side.__cfg.faction]
 	if list then
 		for i, track in ipairs(list) do
 			wesnoth.wml_actions.music {
 				name = "sc/" .. track .. ".ogg",
 				append = i > 1,
 				immediate = i == 1,
-				shuffle = true,
+				shuffle = false,
 			}
 		end
 	end
