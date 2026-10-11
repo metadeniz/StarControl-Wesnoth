@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write maps/4p_Man_Con.map.
+"""Write maps/4p_Manufacturing_Consent.map.
 
 Traced from a screenshot (1124x971 px) of a 4-player ground map that is
 mirror-symmetric left to right and top to bottom. Only its north-west
@@ -16,13 +16,15 @@ dirt are open space. Each team starts at the two player-start markers on
 its edge: a starbase with 5 docking rings. Added on request: two nebulae
 inside the centre's ring of walls, a small starbase with 2 docking rings
 north and south of the ring on the centre column, and no wall touching the
-top or bottom edge; a channel of badlands with one crossing south of the
-south keep, and a small keep with 1 docking ring on each team's side.
+top or bottom edge; a channel of badlands with one crossing beyond each
+of those keeps, fed by swamps, and a small keep with 1 docking ring on each
+team's side.
 
-Also writes maps/default-terrain/4p_Man_Con.map: the same map in default
-Wesnoth terrain (grass, woods, hills, impassable ridges, roads, villages).
+Also writes maps/default-terrain/4p_Manufacturing_Consent.map: the same
+map in default Wesnoth terrain (grass, woods, hills, impassable ridges,
+roads, villages).
 
-Usage: make_man_con.py <add-on dir>
+Usage: make_manufacturing_consent.py <add-on dir>
 """
 
 import math
@@ -33,9 +35,11 @@ W, H = 41, 26            # playable hexes; Wesnoth adds a one-hex border
 IW, IH = 1124, 971       # the screenshot
 
 T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
-     "K": "Yk", "c": "Yc", "r": "Ys", "B": "Yi", "f": "Yif"}
+     "K": "Yk", "c": "Yc", "r": "Ys", "B": "Yi", "f": "Yif",
+     "s": "Yis"}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
-           "K": "Kh", "c": "Ch", "r": "Re", "B": "Wo", "f": "Wo^Bsb\\"}
+           "K": "Kh", "c": "Ch", "r": "Re", "B": "Wo", "f": "Wo^Bsb\\",
+           "s": "Ss"}
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 
 # The north-west quarter, in screenshot pixels (x < 562, y < 485)
@@ -63,15 +67,20 @@ RING_WOODS = [(19, 12)]          # nebulae inside the ring, beside its planet
 # flip), as far from the west starts as from the east, with 2 recruit
 # hexes, one west and one east; no side starts there
 MID_KEEP, MID_RINGS = (20, 8), [(19, 8)]
-# Asked for by hex, in these 0-based coordinates (in-game ones are 1 more):
-# badlands down the centre column south of the south keep (in-game 21,20 to
-# 21,25), with a crossing of thin badlands (a bridge in default terrain) at
-# in-game 21,22; not mirrored north
-SOUTH_CHANNEL = [(20, y) for y in range(19, 25)]
-CROSSING = (20, 21)
-# a keep at in-game 10,11 with 1 recruit hex north of it, mirrored east
-# (in-game 32,11) so both teams get one
-WEST_KEEP, WEST_RINGS = (9, 10), [(9, 9)]
+# Asked for by hex, in these 0-based coordinates (in-game ones are 1 more),
+# all set in the north half and flipped like the rest:
+# badlands down the centre column north of the north keep (in-game 21,2 to
+# 21,7, and 21,20 to 21,25 in the south), with a crossing of thin badlands
+# (a bridge in default terrain) at in-game 21,5 and 21,22
+CHANNEL = [(20, y) for y in range(1, 7)]
+CROSSING = (20, 4)
+# swamp (light badlands) joining the channel at in-game 19,2 / 19,25 and
+# 23,2 / 23,25
+SWAMP = [(18, 0), (18, 1), (19, 0)]
+# a keep at in-game 10,13 on the north-south axis, in the gap of the short
+# west ridge, with 1 recruit hex towards the centre (in-game 11,13);
+# mirrored east at 32,13
+WEST_KEEP, WEST_RINGS = (9, 12), [(10, 12)]
 ROADS = [                        # only drawn in the default-terrain map
     [(500, 30), (530, 55), (562, 75), (562, 290)],
 ]
@@ -180,6 +189,12 @@ def build():
     grid[MID_KEEP[1]][MID_KEEP[0]] = "K"
     for x, y in MID_RINGS:
         grid[y][x] = "c"
+    for x, y in SWAMP:
+        grid[y][x] = "s"
+    for x, y in CHANNEL:
+        grid[y][x] = "B"
+    grid[CROSSING[1]][CROSSING[0]] = "f"
+    grid[WEST_KEEP[1]][WEST_KEEP[0]] = "K"
     for ix, iy in PLANETS + [START]:
         if iy < 480:
             x, y = nearest(ix, iy)
@@ -200,11 +215,7 @@ def build():
             x, y = nearest(ix, iy, lambda x, y: True)
             grid[y][x] = "p"
     keeps = [keep, flip(*keep)]
-    for x, y in SOUTH_CHANNEL:
-        grid[y][x] = "B"
-    grid[CROSSING[1]][CROSSING[0]] = "f"
-    grid[WEST_KEEP[1]][WEST_KEEP[0]] = "K"
-    for x, y in WEST_RINGS:
+    for x, y in WEST_RINGS:       # one hex, so it is not flipped north-south
         grid[y][x] = "c"
     for y in range(H):                               # flip the west half
         for x in range(W // 2):
@@ -242,9 +253,10 @@ def write(grid, keeps, path, table=T, base_only=("Yk", "Ys^Vyp")):
 
 if __name__ == "__main__":
     grid, keeps = build()
-    write(grid, keeps, os.path.join(sys.argv[1], "maps/4p_Man_Con.map"))
-    write(grid, keeps, os.path.join(sys.argv[1],
-                                    "maps/default-terrain/4p_Man_Con.map"),
+    write(grid, keeps,
+          os.path.join(sys.argv[1], "maps/4p_Manufacturing_Consent.map"))
+    write(grid, keeps, os.path.join(
+        sys.argv[1], "maps/default-terrain/4p_Manufacturing_Consent.map"),
           WESNOTH, ("Kh", "Gg^Vh"))
     if "-v" in sys.argv:
         for row in grid:

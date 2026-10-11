@@ -45,7 +45,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | 2p — Understanding Power | 1 vs 1 |
 | 2p — Understanding Power (Small) | 1 vs 1 |
 | 4p — Isar’s Cross (Deep Space) | 2 vs 2 (players 1 & 4 vs 2 & 3) |
-| 4p — Man Con | 2 vs 2 (west, players 1 & 3, vs east, players 2 & 4) |
+| 4p — Manufacturing Consent | 2 vs 2 (west, players 1 & 3, vs east, players 2 & 4) |
 | 2p — The Freelands (Deep Space) | 1 vs 1 |
 | 2p — Weldyn Channel (Deep Space) | 1 vs 1 |
 | 2p — Fallenstar Lake (Deep Space) | 1 vs 1 |
@@ -230,9 +230,9 @@ heat-proof Chenjesu (2 / 50%) are at home in red nebulae.
   Wesnoth terrain.
 - `tools/make_understanding_power_small.py .` writes the small version (26×20,
   both terrains) from the full one.
-- `tools/make_man_con.py .` regenerates Man Con (4p, west vs east), and
-  `maps/default-terrain/4p_Man_Con.map`, the same map in default Wesnoth
-  terrain.
+- `tools/make_manufacturing_consent.py .` regenerates Manufacturing Consent
+  (4p, west vs east), and `maps/default-terrain/4p_Manufacturing_Consent.map`,
+  the same map in default Wesnoth terrain.
 - `tools/grid_overlay.py <map> <render.png> <out.png>` draws a hex grid with
   each hex's in-game coordinates over a `wesnoth --screenshot` render of the
   map, so changes can be asked for by hex.
