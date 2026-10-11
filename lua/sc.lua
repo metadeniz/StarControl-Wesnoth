@@ -268,7 +268,8 @@ end
 -- where it died, unable to act until its next turn. The first time the
 -- chance is 80%, and it halves with every rebirth (40%, 20%, ...).
 -- Replacing the dying unit inside its "die" event tells Wesnoth not to
--- remove it.
+-- remove it. The SC2 reincarnation "hallelujah" plays instead of the
+-- killer's victory ditty. Returns true if the ship was reborn.
 local REBIRTH_CHANCE = 80
 function sc.pkunk_rebirth()
 	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
@@ -289,6 +290,7 @@ function sc.pkunk_rebirth()
 	reborn:to_map(x, y)
 	wesnoth.audio.play("sc/pkunk-rebirth.wav")
 	wesnoth.interface.float_label(x, y, "<span color='#ffe680'>" .. tostring(_ "Reborn!") .. "</span>")
+	return true
 end
 
 ------------------------------------------------------------ Precursor artifacts
