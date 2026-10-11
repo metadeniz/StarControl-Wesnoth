@@ -118,7 +118,8 @@ defense on every terrain.
 **Promotions.** Every ship can rise from level 1 to **Veteran** (level 2)
 and **Elite** (level 3) by gaining experience, at roughly mainline pace:
 40 XP to Veteran and 100 to Elite. Cheap, swarming races learn fast (28 /
-70: Shofixti, Earthling, Umgah, VUX, Zoq-Fot-Pik, Thraddash) and the big
+70: Shofixti, Earthling, Umgah, VUX, Zoq-Fot-Pik, Thraddash, Syreen,
+Ilwrath, Supox) and the big
 capital ships slowly (50 / 125: Ur-Quan, Kohr-Ah, Chmmr, Chenjesu), as does the Arilou Skiff,
 whose Veteran and Elite forms are especially strong. A
 promotion that brings healing, curing or leadership comes one step sooner
