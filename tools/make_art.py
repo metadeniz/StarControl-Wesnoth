@@ -1337,100 +1337,6 @@ BANK_MACRO = """#define SC_BANK FLAG LAYER IMAGESTEM C N NE SE S SW NW
 """
 
 
-def build_precursor_ruins(rng, out):
-    """Impassable: wreckage of ancient Precursor structures, dull metal with
-    a few glyphs still glowing. Three kinds: a broken ring, a cluster of
-    monolith shards, a cracked dome around a dim core."""
-    S = 4                                   # draw large, then shrink (smooth edges)
-    W = HEX * S
-    metal = (88, 96, 112)
-    dark = (46, 50, 62)
-    glow = (110, 235, 255)
-
-    def finish(img, glow_layer):
-        # weathered, lit-from-top-left metal
-        a = np.array(img).astype(np.float32)
-        tex = fractal_noise(rng, W, 4, 6)
-        yy, xx = np.mgrid[0:W, 0:W] / W
-        light = 1.25 - 0.55 * (xx + yy) / 2
-        a[..., :3] *= ((0.7 + 0.6 * tex) * light)[..., None]
-        img = Image.fromarray(a.clip(0, 255).astype(np.uint8), "RGBA")
-        g = glow_layer.filter(ImageFilter.GaussianBlur(3 * S))
-        out_img = Image.alpha_composite(g, img)
-        out_img = Image.alpha_composite(out_img, glow_layer)
-        return out_img.resize((HEX, HEX), Image.LANCZOS)
-
-    def glyphs(d, gd, pts, n):
-        for _ in range(n):
-            x, y = pts[int(rng.integers(len(pts)))]
-            w = rng.uniform(3, 6) * S
-            gd.line([x, y, x + w, y], fill=glow + (255,), width=S)
-            if rng.random() < 0.5:
-                gd.line([x + w / 2, y - 2 * S, x + w / 2, y + 2 * S], fill=glow + (255,), width=S)
-
-    def ring():
-        img = Image.new("RGBA", (W, W), (0, 0, 0, 0)); gl = Image.new("RGBA", (W, W), (0, 0, 0, 0))
-        d, gd = ImageDraw.Draw(img), ImageDraw.Draw(gl)
-        c, r = W / 2, 31 * S
-        gap = rng.uniform(0, 360)
-        for a0 in range(0, 360, 30):
-            if (a0 - gap) % 360 < 75:            # a broken-off section
-                continue
-            d.arc([c - r, c - r * 0.7, c + r, c + r * 0.7], a0, a0 + 26, fill=metal + (255,), width=11 * S)
-            d.arc([c - r + 5 * S, c - r * 0.7 + 5 * S, c + r - 5 * S, c + r * 0.7 - 5 * S], a0, a0 + 26,
-                  fill=dark + (255,), width=3 * S)
-        pts = [(c + r * math.cos(math.radians(a)) - 2 * S, c + r * 0.7 * math.sin(math.radians(a)))
-               for a in range(0, 360, 15) if (a - gap) % 360 >= 80]
-        glyphs(d, gd, pts, 5)
-        for _ in range(4):                        # drifting fragments
-            x, y = rng.uniform(10, 62) * S, rng.uniform(10, 62) * S
-            d.rectangle([x, y, x + 3 * S, y + 2 * S], fill=metal + (255,))
-        return finish(img, gl)
-
-    def monoliths():
-        img = Image.new("RGBA", (W, W), (0, 0, 0, 0)); gl = Image.new("RGBA", (W, W), (0, 0, 0, 0))
-        d, gd = ImageDraw.Draw(img), ImageDraw.Draw(gl)
-        pts = []
-        for i in range(int(rng.integers(3, 5))):
-            cx, cy = (16 + 13 * i + rng.uniform(-3, 3)) * S, rng.uniform(32, 48) * S
-            h, w = rng.uniform(30, 46) * S, rng.uniform(9, 13) * S
-            tilt = rng.uniform(-0.35, 0.35)
-            top = rng.uniform(0.6, 1.0)          # snapped-off tops
-            poly = [(cx - w / 2, cy + h / 2), (cx + w / 2, cy + h / 2),
-                    (cx + w / 2 + tilt * h, cy - h / 2 * top), (cx - w / 2 + tilt * h, cy - h / 2)]
-            d.polygon(poly, fill=metal + (255,))
-            d.polygon([poly[1], poly[2], (poly[2][0] - w * 0.35, poly[2][1]), (poly[1][0] - w * 0.35, poly[1][1])],
-                      fill=dark + (255,))
-            pts += [(cx - w / 3 + tilt * h * k, cy + h / 2 - h * k) for k in (0.25, 0.45, 0.65)]
-        glyphs(d, gd, pts, 6)
-        return finish(img, gl)
-
-    def dome():
-        img = Image.new("RGBA", (W, W), (0, 0, 0, 0)); gl = Image.new("RGBA", (W, W), (0, 0, 0, 0))
-        d, gd = ImageDraw.Draw(img), ImageDraw.Draw(gl)
-        c = W / 2
-        gd.ellipse([c - 9 * S, c - 4 * S, c + 9 * S, c + 14 * S], fill=glow + (170,))      # dim core
-        d.pieslice([c - 32 * S, c - 26 * S, c + 32 * S, c + 38 * S], 180, 360, fill=metal + (255,))
-        d.rectangle([c - 34 * S, c + 6 * S, c + 34 * S, c + 13 * S], fill=dark + (255,))
-        for _ in range(3):                         # cracks and holes in the shell
-            a = rng.uniform(200, 340)
-            x, y = c + 24 * S * math.cos(math.radians(a)), c + 6 * S + 26 * S * math.sin(math.radians(a))
-            d.polygon([(x, y), (x + rng.uniform(5, 11) * S, y + rng.uniform(2, 7) * S),
-                       (x + rng.uniform(-4, 4) * S, y + rng.uniform(6, 12) * S)], fill=(0, 0, 0, 0))
-        d.ellipse([c - 8 * S, c - 2 * S, c + 8 * S, c + 10 * S], fill=(0, 0, 0, 0))
-        gd.ellipse([c - 6 * S, c - 1 * S, c + 6 * S, c + 9 * S], fill=glow + (230,))
-        glyphs(d, gd, [(c - 26 * S + k * 8 * S, c + 9 * S) for k in range(7)], 5)
-        return finish(img, gl)
-
-    for v, make in enumerate([ring, monoliths, dome]):
-        img = apply_mask(make(), hex_mask_cache)
-        name = "precursor-ruins" if v == 0 else f"precursor-ruins{v + 1}"
-        save(img, out, f"images/terrain/sc/{name}.png", False)
-        if v == 0:
-            tile = starfield(rng)
-            tile.alpha_composite(img)
-            save(apply_mask(tile, hex_mask_cache), out, "images/terrain/sc/precursor-ruins-tile.png", False)
-
 
 def shaded_sphere(rng, diameter, palette, kind):
     """Lit planet sphere on a transparent square canvas."""
@@ -1694,7 +1600,6 @@ def main():
     # Added later with its own seed so the art above stays byte-identical.
     build_gas(args.seed, args.out)
     build_badlands(np.random.default_rng(args.seed + 4), args.out)
-    build_precursor_ruins(np.random.default_rng(args.seed + 8), args.out)
     build_asteroid_art(np.random.default_rng(args.seed + 20), args.out, save, TRANSITION_COMBOS, mask)
     build_barrier_objects(np.random.default_rng(args.seed + 40), args.out, save, apply_mask, starfield, mask)
 

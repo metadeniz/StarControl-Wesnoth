@@ -30,7 +30,7 @@ Usage: convert_map.py <wesnoth .map> <output .map> [X,Y=CODE ...]
 
 Each X,Y=CODE puts that terrain on hex X,Y (game coordinates) afterwards,
 for things the original scenario placed as units: Caves of the Basilisk's
-statues became Precursor ruins (Ys^Ypr).
+statues became black holes (Ys^Yxb).
 """
 
 import collections
