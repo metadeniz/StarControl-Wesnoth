@@ -98,7 +98,7 @@ leaves them as loud as before.
 | Chenjesu Broodhome | photon crystal (ranged; lighter shards close up), DOGI (slows) | Mycon Podship | homing plasmoids at range, heavier plasmoids close up (both half damage against Yehat and Utwig shields); regrows crew |
 | Mmrnmhrm X-Wing / Y-Wing | recruit either; lasers or torpedoes, transforms; X-Wing heals +4 | Spathi Eluder | missiles, B.U.T.T. |
 | Yehat Terminator | pulse cannons, rail cannons (pierce); armored hull (resists blade 40%, pierce 30%, impact 20%, arcane 10%); force shield (+40% when attacked, +50% against ranged) | Umgah Drone | antimatter cone, skirmisher |
-| Syreen Penetrator | ranged particle dagger; close-range Syreen song (drains) | VUX Intruder | close-range laser (**first strike**); long-range limpets (slow) |
+| Syreen Penetrator | ranged particle dagger; close range: one-shot Syreen song (**lures crew**: heals the full damage dealt) and an entrancing hum (**slows**) | VUX Intruder | close-range laser (**first strike**); long-range limpets (slow) |
 | Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison), Blazer ram |
 | Shofixti Scout | dart gun; **Glory Device**: one unavoidable fire strike (16 / 20 / 24 by level) on one ship, destroying the Scout | Ilwrath Avenger | Hellfire, cloaking device |
 
@@ -139,7 +139,7 @@ Spathi and Shofixti, which only get it as Elites):
 | Chenjesu Broodhome | stronger crystals, DOGI ×3, **heals +4** | **cures** (heals +8 and cures poison) |
 | Mmrnmhrm X-Wing / Y-Wing | X-Wing lasers **backstab**; stronger torpedoes ×3 | lasers ×5 / heavy torpedoes, **self-repair** |
 | Yehat Terminator | pulse cannons ×6, rail cannons ×5 | **first strike** |
-| Syreen Penetrator | song ×3 | song also **slows**, dagger ×4 |
+| Syreen Penetrator | song gets a 2nd shot, hum ×3 | stronger song, hum ×5, dagger ×4 |
 | Arilou Skiff | new **ranged** laser; close laser **backstab**; **ambush** | ambush, laser ×4 |
 | Shofixti Scout | stronger darts, 20-damage Glory | **skirmisher**, darts **backstab**, 24-damage Glory |
 | Ur-Quan Dreadnought | heavier fusion blast, fighters ×5 | fighters ×6, **leadership** |
