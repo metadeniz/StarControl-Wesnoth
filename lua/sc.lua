@@ -45,6 +45,18 @@ function sc.glory_used()
 	wesnoth.wml_actions.kill { x = u.x, y = u.y, animate = false, fire_event = true }
 end
 
+-- The listed damage is the average: each blast rolls from 2/3 to 4/3 of it
+-- (12 -> 8-16). The engine re-reads the weapon after the attack event.
+function sc.glory_roll()
+	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
+	if not u or not is_a(u, "SC_Shofixti_Scout") then return end
+	for _, a in ipairs(u.attacks) do
+		if a.name == "glory_device" then
+			a.damage = mathx.random(math.floor(a.damage * 2 / 3 + 0.5), math.floor(a.damage * 4 / 3 + 0.5))
+		end
+	end
+end
+
 -- Fire scout s's Glory Device at enemy e, as a normal attack.
 local function fire_glory(s, e)
 	for i, a in ipairs(s.attacks) do
