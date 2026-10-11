@@ -108,7 +108,7 @@ leaves them as loud as before.
 | Chmmr Avatar | 4 moves, and a drive that handles nebulae, dust, badlands and asteroids better than other large hulls; close-range megawatt laser and ZapSats (**first strike**); ranged tractor beam + laser (**marksman**; **slows** from Veteran); point-defense | Druuge Mauler | 4 moves; long-range mass driver (**marksman**); nothing up close |
 | Zoq-Fot-Pik Stinger | cheap; acid spit, hard-hitting tongue | Thraddash Torch | fast; afterburner (**charge**), horn blasters |
 | Pkunk Fury | fast triple gun; **reincarnation**: reborn at full HP when destroyed, 80% the first time, halving with each rebirth | Slylandro Probe | 7 moves; seeking lightning (**magical**); repairs 8 HP a turn in asteroid fields |
-| Supox Blade | **skirmisher**; globs of goo | Orz Nemesis | howitzer; space marines (**boarding**: ignore armour and shields) |
+| Supox Blade | **skirmisher**; globs of goo | Orz Nemesis | hard-hitting space marines (**boarding**: ignore armour and shields); light howitzer |
 | Utwig Jugger | six-lance volleys; absorbing shield (+30% resistance when attacked) | Mycon Podship | as in the Hierarchy |
 | Melnorme Trader | 4-shot blaster up close; one heavy charged shot and a confusion ray (**slows**) at range; heals +4 (Veteran +8, Elite cures) | Ilwrath Avenger | as in the Hierarchy |
 
