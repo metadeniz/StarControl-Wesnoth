@@ -284,7 +284,7 @@ local DITTIES = {   -- races with a sounds/sc/ditty-<race>.ogg
 	supox = true, syreen = true, thraddash = true, umgah = true,
 	urquan = true, utwig = true, vux = true, yehat = true,
 	zoqfotpik = true, melnorme = true,
-	samatra = true,     -- the Precursors' remix of the Kohr-Ah ditty
+	samatra = true,     -- the Kohr-Ah ditty
 }
 
 function sc.victory_ditty()

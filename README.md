@@ -82,10 +82,10 @@ once before any repeats:
 
 When you win, the old Alliance and the Hierarchy hear Star Control 1's
 victory theme for their side, the New Alliance hears Star Control II's
-victory fanfare, and the Agents of Chaos (for now) the Precursors' remix of the
-Kohr-Ah victory ditty. When a ship destroys
+victory fanfare, and the Agents of Chaos the opening of Chopin's Funeral
+March. When a ship destroys
 another, its race's victory ditty plays over the music (the Sa-Matra, which has
-none in Star Control II, plays the Precursors' remix of the Kohr-Ah ditty), which keeps going at
+none in Star Control II, plays the Kohr-Ah's), which keeps going at
 full volume. A Pkunk that is reborn gets Star Control II's "hallelujah"
 instead of its killer's ditty. The victory themes and ditties are sound effects, so they
 follow the Sound volume, not the Music volume: turning the music down

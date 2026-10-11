@@ -443,14 +443,13 @@ DITTY_MAX_BOOST = 12.0   # dB of gain at most past where the peaks reach the lim
 DITTY_DELAY_MS = 400     # starts after the ship's explosion, not on top of it
 
 
-def build_ditties(uqm, out, remix=None):
+def build_ditties(uqm, out):
     """Victory ditties: rendered from the .mod files with ffmpeg (libopenmpt),
     capped at 8 seconds in case a module loops, brought to the same loudness
     and delayed slightly so the explosion doesn't mask the start. A limiter
     catches the peaks, so the gain is corrected over a few passes; ditties
     with sharp peaks stop short of the target rather than being crushed.
-    The Sa-Matra has no ditty of its own in UQM; it gets the Precursors'
-    remix of the Kohr-Ah ditty (the Death March's victory theme)."""
+    The Sa-Matra has no ditty of its own in UQM; it gets the Kohr-Ah's."""
     import re
     import subprocess
     os.makedirs(os.path.join(out, "sounds/sc"), exist_ok=True)
@@ -465,8 +464,7 @@ def build_ditties(uqm, out, remix=None):
         return peak, lufs
 
     sources = {race: os.path.join(uqm, "base/ships", rel) for race, rel in DITTIES.items()}
-    if remix:
-        sources["samatra"] = os.path.join(remix, "remix/1/ditties/kohrah.ogg")
+    sources["samatra"] = sources["kohrah"]
     for race, src in sources.items():
         dest = f"sounds/sc/ditty-{race}.ogg"
         peak, lufs = measure(src, fade + ",")
@@ -1643,7 +1641,7 @@ def main():
     build_attack_icons(args.out)
     nfire = build_effects(args.uqm, args.out)
     build_sounds(args.uqm, args.out)
-    build_ditties(args.uqm, args.out, args.remix)
+    build_ditties(args.uqm, args.out)
     build_music(args.uqm, args.out)
     if args.remix:
         build_remixes(args.remix, args.out)
