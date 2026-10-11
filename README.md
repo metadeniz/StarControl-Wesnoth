@@ -233,6 +233,9 @@ heat-proof Chenjesu (2 / 50%) are at home in red nebulae.
 - `tools/make_man_con.py .` regenerates Man Con (4p, west vs east), and
   `maps/default-terrain/4p_Man_Con.map`, the same map in default Wesnoth
   terrain.
+- `tools/grid_overlay.py <map> <render.png> <out.png>` draws a hex grid with
+  each hex's in-game coordinates over a `wesnoth --screenshot` render of the
+  map, so changes can be asked for by hex.
 - `tools/convert_map.py <wesnoth .map> <out .map>` turns any regular
   Wesnoth map into a space map hex for hex: forest → nebula, mushroom
   grove → red nebula, sand → dust cloud, hills → asteroids, mountains →

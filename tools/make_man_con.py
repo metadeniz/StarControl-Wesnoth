@@ -54,6 +54,10 @@ WALLS = [
 # The ring round the centre, set hex by hex so a one-hex gap is left at
 # each corner as in the screenshot: its north arc and its west arc
 RING = [(20, 10), (19, 10), (17, 11), (17, 12)]
+RING_WOODS = [(19, 12)]          # nebulae inside the ring, beside its planet
+# A small keep west of the ring (and east, by the flip) with 2 recruit
+# hexes, one north and one south; no side starts there
+MID_KEEP, MID_RINGS = (13, 12), [(13, 11)]
 ROADS = [                        # only drawn in the default-terrain map
     [(500, 30), (530, 55), (562, 75), (562, 290)],
 ]
@@ -154,6 +158,14 @@ def build():
                 grid[y][x] = kind
     for x, y in RING:
         grid[y][x] = "w"
+    for x in range(W // 2 + 1):      # walls stay off the top and bottom
+        if grid[0][x] == "w":        # edges, so ships can pass along them
+            grid[0][x] = "."
+    for x, y in RING_WOODS:
+        grid[y][x] = "n"
+    grid[MID_KEEP[1]][MID_KEEP[0]] = "K"
+    for x, y in MID_RINGS:
+        grid[y][x] = "c"
     for ix, iy in PLANETS + [START]:
         if iy < 480:
             x, y = nearest(ix, iy)
