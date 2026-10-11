@@ -388,6 +388,54 @@ function sc.expire_artifact_labels()
 	wml.array_access.set("sc_artifact_labels", keep)
 end
 
+--------------------------------------------------------------- Syreen crew
+
+-- The Syreen Penetrator has room for a huge crew (max HP as high as an
+-- Ur-Quan Dreadnought's) but always leaves port with a small one, and fills
+-- the rest by luring enemy crew across with its song. Recruits, leaders
+-- placed at the start and freshly promoted ships all start at these HP.
+local SYREEN_START_HP = { 28, 36, 44 }
+
+local function syreen_low_start(u, floor)
+	if not is_a(u, "SC_Syreen_Penetrator") then return end
+	local hp = math.max(by_level(SYREEN_START_HP, u), floor or 0)
+	u.hitpoints = math.min(hp, u.max_hitpoints)
+end
+
+-- recruit: the event's unit.
+function sc.syreen_recruited()
+	syreen_low_start(wesnoth.units.get(wml.variables["x1"], wml.variables["y1"]))
+end
+
+-- prestart: every Syreen already on the map (leaders).
+function sc.syreen_prestart()
+	for _, u in ipairs(wesnoth.units.find_on_map { type = all_levels("SC_Syreen_Penetrator") }) do
+		syreen_low_start(u)
+	end
+end
+
+-- Promotion fully heals a ship; a Syreen instead gains the step between the
+-- two levels' starting HP (+8), and is raised to the new level's starting
+-- HP if that is still more.
+function sc.syreen_before_advance()
+	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
+	if not is_a(u, "SC_Syreen_Penetrator") then return end
+	u.variables.sc_pre_advance_hp = u.hitpoints
+	u.variables.sc_pre_advance_start = by_level(SYREEN_START_HP, u)
+end
+
+function sc.syreen_after_advance()
+	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
+	if not is_a(u, "SC_Syreen_Penetrator") then return end
+	local hp = u.variables.sc_pre_advance_hp
+	if hp then
+		hp = hp + by_level(SYREEN_START_HP, u) - u.variables.sc_pre_advance_start
+	end
+	syreen_low_start(u, hp)
+	u.variables.sc_pre_advance_hp = nil
+	u.variables.sc_pre_advance_start = nil
+end
+
 -------------------------------------------------------------------- reporting
 
 function sc.note_levelup()
