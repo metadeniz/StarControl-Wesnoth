@@ -123,8 +123,12 @@ LASERS = {
     "laser-green": (90, 255, 110),
     "laser-gold": (255, 220, 90),
     "laser-violet": (220, 120, 255),
-    "laser-cyan": (110, 230, 255),       # Chmmr megawatt laser
-    "laser-blue": (90, 130, 255),        # Chmmr tractor beam
+    # Chmmr megawatt laser: UQM cycles its colour every battle frame while
+    # it is held (chmmr.c cycle_array), which makes the beam shimmer.
+    "chmmr-laser-1": (189, 0, 0),
+    "chmmr-laser-2": (255, 25, 0),
+    "chmmr-laser-3": (255, 140, 0),
+    "chmmr-laser-4": (255, 25, 0),
     "lightning": (200, 220, 255),        # Slylandro probe
 }
 
