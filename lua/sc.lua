@@ -414,18 +414,26 @@ function sc.syreen_prestart()
 	end
 end
 
--- Promotion fully heals a ship; a Syreen keeps the crew it had before, or
--- its new level's starting crew if that is more.
+-- Promotion fully heals a ship; a Syreen instead gains the step between the
+-- two levels' starting HP (+8), and is raised to the new level's starting
+-- HP if that is still more.
 function sc.syreen_before_advance()
 	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
-	if is_a(u, "SC_Syreen_Penetrator") then u.variables.sc_pre_advance_hp = u.hitpoints end
+	if not is_a(u, "SC_Syreen_Penetrator") then return end
+	u.variables.sc_pre_advance_hp = u.hitpoints
+	u.variables.sc_pre_advance_start = by_level(SYREEN_START_HP, u)
 end
 
 function sc.syreen_after_advance()
 	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
 	if not is_a(u, "SC_Syreen_Penetrator") then return end
-	syreen_low_start(u, u.variables.sc_pre_advance_hp)
+	local hp = u.variables.sc_pre_advance_hp
+	if hp then
+		hp = hp + by_level(SYREEN_START_HP, u) - u.variables.sc_pre_advance_start
+	end
+	syreen_low_start(u, hp)
 	u.variables.sc_pre_advance_hp = nil
+	u.variables.sc_pre_advance_start = nil
 end
 
 -------------------------------------------------------------------- reporting
