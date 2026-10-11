@@ -17,8 +17,8 @@ its edge: a starbase with 5 docking rings. Added on request: two nebulae
 inside the centre's ring of walls, a small starbase with 2 docking rings
 north and south of the ring on the centre column, and no wall touching the
 top or bottom edge; a channel of badlands with one crossing beyond each
-of those keeps, fed by swamps, and a small keep with 1 docking ring on each
-team's side.
+of those keeps, fed by swamps, a small keep with 1 docking ring on each
+team's side, and red nebulae (mushroom groves) by the ring.
 
 Also writes maps/default-terrain/4p_Manufacturing_Consent.map: the same
 map in default Wesnoth terrain (grass, woods, hills, impassable ridges,
@@ -36,10 +36,10 @@ IW, IH = 1124, 971       # the screenshot
 
 T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
      "K": "Yk", "c": "Yc", "r": "Ys", "B": "Yi", "f": "Yif",
-     "s": "Yis"}
+     "s": "Yis", "m": "Yr"}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "r": "Re", "B": "Wo", "f": "Wo^Bsb\\",
-           "s": "Ss"}
+           "s": "Ss", "m": "Gg^Tf"}
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 
 # The north-west quarter, in screenshot pixels (x < 562, y < 485)
@@ -81,6 +81,9 @@ SWAMP = [(18, 0), (18, 1), (19, 0)]
 # west ridge, with 1 recruit hex towards the centre (in-game 11,13);
 # mirrored east at 32,13
 WEST_KEEP, WEST_RINGS = (9, 12), [(10, 12)]
+# mushroom forest (red nebula) at in-game 19,16 and its flip 19,11, and at
+# 17,13 (whose flip, 17,14, is a planet); mirrored east
+MUSHROOMS = [(18, 15), (18, 10), (16, 12)]
 ROADS = [                        # only drawn in the default-terrain map
     [(500, 30), (530, 55), (562, 75), (562, 290)],
 ]
@@ -217,6 +220,8 @@ def build():
     keeps = [keep, flip(*keep)]
     for x, y in WEST_RINGS:       # one hex, so it is not flipped north-south
         grid[y][x] = "c"
+    for x, y in MUSHROOMS:
+        grid[y][x] = "m"
     for y in range(H):                               # flip the west half
         for x in range(W // 2):
             grid[y][W - 1 - x] = grid[y][x]
