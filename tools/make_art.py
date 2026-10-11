@@ -24,6 +24,7 @@ import math
 import os
 import shutil
 import sys
+import wave
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
@@ -602,6 +603,56 @@ def build_sounds(uqm, out):
         os.makedirs(os.path.join(out, "sounds/sc"), exist_ok=True)
         shutil.copyfile(os.path.join(uqm, rel), os.path.join(out, dest))
         manifest.append(dest)
+    build_chmmr_sounds(out)
+
+
+def read_wav(path):
+    """8-bit mono UQM sample -> (float samples in -1..1, rate)."""
+    with wave.open(path) as w:
+        raw = np.frombuffer(w.readframes(w.getnframes()), np.uint8)
+        return (raw.astype(np.float32) - 128) / 128, w.getframerate()
+
+
+def write_wav(path, data, rate):
+    data = np.clip(np.round(data * 128 + 128), 0, 255).astype(np.uint8)
+    with wave.open(path, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(1)
+        w.setframerate(rate)
+        w.writeframes(data.tobytes())
+
+
+def held(sample, rate, seconds, tail):
+    """A weapon held down in UQM: the sample restarts every battle frame
+    (24 per second), which turns the Chmmr laser into a long buzz. When the
+    button is let go the last restart rings out for `tail` seconds."""
+    step = rate // 24
+    frames = int(seconds * 24)
+    end = sample[:int(tail * rate)].copy()
+    end *= np.linspace(1, 0, len(end)) ** 2
+    return np.concatenate([sample[:step]] * frames + [end])
+
+
+def build_chmmr_sounds(out):
+    """Long laser (ranged) and tractor beam + laser (melee) for the Chmmr
+    Avatar, made from the Chmmr's own laser and tractor samples."""
+    snd = os.path.join(out, "sounds/sc")
+    laser, rate = read_wav(os.path.join(snd, "chmmr-laser.wav"))
+    tractor, _ = read_wav(os.path.join(snd, "chmmr-tractor.wav"))
+
+    long_laser = held(laser, rate, 0.6, 0.3)
+    write_wav(os.path.join(snd, "chmmr-laser-long.wav"), long_laser, rate)
+
+    # The tractor beam hums under the whole shot, its sample looped end to
+    # end; the laser joins once the beam has locked on.
+    lead = int(0.15 * rate)
+    mix = np.zeros(lead + len(long_laser), np.float32)
+    hum = np.tile(tractor, len(mix) // len(tractor) + 1)[:len(mix)]
+    hum[-len(tractor):] *= np.linspace(1, 0, len(tractor))
+    mix += 1.2 * hum
+    mix[lead:] += 0.8 * long_laser
+    write_wav(os.path.join(snd, "chmmr-tractor-laser.wav"), mix, rate)
+    manifest.extend(["sounds/sc/chmmr-laser-long.wav", "sounds/sc/chmmr-tractor-laser.wav"])
 
 
 # ------------------------------------------------------- original terrain
