@@ -15,6 +15,7 @@ Usage:
                 [--wesnoth-data /usr/share/games/wesnoth/1.16/data]
     make_art.py --only badlands --out <add-on dir>    (badlands art and rules only)
     make_art.py --only asteroids --out <add-on dir>   (asteroid fields, dense asteroids, walls)
+    make_art.py --only fried --out <add-on dir>       (Kohr-Ah F.R.I.E.D. plumes)
 """
 
 import argparse
@@ -31,6 +32,7 @@ from PIL import Image, ImageDraw, ImageFilter
 
 from make_alliance_starbase import build_alliance_starbase
 from make_asteroids import build as build_asteroid_art
+from make_fried import build as build_fried_plumes
 from make_starbase import build_hierarchy_starbase
 
 HEX = 72
@@ -1615,11 +1617,14 @@ def main():
     ap.add_argument("--threedo", help="unzipped UQM 3DO music add-on (optional)")
     ap.add_argument("--wesnoth-data", default="/usr/share/games/wesnoth/1.16/data")
     ap.add_argument("--seed", type=int, default=1990)
-    ap.add_argument("--only", choices=["badlands", "gas", "asteroids"], help="rebuild just this terrain")
+    ap.add_argument("--only", choices=["badlands", "gas", "asteroids", "fried"], help="rebuild just this terrain")
     args = ap.parse_args()
     if not args.only and not args.uqm:
         ap.error("--uqm is required unless --only is given")
 
+    if args.only == "fried":
+        build_fried_plumes(args.out, save, rotated, DIAG, args.seed)
+        return 0
     rng = np.random.default_rng(args.seed)
     mask = hex_mask(args.wesnoth_data)
     hex_mask_cache = mask
@@ -1640,6 +1645,7 @@ def main():
     build_alliance_starbase(args.out)    # original art
     build_projectiles(args.uqm, args.out)
     build_lasers(args.out)
+    build_fried_plumes(args.out, save, rotated, DIAG, args.seed)   # original art
     build_attack_icons(args.out)
     nfire = build_effects(args.uqm, args.out)
     build_sounds(args.uqm, args.out)
