@@ -2,7 +2,8 @@
 """Write maps/2p_Understanding_Power.map.
 
 Traced hex by hex from a screenshot of a 2-player ground map: rivers became
-light badlands (thin badlands where roads forded them), lakes badlands
+light badlands (thin badlands where roads forded them), one ridge a swamp
+line of light badlands, lakes badlands
 ringed by dust, cliffs asteroid walls, woods nebulae, ore fields asteroid
 fields with a planet at each mine, gem patches asteroid fields, buildings
 planets. Only the north half (rows 0-13) is drawn; the south half is the
@@ -20,11 +21,11 @@ import sys
 
 W, H = 38, 28            # playable hexes; Wesnoth adds a one-hex border
 
-T = {".": "Ys", "n": "Yn", "d": "Yd", "r": "Yd", "B": "Yi", "l": "Yis", "f": "Yif",
+T = {".": "Ys", "s": "Yis", "n": "Yn", "d": "Yd", "r": "Yd", "B": "Yi", "l": "Yis", "f": "Yif",
      "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp", "K": "Yk", "c": "Yc"}
 
 # The same map in default Wesnoth terrain, closer to the original screenshot
-WESNOTH = {".": "Gg", "n": "Gs^Fp", "d": "Ds", "r": "Re", "B": "Ww",
+WESNOTH = {".": "Gg", "s": "Ss", "n": "Gs^Fp", "d": "Ds", "r": "Re", "B": "Ww",
            "l": "Ww", "f": "Wwf", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch"}
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
@@ -36,6 +37,9 @@ FEATURES = {
           (16, 2), (17, 1), (17, 0),
           (25, 0), (25, 1), (25, 2)],               # stream into the pond
     "f": [(1, 5), (5, 5), (9, 5)],
+    # swamp line where the original had a ridge by the gem field
+    "s": [(24, 9), (24, 10), (25, 10), (26, 11), (27, 11), (28, 11),
+          (29, 11), (30, 12)],
     # pond in the north, the two long lakes on the flanks
     "B": [(22, 4), (23, 3), (24, 4), (25, 3)]
          + [(x, y) for x in (35, 36, 37) for y in range(8, 14)]
