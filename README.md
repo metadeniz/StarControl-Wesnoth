@@ -62,7 +62,8 @@ Each player hears their own faction's playlist, shuffled:
   Thraddash themes, an Androsynth theme by TheMisterCat (DUOLED), the
   Precursors' "Now and Forever" (Ur-Quan) remix,
   and Starbase.
-- **New Alliance:** Ramen Rider's cover of the Syreen theme, and the
+- **New Alliance:** Ramen Rider's cover of the Syreen theme, the Melnorme
+  theme re-imagined by DJ Yan Yan Lipavsky, and the
   Precursors' remixes: Chmmr ("Photosynthesis"),
   Zoq-Fot-Pik ("Frungy Party"), Pkunk ("Pkunks Not Dead"), Supox ("Shake
   Yer Rootz"), Utwig ("Mask of Ultimate Embarrassment and Shame", "The

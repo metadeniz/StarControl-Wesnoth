@@ -198,9 +198,10 @@ end
 local PLAYLISTS = {
 	SC_Alliance = { "commander", "chenjesu-titus", "mmrnmhrm-titus", "yehat", "syreen", "arilou", "shofixti", "quasispace", "quasispace-3do",
 		"intro", "victory", "starbase", "outfit" },
-	-- the New Alliance hears the Precursors' remixes (and one cover)
+	-- the New Alliance hears the Precursors' remixes (and a cover and a
+	-- re-imagined Melnorme theme)
 	SC_NewAlliance = { "remix-chmmr", "remix-zoqfotpik", "remix-pkunk", "remix-supox", "remix-utwig",
-		"remix-utwig-ultron", "remix-commander", "remix-arilou", "remix-melnorme", "remix-syreen", "syreen-ramen-rider",
+		"remix-utwig-ultron", "remix-commander", "remix-arilou", "remix-melnorme", "melnorme-lipavsky", "remix-syreen", "syreen-ramen-rider",
 		"remix-mystic-shadows", "remix-quasispace", "remix-intro", "remix-ending", "remix-starbase",
 		"remix-outfit" },
 	-- the Agents of Chaos hear modern versions: the Precursors' remixes
