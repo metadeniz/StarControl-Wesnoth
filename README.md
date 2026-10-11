@@ -167,7 +167,7 @@ starbases.
 | Shofixti Scout | asteroid fields, green and red nebulae | Elite |
 
 **Leaders** start promoted: Elite (level 3) if the ship costs 16 gold or
-less (Earthling Cruiser, Syreen, Arilou, Shofixti, Spathi, Umgah, VUX,
+less (Earthling Cruiser, Syreen, Arilou, Shofixti, Umgah, VUX,
 Androsynth, Ilwrath), Veteran (level 2) otherwise. A leader can't use the
 Glory Device.
 
