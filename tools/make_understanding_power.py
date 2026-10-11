@@ -69,16 +69,16 @@ FEATURES = {
           (20, 11), (22, 11), (23, 12), (23, 13), (24, 13)],
     # ore fields and gem patches
     "a": [(10, 1), (11, 1), (4, 7), (4, 8), (5, 7), (13, 8), (13, 9),
-          (15, 9), (21, 1), (22, 1), (29, 10), (28, 6)],
+          (15, 9), (21, 1), (22, 1), (29, 10), (28, 6),
+          (10, 0), (22, 0)],          # where two more mines were
     # ore mines and buildings
-    "p": [(10, 0), (10, 2), (4, 6), (14, 9), (22, 0), (22, 2), (32, 2),
-          (33, 13), (2, 8), (20, 12),
+    "p": [(10, 2), (4, 6), (14, 9), (22, 2), (2, 8), (20, 12),
           (37, 0), (28, 10)],                     # corner, gem patch
     "K": [(5, 3),
-          (15, 12)],                 # a small keep in the central woods
+          (14, 11)],                 # a small keep in the central woods
 
     "c": [(4, 3), (4, 4), (5, 2), (6, 3), (6, 4),
-          (15, 13)],                 # its one recruit hex
+          (14, 12)],                 # its one recruit hex
     # a second, smaller castle in the east lake (west lake in the south
     # half, about hex 2,19 in game coordinates), no starting side; the
     # shore beside it is open space so it is easy to reach
