@@ -16,7 +16,8 @@ dirt are open space. Each team starts at the two player-start markers on
 its edge: a starbase with 5 docking rings. Added on request: two nebulae
 inside the centre's ring of walls, a small starbase with 2 docking rings
 north and south of the ring on the centre column, and no wall touching the
-top or bottom edge.
+top or bottom edge; a channel of badlands with one crossing south of the
+south keep, and a small keep with 1 docking ring on each team's side.
 
 Also writes maps/default-terrain/4p_Man_Con.map: the same map in default
 Wesnoth terrain (grass, woods, hills, impassable ridges, roads, villages).
@@ -32,9 +33,9 @@ W, H = 41, 26            # playable hexes; Wesnoth adds a one-hex border
 IW, IH = 1124, 971       # the screenshot
 
 T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
-     "K": "Yk", "c": "Yc", "r": "Ys"}
+     "K": "Yk", "c": "Yc", "r": "Ys", "B": "Yi", "f": "Yif"}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
-           "K": "Kh", "c": "Ch", "r": "Re"}
+           "K": "Kh", "c": "Ch", "r": "Re", "B": "Wo", "f": "Wo^Bsb\\"}
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 
 # The north-west quarter, in screenshot pixels (x < 562, y < 485)
@@ -62,6 +63,15 @@ RING_WOODS = [(19, 12)]          # nebulae inside the ring, beside its planet
 # flip), as far from the west starts as from the east, with 2 recruit
 # hexes, one west and one east; no side starts there
 MID_KEEP, MID_RINGS = (20, 8), [(19, 8)]
+# Asked for by hex, in these 0-based coordinates (in-game ones are 1 more):
+# badlands down the centre column south of the south keep (in-game 21,20 to
+# 21,25), with a crossing of thin badlands (a bridge in default terrain) at
+# in-game 21,22; not mirrored north
+SOUTH_CHANNEL = [(20, y) for y in range(19, 25)]
+CROSSING = (20, 21)
+# a keep at in-game 10,11 with 1 recruit hex north of it, mirrored east
+# (in-game 32,11) so both teams get one
+WEST_KEEP, WEST_RINGS = (9, 10), [(9, 9)]
 ROADS = [                        # only drawn in the default-terrain map
     [(500, 30), (530, 55), (562, 75), (562, 290)],
 ]
@@ -190,6 +200,12 @@ def build():
             x, y = nearest(ix, iy, lambda x, y: True)
             grid[y][x] = "p"
     keeps = [keep, flip(*keep)]
+    for x, y in SOUTH_CHANNEL:
+        grid[y][x] = "B"
+    grid[CROSSING[1]][CROSSING[0]] = "f"
+    grid[WEST_KEEP[1]][WEST_KEEP[0]] = "K"
+    for x, y in WEST_RINGS:
+        grid[y][x] = "c"
     for y in range(H):                               # flip the west half
         for x in range(W // 2):
             grid[y][W - 1 - x] = grid[y][x]
