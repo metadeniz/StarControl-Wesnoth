@@ -450,7 +450,7 @@ def build_ditties(uqm, out, remix=None):
     catches the peaks, so the gain is corrected over a few passes; ditties
     with sharp peaks stop short of the target rather than being crushed.
     The Sa-Matra has no ditty of its own in UQM; it gets the Precursors'
-    remix of the Kohr-Ah ditty (the Death March's victory theme)."""
+    remix of the Kohr-Ah ditty."""
     import re
     import subprocess
     os.makedirs(os.path.join(out, "sounds/sc"), exist_ok=True)
