@@ -99,8 +99,10 @@ def build():
     return grid
 
 
-def write(grid, path, table=T, base_only=("Yk", "Ys^Vyp")):
-    starts = {(5, 3): 1, (W - 1 - 5, H - 1 - 3): 2}
+def write(grid, path, table=T, base_only=("Yk", "Ys^Vyp"), start=(5, 3)):
+    H, W = len(grid), len(grid[0])
+    sx, sy = start
+    starts = {(sx, sy): 1, (W - 1 - sx, H - 1 - sy): 2}
     rows = []
     for Y in range(H + 2):
         row = []
