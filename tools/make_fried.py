@@ -16,7 +16,7 @@ W, H = 88, 88           # final image size
 SS = 4                  # supersampling
 ORIGIN = (W / 2, H - 3)
 PLUMES = [(-25.0, 0.88), (0.0, 1.0), (25.0, 0.88)]   # (angle, relative length)
-LENGTH = 74.0
+LENGTH = 62.0
 WIDTH = 9.5             # half-width at the widest point
 FRAMES = [0.45, 0.78, 1.0, 1.0]   # plume length of each frame
 
