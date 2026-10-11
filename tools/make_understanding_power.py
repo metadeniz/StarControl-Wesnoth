@@ -22,12 +22,12 @@ import sys
 W, H = 38, 28            # playable hexes; Wesnoth adds a one-hex border
 
 T = {".": "Ys", "s": "Yis", "n": "Yn", "d": "Yd", "r": "Yd", "B": "Yi", "l": "Yis", "f": "Yif",
-     "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp", "K": "Yk", "c": "Yc"}
+     "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp", "K": "Yk", "c": "Yc", "k": "Yk", "h": "Yc"}
 
 # The same map in default Wesnoth terrain, closer to the original screenshot
 WESNOTH = {".": "Gg", "s": "Ss", "n": "Gs^Fp", "d": "Ds", "r": "Re", "B": "Ww",
            "l": "Ww", "f": "Wwf", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
-           "K": "Kh", "c": "Ch"}
+           "K": "Kh", "c": "Ch", "k": "Khw", "h": "Chw"}
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 
 FEATURES = {
@@ -41,10 +41,10 @@ FEATURES = {
     "s": [(24, 9), (24, 10), (25, 10), (26, 11), (27, 11), (28, 11),
           (29, 11), (30, 12)],
     # pond in the north, the two long lakes on the flanks
-    "B": [(22, 4), (23, 3), (24, 4), (25, 3)]
+    "B": [(25, 3)]
          + [(x, y) for x in (35, 36, 37) for y in range(8, 14)]
          + [(x, y) for x in (0, 1, 2) for y in range(11, 14)],
-    "d": [(21, 3), (21, 4), (22, 3), (23, 4), (24, 3), (25, 4), (26, 3),
+    "d": [(25, 4), (26, 3),
           (35, 7), (36, 7), (37, 7), (1, 10)]
          + [(34, y) for y in range(8, 14)] + [(3, y) for y in range(10, 14)]
          ,
@@ -75,6 +75,10 @@ FEATURES = {
           (37, 0), (28, 10)],                     # corner, gem patch
     "K": [(5, 3)],
     "c": [(4, 3), (4, 4), (5, 2), (6, 3), (6, 4)],
+    # a second, smaller castle standing in the pond (no starting side),
+    # with open space around it so it is easy to reach
+    "k": [(23, 3)],
+    "h": [(22, 4), (24, 4)],
 }
 
 
@@ -104,7 +108,7 @@ def write(grid, path, table=T, base_only=("Yk", "Ys^Vyp")):
                 if (u * 7 + v * 3) % 3 == 0:
                     code = LEAFY
             border = (X - 1, Y - 1) != (x, y)
-            if border and code in base_only:
+            if border and code in base_only + ("Khw",):
                 code = table["c"] if grid[y][x] == "K" else table["."]
             elif (x, y) in starts:
                 code = f"{starts[x, y]} {code}"
