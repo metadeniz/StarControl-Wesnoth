@@ -117,10 +117,14 @@ tiny) as a trait in the side panel; hover over it for that hull's moves and
 defense on every terrain.
 
 **Promotions.** Every ship can rise from level 1 to **Veteran** (level 2)
-and **Elite** (level 3) by gaining experience. Cheap, small ships promote
-fastest, the powerful ones slowest: the Veteran threshold is 1.6 × recruit
-cost (8 XP for a Shofixti Scout, 45 for an Ur-Quan Dreadnought, 48 for a
-Chenjesu Broodhome), Elite is twice that.
+and **Elite** (level 3) by gaining experience, at roughly mainline pace:
+40 XP to Veteran and 100 to Elite. Fast learners need 28 / 70 (Shofixti,
+Earthling, Umgah, VUX, Zoq-Fot-Pik, Thraddash, Syreen, Ilwrath, Supox).
+The big capital ships and the Arilou Skiff, whose promoted forms are
+especially strong, need 50 / 125 (Ur-Quan, Kohr-Ah, Chmmr, Chenjesu,
+Arilou). A promotion that brings healing, curing or leadership comes one
+step sooner (Melnorme 28 / 70, Chenjesu 40 / 100, Androsynth Elite at 70,
+Ur-Quan, Kohr-Ah and Chmmr Elite at 100).
 (Wesnoth's multiplayer *Experience modifier* setting, 70% by default, scales
 these further.) Each promotion adds HP and some mix of stronger or more
 frequent attacks, new attacks and new abilities. **Backstab** (double
@@ -164,7 +168,7 @@ starbases.
 | Shofixti Scout | asteroid fields, green and red nebulae | Elite |
 
 **Leaders** start promoted: Elite (level 3) if the ship costs 16 gold or
-less (Earthling Cruiser, Syreen, Arilou, Shofixti, Spathi, Umgah, VUX,
+less (Earthling Cruiser, Syreen, Arilou, Shofixti, Umgah, VUX,
 Androsynth, Ilwrath), Veteran (level 2) otherwise. A leader can't use the
 Glory Device.
 
