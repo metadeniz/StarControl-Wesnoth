@@ -4,7 +4,7 @@
 Traced hex by hex from a screenshot of a 2-player ground map: rivers became
 light badlands (thin badlands where roads forded them), one ridge a swamp
 line of light badlands, lakes badlands
-ringed by dust, cliffs asteroid walls, woods nebulae, ore fields asteroid
+ringed by dust (the east and west seas by light badlands), cliffs asteroid walls, woods nebulae, ore fields asteroid
 fields with a planet at each mine, gem patches asteroid fields, buildings
 planets. Only the north half (rows 0-13) is drawn; the south half is the
 north half turned 180 degrees, so both players get exactly the same map.
@@ -25,7 +25,7 @@ T = {".": "Ys", "s": "Yis", "n": "Yn", "d": "Yd", "r": "Yd", "B": "Yi", "l": "Yi
      "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp", "K": "Yk", "c": "Yc", "k": "Yk", "h": "Yc"}
 
 # The same map in default Wesnoth terrain, closer to the original screenshot
-WESNOTH = {".": "Gg", "s": "Ss", "n": "Gs^Fp", "d": "Ds", "r": "Re", "B": "Ww",
+WESNOTH = {".": "Gg", "s": "Ss", "n": "Gs^Fp", "d": "Ds", "r": "Re", "B": "Wo",
            "l": "Ww", "f": "Wwf", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "k": "Khw", "h": "Chw"}
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
@@ -87,6 +87,33 @@ FEATURES = {
 }
 
 
+def neighbours(x, y):
+    up = y - 1 if x % 2 == 0 else y        # odd columns sit half a hex lower
+    return [(x, y - 1), (x, y + 1), (x - 1, up), (x - 1, up + 1),
+            (x + 1, up), (x + 1, up + 1)]
+
+
+def shallows(grid):
+    """Ring the east and west seas with light badlands, leaving the shore
+    beside the lake castles open."""
+    H, W = len(grid), len(grid[0])
+
+    def at(x, y):
+        return grid[y][x] if 0 <= x < W and 0 <= y < H else None
+
+    ring = []
+    for y in range(H):
+        for x in range(W):
+            if W // 4 <= x < W - W // 4 or grid[y][x] not in ".dr":
+                continue
+            near = [at(*n) for n in neighbours(x, y)]
+            if "B" in near and "h" not in near and "k" not in near:
+                ring.append((x, y))
+    for x, y in ring:
+        grid[y][x] = "l"
+    return grid
+
+
 def build():
     grid = [["." for _ in range(W)] for _ in range(H)]
     for ch, hexes in FEATURES.items():
@@ -96,7 +123,7 @@ def build():
     for y in range(H // 2, H):                       # turn the north half
         for x in range(W):
             grid[y][x] = grid[H - 1 - y][W - 1 - x]
-    return grid
+    return shallows(grid)
 
 
 def write(grid, path, table=T, base_only=("Yk", "Ys^Vyp"), start=(5, 3)):

@@ -108,7 +108,7 @@ def shrink(W, H):
     for y in range(H // 2, H):
         for x in range(W):
             grid[y][x] = grid[H - 1 - y][W - 1 - x]
-    return grid, keeps[(5, 3)]
+    return full.shallows(grid), keeps[(5, 3)]
 
 
 if __name__ == "__main__":
