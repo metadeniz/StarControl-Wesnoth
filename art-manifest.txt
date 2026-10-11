@@ -822,13 +822,13 @@ sounds/sc/druuge-furnace.wav
 sounds/sc/earthling-nuke.wav
 sounds/sc/earthling-pd.wav
 sounds/sc/flagship-blaster.wav
+sounds/sc/funeral-march.ogg
 sounds/sc/hierarchy-victory.ogg
 sounds/sc/ilwrath-cloak.wav
 sounds/sc/ilwrath-hellfire.wav
 sounds/sc/ilwrath-uncloak.wav
 sounds/sc/kohrah-buzzsaw.wav
 sounds/sc/kohrah-fried.wav
-sounds/sc/kohrah-victory.ogg
 sounds/sc/melnorme-blaster.wav
 sounds/sc/melnorme-confuser.wav
 sounds/sc/mmrnmhrm-laser.wav

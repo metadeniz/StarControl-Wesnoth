@@ -466,7 +466,7 @@ def build_ditties(uqm, out, remix=None):
 
     sources = {race: os.path.join(uqm, "base/ships", rel) for race, rel in DITTIES.items()}
     if remix:
-        sources["samatra"] = os.path.join(remix, REMIXES["kohrah-victory"])
+        sources["samatra"] = os.path.join(remix, "remix/1/ditties/kohrah.ogg")
     for race, src in sources.items():
         dest = f"sounds/sc/ditty-{race}.ogg"
         peak, lufs = measure(src, fade + ",")
@@ -525,7 +525,6 @@ REMIXES = {
     "kohrah-cleansing-required": "remix/3/07_-_Kohr-Ah_-_Cleansing_Required.ogg",
     "slylandro-we-come-in-peace": "remix/2/03_-_Slylandro_Probes_-_We_Come_In_Peace.ogg",
     "samatra-battle": "remix/1/05_-_Melee_-_The_Battle_of_the_Sa-Matra.ogg",
-    "kohrah-victory": "remix/1/ditties/kohrah.ogg",     # Death March victory music (for now)
     "orz-squeezing-the-juice": "remix/4/10_-_Orz_-_Squeezing_the_Juice.ogg",
     "mycon-rebirth": "remix/3/05_-_Mycon_-_Rebirth.ogg",
     "ilwrath-all-evil": "remix/3/02_-_Ilwrath_-_All_Evil.ogg",
@@ -563,7 +562,7 @@ THREEDO = {
 
 # Victory themes are played as sound effects (they follow the sound volume,
 # not the music volume), so they go with the sounds.
-VICTORY_THEMES = {"victory-fanfare", "kohrah-victory"}
+VICTORY_THEMES = {"victory-fanfare"}
 
 
 def music_dest(name):
@@ -1674,6 +1673,9 @@ def main():
     manifest.extend(["music/sc/androsynth-duoled.ogg", "music/sc/melnorme-lipavsky.ogg"])
     # ...and Ramen Rider's cover of the Syreen theme (MP3).
     manifest.append("music/sc/syreen-ramen-rider.ogg")
+    # ...and the Death March victory theme, the opening phrase of Chopin's
+    # Funeral March (MP3, trimmed with a fade-out; played as a sound effect).
+    manifest.append("sounds/sc/funeral-march.ogg")
     with open(os.path.join(args.out, "art-manifest.txt"), "w") as f:
         f.write("# Files derived from The Ur-Quan Masters content (CC BY-NC-SA 2.5).\n")
         f.write("# A published build must replace every one of these.\n")

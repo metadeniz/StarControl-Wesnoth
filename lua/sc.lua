@@ -220,7 +220,7 @@ local VICTORY_THEME = {
 	SC_Alliance = "sc/alliance-victory.ogg",     -- Star Control 1's Alliance victory theme
 	SC_Hierarchy = "sc/hierarchy-victory.ogg",   -- Star Control 1's Hierarchy victory theme
 	SC_NewAlliance = "sc/victory-fanfare.ogg",   -- Star Control II's victory fanfare
-	SC_DeathMarch = "sc/kohrah-victory.ogg",     -- for now: the Precursors' Kohr-Ah ditty remix
+	SC_DeathMarch = "sc/funeral-march.ogg",      -- Chopin's Funeral March (Sonata No. 2), opening phrase
 }
 
 local function local_human_side()
