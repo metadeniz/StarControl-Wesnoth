@@ -39,7 +39,7 @@ T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
      "s": "Yis", "m": "Yr",
      # barriers that replace most of the asteroid walls (see BARRIERS)
      "D": "Yqd", "R": "Yqr", "P": "Yqp", "E": "Yqe", "G": "Yqd^Ygg",
-     "H": "Yqr^Ygg", "X": "Yqe^Yxb", "U": "Yqr^Yxp", "S": "Ys^Yxs"}
+     "H": "Yqr^Ygg", "X": "Yqe^Yxb", "U": "Yqr^Yxp", "S": "Ys^Yx"}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "r": "Re", "B": "Wo", "f": "Wo^Bsb\\",
            "s": "Ss", "m": "Gg^Tf"}
@@ -251,7 +251,7 @@ BARRIERS = [
     # the centre ring's west arc: a pulsar in its own radiation
     ("U", [(18, 14)]),
     ("R", [(18, 13), (18, 15)]),
-    # lone rocks near the top and bottom: shielded planets
+    # lone rocks near the top and bottom: stars
     ("S", [(13, 3), (13, 26)]),
 ]
 # the centre ring's north and south arcs: a black hole in its eddy

@@ -8,8 +8,8 @@ Two kinds:
   every few hexes, each hex shows its own piece of it and spills wisps onto
   its neighbours, so a blob reads as one cloud with a soft edge. This file
   only paints the clouds; make_art.py cuts them into hexes.
-* Single objects, drawn as overlays: black hole, pulsar, a planet under an
-  Ur-Quan slave shield, and a gas giant that spans four hexes.
+* Single objects, drawn as overlays: black hole, pulsar, and a gas giant
+  that spans four hexes.
 """
 import math
 
@@ -185,24 +185,6 @@ def sphere(rng, d, palette, kind, light=(-0.55, -0.55, 0.63)):
     return _rgba(rgb, np.clip((1 - np.sqrt(d2)) * r, 0, 1))
 
 
-def slave_shield(rng):
-    """A planet sealed under the Ur-Quan's red slave shield."""
-    W = HEX * S
-    planet = sphere(rng, 34 * S, [(20, 60, 140), (30, 90, 170), (60, 130, 70), (110, 150, 80), (200, 200, 190)], "rock")
-    img = Image.new("RGBA", (W, W)); img.alpha_composite(planet, ((W - planet.width) // 2,) * 2)
-    x, y = _grid(W); d = np.sqrt(x ** 2 + y ** 2) / S
-    R = 26.0
-    shell = np.clip(1 - np.abs(d - R) / 2.2, 0, 1)
-    inner = np.where(d < R, 0.30 + 0.45 * (d / R) ** 4, 0)
-    tex = _noise(rng, W, 4, 6)
-    cells = np.sin(x / S * 1.3) * np.sin((x * 0.5 + y * 0.866) / S * 1.3) * np.sin((x * 0.5 - y * 0.866) / S * 1.3)
-    inner = inner * (0.85 + 0.3 * tex) + np.where(d < R, 0.12 * (cells > 0.25), 0)
-    halo = np.clip(1 - (d - R) / 9, 0, 1) ** 2 * (d > R) * 0.55
-    a = np.clip(np.maximum.reduce([shell, inner, halo]), 0, 1)
-    rgb = np.dstack([np.full_like(d, 255), 40 + 140 * shell, 30 + 90 * shell])
-    img.alpha_composite(_rgba(rgb, a))
-    return img.resize((HEX, HEX), Image.LANCZOS)
-
 
 def black_hole(rng):
     """Dead-black core in a lensed, glowing accretion disc."""
@@ -268,7 +250,7 @@ def gas_giant(rng, palette):
 
 
 def build_objects(rng, out, save, apply_mask, starfield, mask):
-    for name, make in [("black-hole", black_hole), ("pulsar", pulsar), ("slave-shield", slave_shield)]:
+    for name, make in [("black-hole", black_hole), ("pulsar", pulsar)]:
         img = make(rng)
         save(img, out, f"images/terrain/sc/{name}.png", False)
         tile = apply_mask(starfield(rng), mask); tile.alpha_composite(img)
