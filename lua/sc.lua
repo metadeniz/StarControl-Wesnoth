@@ -388,6 +388,46 @@ function sc.expire_artifact_labels()
 	wml.array_access.set("sc_artifact_labels", keep)
 end
 
+--------------------------------------------------------------- Syreen crew
+
+-- The Syreen Penetrator has room for a huge crew (max HP as high as an
+-- Ur-Quan Dreadnought's) but always leaves port with a small one, and fills
+-- the rest by luring enemy crew across with its song. Recruits, leaders
+-- placed at the start and freshly promoted ships all start at these HP.
+local SYREEN_START_HP = { 28, 36, 44 }
+
+local function syreen_low_start(u, floor)
+	if not is_a(u, "SC_Syreen_Penetrator") then return end
+	local hp = math.max(by_level(SYREEN_START_HP, u), floor or 0)
+	u.hitpoints = math.min(hp, u.max_hitpoints)
+end
+
+-- recruit: the event's unit.
+function sc.syreen_recruited()
+	syreen_low_start(wesnoth.units.get(wml.variables["x1"], wml.variables["y1"]))
+end
+
+-- prestart: every Syreen already on the map (leaders).
+function sc.syreen_prestart()
+	for _, u in ipairs(wesnoth.units.find_on_map { type = all_levels("SC_Syreen_Penetrator") }) do
+		syreen_low_start(u)
+	end
+end
+
+-- Promotion fully heals a ship; a Syreen keeps the crew it had before, or
+-- its new level's starting crew if that is more.
+function sc.syreen_before_advance()
+	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
+	if is_a(u, "SC_Syreen_Penetrator") then u.variables.sc_pre_advance_hp = u.hitpoints end
+end
+
+function sc.syreen_after_advance()
+	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
+	if not is_a(u, "SC_Syreen_Penetrator") then return end
+	syreen_low_start(u, u.variables.sc_pre_advance_hp)
+	u.variables.sc_pre_advance_hp = nil
+end
+
 -------------------------------------------------------------------- reporting
 
 function sc.note_levelup()
