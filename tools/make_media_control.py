@@ -114,7 +114,12 @@ OBJECTS = [("S", "D", (375, 170)), ("U", "R", (100, 440)),
 # turned copies): the tip of the dark nebula, to open space, and the end
 # of the S-shaped ridge, to nebula
 OPENINGS = [((330, 226), "D", "."), ((206, 333), "w", "n")]
-GAS_GIANT = (450, 125)           # 4 hexes at the dark nebula's bend
+GAS_GIANT = (450, 125)
+# keeps by the gas giants moved on request (0-based): the one at in-game
+# 9,18 was too close to the centre and went to 5,14, and the one on the
+# opposite side, at 29,15, to 31,18
+# (by gas giant: 0 north-west, 1 north-east, 2 south-east, 3 south-west)
+MOVED_KEEPS = {3: (4, 13), 1: (30, 17)}           # 4 hexes at the dark nebula's bend
 RIVER = [(0, 192), (140, 192), (152, 175), (150, 110), (175, 88),
          (208, 70), (216, 40), (218, 0)]
 FORDS = [(75, 192), (146, 192)]  # where the start's two roads cross it
@@ -317,7 +322,7 @@ def build():
     for p in PLANETS:
         place_planet(grid, keeps, p, "q" if p in SWAMP_PLANETS else "p")
     dists = [moves(grid, k) for k in keeps]
-    for diamond in giants:
+    for turn, diamond in enumerate(giants):
         # added on request: a keep with 1 docking ring two hexes from the
         # gas giant on its centre side, the ring towards the centre
         gx = sum(centre(*h)[0] for h in diamond) / 4
@@ -332,6 +337,7 @@ def build():
             return b - a, h != (kx, ky)
         kx, ky = min([(kx, ky)] + [h for h in neighbours(kx, ky)
                                    if grid[h[1]][h[0]] in ".n"], key=gap)
+        kx, ky = MOVED_KEEPS.get(turn, (kx, ky))
         ring = min(neighbours(kx, ky), key=lambda h: math.dist(centre(*h), MID))
         grid[ky][kx] = "K"
         grid[ring[1]][ring[0]] = "c"
