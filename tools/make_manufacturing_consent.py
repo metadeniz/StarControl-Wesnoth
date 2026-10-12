@@ -39,11 +39,13 @@ T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
      "s": "Yis", "m": "Yr",
      # barriers that replace most of the asteroid walls (see BARRIERS)
      "D": "Yqd", "R": "Yqr", "P": "Yqp", "E": "Yqe", "G": "Yqd^Ygg",
-     "H": "Yqr^Ygg", "X": "Yqe^Yxb", "U": "Yqr^Yxp", "S": "Ys^Yx"}
+     "H": "Yqr^Ygc", "X": "Yqe^Yxb", "U": "Yqr^Yxp", "S": "Ys^Yx", "M": "Ys^Ysg",
+     "O": "Yqe^Ybh", "T": "Yqp^Yx", "V": "Yqp^Yxp",
+     **{str(n): f"Yqe^Ybh{n}" for n in range(1, 7)}}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "r": "Re", "B": "Wo", "f": "Wo^Bsb\\",
            "s": "Ss", "m": "Gg^Tf"}
-WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUS"})
+WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUSOTVM123456"})
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 
 # The north-west quarter, in screenshot pixels (x < 562, y < 485)
@@ -258,6 +260,89 @@ BARRIERS = [
 CENTRE_BARRIERS = [("X", [(21, 12), (21, 17)]), ("E", [(20, 12), (22, 12), (20, 16), (22, 16)])]
 
 
+# Added on request: every cluster of barriers has a centrepiece. Each
+# cluster of gravity eddies has a supermassive black hole (4 hexes, which
+# takes one more hex, open before, to make the diamond), each plasma storm a
+# star or a pulsar at its corner (stars in storms are red, blue or green), and the radiation zones round
+# the south gas giants hold globular clusters instead (see "H" in T).
+# In-game coordinates, both halves.
+CENTREPIECES = [
+    # (each a different one of the six looks, 1-6)
+    ("1", [(16, 9), (17, 9), (17, 10), (18, 9)]),       # north-west eddies
+    ("2", [(24, 9), (25, 9), (25, 10), (26, 9)]),       # north-east
+    ("3", [(16, 19), (17, 19), (17, 20), (18, 19)]),    # south-west
+    ("4", [(24, 19), (25, 19), (25, 20), (26, 19)]),    # south-east
+    ("5", [(20, 12), (21, 12), (22, 12), (21, 13)]),    # the centre ring's north arc
+    ("6", [(20, 16), (21, 16), (22, 16), (21, 17)]),    # and south arc
+    ("T", [(18, 3)]), ("V", [(24, 3)]),                 # the plasma storms
+    ("V", [(18, 25)]), ("T", [(24, 25)]),
+]
+
+
+def centrepieces(grid):
+    for ch, hexes in CENTREPIECES:
+        cloud = "E" if ch in "O123456" else "P"
+        for X, Y in hexes:
+            assert grid[Y - 1][X - 1] in (cloud, "X", "."), (X, Y, grid[Y - 1][X - 1])
+            grid[Y - 1][X - 1] = ch
+    return grid
+
+
+# Added on request: loose asteroids gather round the big rocks. An open hex
+# next to a gas giant becomes an asteroid field, and so do some of the open
+# hexes next to a debris disk (asteroid wall). Picked by a fixed hash on
+# the west half and mirrored, so both teams get the same.
+NEAR_GIANT, NEAR_DISK = 1.0, 0.3
+
+
+def asteroid_skirts(grid):
+    H, W = len(grid), len(grid[0])
+    for y in range(H):
+        for x in range(W // 2 + 1):
+            if grid[y][x] != ".":
+                continue
+            near = [grid[v][u] for u, v in neighbours(x, y) if 0 <= u < W and 0 <= v < H]
+            chance = NEAR_GIANT if "G" in near else NEAR_DISK if "w" in near else 0
+            if chance and (x * 7919 + y * 104729) % 100 < chance * 100:
+                grid[y][x] = grid[y][W - 1 - x] = "a"
+    return grid
+
+
+# Hand edits asked for by hex, in-game coordinates, each with its copies on
+# the other three sides: (hex, new terrain letter).
+HAND_EDITS = [
+    # the badlands channel opens at 21,21 and 21,8
+    *[((21, y), ".") for y in (21, 8)],
+    # the planets at 24,24 and its copies move two hexes outwards
+    *[((x, y), ".") for x in (24, 18) for y in (24, 4)],
+    *[((x, y), "p") for x in (26, 16) for y in (24, 4)],
+    # the planet at 24,23 and the asteroid field at 25,23 swap
+    ((24, 23), "a"), ((25, 23), "p"), ((18, 23), "a"), ((17, 23), "p"),
+    ((24, 5), "a"), ((25, 6), "p"), ((18, 5), "a"), ((17, 6), "p"),
+    # debris disks at 2,16 and 7,16 opened
+    *[((x, y), ".") for x in (2, 40) for y in (16, 12)],
+    *[((x, y), ".") for x in (7, 35) for y in (16, 13)],
+    # the planet at 1,15 moves to 7,14 (copied west to east only)
+    ((1, 15), "."), ((41, 15), "."), ((7, 14), "p"), ((35, 14), "p"),
+    # the plasma storm at 23,23 opened, the gravity eddy at 23,21 badlands
+    *[((x, y), ".") for x in (23, 19) for y in (23, 6)],
+    *[((x, y), "B") for x in (23, 19) for y in (21, 8)],
+    # 1,16 kept open
+    *[((x, y), ".") for x in (1, 41) for y in (16, 13)],
+    # a red supergiant in its debris disk, its top at 5,16 and 6,16
+    # (mirrored west to east only)
+    *[((x, y), "M") for x in (5, 6, 36, 37) for y in (16, 17)],
+    # the channel's south crossing becomes red nebula
+    ((21, 22), "m"),
+]
+
+
+def hand_edits(grid):
+    for (X, Y), ch in HAND_EDITS:
+        grid[Y - 1][X - 1] = ch
+    return grid
+
+
 def barriers(grid):
     W = len(grid[0])
     for ch, hexes in BARRIERS + CENTRE_BARRIERS:
@@ -307,7 +392,7 @@ def write(grid, keeps, path, table=T, base_only=("Yk", "Ys^Vyp")):
 
 if __name__ == "__main__":
     grid, keeps = pad_top(*build())
-    grid = barriers(grid)
+    grid = hand_edits(asteroid_skirts(centrepieces(barriers(grid))))
     write(grid, keeps,
           os.path.join(sys.argv[1], "maps/4p_Manufacturing_Consent.map"))
     write(grid, keeps, os.path.join(

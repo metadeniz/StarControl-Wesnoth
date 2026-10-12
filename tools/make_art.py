@@ -1445,26 +1445,61 @@ def spend_old_asteroid_draws(rng):
             rng.uniform(0, 360)
 
 
-def build_star(rng, out):
-    s = HEX
+STAR_SIZE = 128   # bigger than a hex, so the glow fades out past the hex edge
+
+
+# Coloured suns for plasma storms: (corona rgb, core rgb), picked per hex.
+STORM_STARS = [((90, 150, 255), (220, 235, 255)),    # blue
+               ((80, 235, 120), (215, 255, 220))]    # green
+# ...a purple one for gravity eddies and an orange one for dust clouds
+OTHER_STARS = {"star-eddy": ((185, 90, 255), (235, 210, 255)),
+               "star-dust": ((255, 140, 30), (255, 220, 160))}
+
+
+def star_image(tex, corona_rgb=None, core_rgb=None):
+    """A sun on a STAR_SIZE square: a white-hot core in a rayed corona and a
+    soft glow that fades out beyond its hex. Yellow unless given colours."""
+    s = STAR_SIZE
     yy, xx = np.mgrid[0:s, 0:s].astype(np.float32)
     c = (s - 1) / 2
     d = np.sqrt((xx - c) ** 2 + (yy - c) ** 2)
     ang = np.arctan2(yy - c, xx - c)
     rays = 0.5 + 0.5 * np.sin(ang * 11 + 1.3) * np.sin(ang * 7)
-    core_r = 19
-    corona = np.clip(1 - (d - core_r) / (17 + 8 * rays), 0, 1) ** 1.6
+    core_r = 17
+    corona = np.clip(1 - (d - core_r) / (11 + 9 * rays), 0, 1) ** 1.6
+    glow = np.clip(1 - (d - core_r) / (s / 2 - core_r - 2), 0, 1) ** 2.4 * 0.55
     core = np.clip(core_r + 1 - d, 0, 1)
-    tex = fractal_noise(rng, s, 4, 4)
     rgb = np.zeros((s, s, 3), np.float32)
-    rgb[..., 0] = 255
-    rgb[..., 1] = 150 + 100 * core * (0.6 + 0.4 * tex) + 40 * (1 - core) * corona
-    rgb[..., 2] = 40 + 170 * core * np.clip(1 - d / core_r, 0, 1) ** 0.7
-    alpha = 255 * np.maximum(core, corona * 0.85)
-    img = Image.fromarray(np.dstack([rgb, alpha]).clip(0, 255).astype(np.uint8), "RGBA")
+    if corona_rgb is None:
+        rgb[..., 0] = 255
+        rgb[..., 1] = 150 + 100 * core * (0.6 + 0.4 * tex) + 40 * (1 - core) * np.maximum(corona, glow)
+        rgb[..., 2] = 40 + 170 * core * np.clip(1 - d / core_r, 0, 1) ** 0.7
+    else:
+        hot = (core * (0.75 + 0.25 * tex) * np.clip(1 - d / core_r, 0, 1) ** 0.5)[..., None]
+        rim = core[..., None] * (1 - hot)
+        rgb = (np.array(corona_rgb, np.float32) * (1 - core[..., None])
+               + np.array(core_rgb, np.float32) * 0.85 * rim + 255 * hot)
+    alpha = 255 * np.maximum.reduce([core, corona * 0.85, glow])
+    return Image.fromarray(np.dstack([rgb, alpha]).clip(0, 255).astype(np.uint8), "RGBA")
+
+
+def build_star(rng, out):
+    """The yellow sun and the coloured storm suns, drawn centred on their
+    hex (terrain-graphics.cfg)."""
+    s = STAR_SIZE
+    # (the same draws as before, so the art built after the star stays the same)
+    tex = np.asarray(Image.fromarray((fractal_noise(rng, HEX, 4, 4) * 255).astype(np.uint8))
+                     .resize((s, s), Image.BICUBIC), np.float32) / 255
+    img = star_image(tex)
     save(img, out, "images/terrain/sc/star.png", False)
+    for i, (corona_rgb, core_rgb) in enumerate(STORM_STARS):
+        save(star_image(tex, corona_rgb, core_rgb), out,
+             f"images/terrain/sc/star-storm{i + 2}.png", False)
+    for name, (corona_rgb, core_rgb) in OTHER_STARS.items():
+        save(star_image(tex, corona_rgb, core_rgb), out, f"images/terrain/sc/{name}.png", False)
     tile = apply_mask(starfield(rng), hex_mask_cache)
-    tile.alpha_composite(img)
+    o = (s - HEX) // 2
+    tile.alpha_composite(img.crop((o, o, o + HEX, o + HEX)))
     save(apply_mask(tile, hex_mask_cache), out, "images/terrain/sc/star-tile.png", False)
 
 
