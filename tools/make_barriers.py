@@ -9,7 +9,7 @@ Two kinds:
   its neighbours, so a blob reads as one cloud with a soft edge. This file
   only paints the clouds; make_art.py cuts them into hexes.
 * Single objects, drawn as overlays: black hole (four of them, picked per
-  hex), pulsar, and four that span four hexes: gas giant, supermassive
+  hex), pulsar, and four that span four hexes: brown dwarf, supermassive
   black hole, globular cluster and red supergiant (in its debris disk).
 """
 import math
@@ -318,6 +318,37 @@ def banded_sphere(rng, d, palette, light=(-0.55, -0.55, 0.63)):
     return _rgba(rgb, np.clip((1 - np.sqrt(d2)) * r, 0, 1))
 
 
+# Brown dwarfs: failed stars, barely warm enough to glow. The four looks
+# run from a dim red-brown to the magenta of the coolest ones.
+BROWN_DWARFS = [
+    [(45, 12, 10), (95, 32, 20), (150, 62, 35), (70, 22, 15), (120, 48, 28)],     # ember brown
+    [(40, 14, 22), (90, 30, 45), (150, 65, 85), (65, 20, 32), (120, 45, 65)],     # magenta
+    [(55, 20, 8), (110, 45, 15), (175, 95, 40), (80, 30, 10), (140, 70, 28)],     # rust
+    [(35, 8, 8), (80, 18, 14), (140, 40, 25), (60, 12, 10), (110, 28, 18)],       # deep red
+]
+
+
+def brown_dwarf(rng, palette):
+    """Lit from inside, not by a sun: banded like a gas giant, darker at
+    the limb than in the middle, in a faint red glow."""
+    g = banded_sphere(rng, GIANT_D * 2, palette, light=(0.0, 0.0, 1.0))
+    a = np.array(g).astype(np.float32)
+    x, y = _grid(a.shape[0])
+    r = np.hypot(x, y) / (GIANT_D)
+    heat = np.clip(1 - r, 0, 1) ** 0.6
+    a[..., :3] = a[..., :3] * (0.55 + 0.6 * heat[..., None]) + np.array([30, 6, 0]) * heat[..., None]
+    g = Image.fromarray(a.clip(0, 255).astype(np.uint8), "RGBA")
+    g = g.resize((GIANT_D + 8, GIANT_D + 8), Image.LANCZOS)
+    size = GIANT_D + 24
+    out = Image.new("RGBA", (size, size))
+    halo = Image.new("RGBA", (size, size)); c = size / 2
+    ImageDraw.Draw(halo).ellipse([c - GIANT_D / 2 - 4, c - GIANT_D / 2 - 4, c + GIANT_D / 2 + 4, c + GIANT_D / 2 + 4],
+                                 fill=tuple(palette[2]) + (120,))
+    out.alpha_composite(halo.filter(ImageFilter.GaussianBlur(6)))
+    out.alpha_composite(g, ((size - g.width) // 2,) * 2)
+    return out
+
+
 def gas_giant(rng, palette):
     g = banded_sphere(rng, GIANT_D * 2, palette).resize((GIANT_D + 8, GIANT_D + 8), Image.LANCZOS)
     size = GIANT_D + 24
@@ -331,10 +362,10 @@ def gas_giant(rng, palette):
 
 
 # ---------------------------------------------------------------- big objects
-# Four-hex centrepieces, drawn like the gas giants over a diamond of four
+# Four-hex centrepieces, drawn like the brown dwarfs over a diamond of four
 # hexes, each to sit in the middle of a cluster of the matching cloud.
 
-BIG = GIANT_D + 24     # the same size as a gas giant's image
+BIG = GIANT_D + 24     # the same size as a brown dwarf's image
 BIG_BLACK_HOLES = [
     dict(),                                                                          # gold, edge-on
     dict(tilt=0.3, angle=-12, tint=(0.55, 0.7, 1.0), hot=(0.92, 0.96, 1.0)),        # blue-white, tilted
@@ -630,8 +661,12 @@ DARK_STARS = [
 ]
 
 
-# A gas giant standing in a cloud has wisps of that cloud drifting in front
-# of it: (dark, light) colours of each cloud's veil, and its terrain code.
+# A brown dwarf standing in a cloud has wisps of that cloud drifting in
+# front of it: (dark, light) colours of each cloud's veil, and its terrain
+# code. Only the clouds ships can fly through: brown dwarfs never stand in
+# the impassable ones (see terrain-graphics.cfg). The impassable ones are
+# still listed, as the gas giants were once veiled by them, so the same
+# random draws keep the veils below byte-identical.
 GIANT_VEILS = {
     "darknebula": ("Yqd", (38, 15, 58), (105, 60, 145)),
     "plasmastorm": ("Yqp", (55, 12, 70), (160, 60, 175)),
@@ -674,27 +709,35 @@ def build_objects(rng, out, save, apply_mask, starfield, mask):
         save(img, out, f"images/terrain/sc/{name}.png", False)
         tile = apply_mask(starfield(rng), mask); tile.alpha_composite(img)
         save(apply_mask(tile, mask), out, f"images/terrain/sc/{name}-tile.png", False)
-    giants = []
-    for i, pal in enumerate(GAS_GIANTS):
-        img = gas_giant(rng, pal)
-        giants.append(img)
-        save(img, out, f"images/terrain/sc/gas-giant{'' if i == 0 else i + 1}.png", False)
+    for pal in GAS_GIANTS:
+        # drawn (so the art after them stays the same) but not saved: the
+        # gas giants became brown dwarfs, drawn below with their own seed
+        gas_giant(rng, pal)
+    # Brown dwarfs, with their own seed.
+    wrng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 7)
+    dwarfs = []
+    for i, pal in enumerate(BROWN_DWARFS):
+        img = brown_dwarf(wrng, pal)
+        dwarfs.append(img)
+        save(img, out, f"images/terrain/sc/brown-dwarf{'' if i == 0 else i + 1}.png", False)
         if i == 0:
-            tile = apply_mask(starfield(rng), mask)
+            tile = apply_mask(starfield(wrng), mask)
             tile.alpha_composite(img.resize((HEX - 4, HEX - 4), Image.LANCZOS), (2, 2))
-            save(apply_mask(tile, mask), out, "images/terrain/sc/gas-giant-tile.png", False)
+            save(apply_mask(tile, mask), out, "images/terrain/sc/brown-dwarf-tile.png", False)
     # More black holes, added later with their own seed so the art above stays the same.
     brng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 1)
     for i, style in enumerate(BLACK_HOLES[1:]):
         save(black_hole(brng, **style), out, f"images/terrain/sc/black-hole{i + 2}.png", False)
-    # Gas giants veiled by the cloud they stand in, with their own seed too.
+    # The veils were drawn over the gas giants: still drawn, so the art
+    # after them stays the same, but now over the brown dwarfs, and saved
+    # only for the clouds ships can fly through.
     vrng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 3)
     for name, (code, dark, light) in GIANT_VEILS.items():
-        for i, img in enumerate(giants):
+        for i, img in enumerate(dwarfs):
             veil = veiled(vrng, img, dark, light)
-            if name == "darknebula":        # dark stars stand there now; drawn so the rest stay the same
+            if code.startswith("Yq"):       # impassable: no brown dwarfs there
                 continue
-            save(veil, out, f"images/terrain/sc/gas-giant-{name}{'' if i == 0 else i + 1}.png", False)
+            save(veil, out, f"images/terrain/sc/brown-dwarf-{name}{'' if i == 0 else i + 1}.png", False)
     # The four-hex black holes and globular clusters, also with their own seed.
     grng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 2)
     for name, make, styles in [("black-hole-big", big_black_hole, BIG_BLACK_HOLES),

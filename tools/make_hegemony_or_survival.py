@@ -116,7 +116,7 @@ class Map:
             self.put(x, y, ch)
 
     def big_object(self, hexes, code, under):
-        """A four-hex object (gas giant, dark star, ...) on a diamond: three
+        """A four-hex object (brown dwarf, dark star, ...) on a diamond: three
         across and two down, or two by two slanting either way. code may be
         two codes, the west one and its mirror image (to show two looks)."""
         west, east = (code, code) if isinstance(code, str) else code
@@ -218,7 +218,7 @@ def build():
     m.hexes([(13, 1), (14, 1), (14, 2), (15, 2), (13, 2), (15, 3)], "S")
     m.put(14, 2, "s")
     m.hexes([(12, 2), (16, 1)], "p")
-    # a gas giant in a nebula, a planet in asteroids beside it
+    # a brown dwarf in a nebula, a planet in asteroids beside it
     m.blob(15, 8, 1, "n")
     m.big_object(diamond_slant(15, 8), "Ygg", "n")
     m.hexes([(13, 7)], "a")
