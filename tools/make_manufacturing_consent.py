@@ -319,6 +319,16 @@ HAND_EDITS = [
     # the planet at 24,23 and the asteroid field at 25,23 swap
     ((24, 23), "a"), ((25, 23), "p"), ((18, 23), "a"), ((17, 23), "p"),
     ((24, 5), "a"), ((25, 6), "p"), ((18, 5), "a"), ((17, 6), "p"),
+    # debris disks at 2,16 and 7,16 opened
+    *[((x, y), ".") for x in (2, 40) for y in (16, 12)],
+    *[((x, y), ".") for x in (7, 35) for y in (16, 13)],
+    # the planet at 1,15 moves to 7,14 (copied west to east only)
+    ((1, 15), "."), ((41, 15), "."), ((7, 14), "p"), ((35, 14), "p"),
+    # the plasma storm at 23,23 opened, the gravity eddy at 23,21 badlands
+    *[((x, y), ".") for x in (23, 19) for y in (23, 6)],
+    *[((x, y), "B") for x in (23, 19) for y in (21, 8)],
+    # 1,16 kept open
+    *[((x, y), ".") for x in (1, 41) for y in (16, 13)],
 ]
 
 
