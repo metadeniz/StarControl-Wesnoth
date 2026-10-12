@@ -237,19 +237,26 @@ def black_hole(rng, tilt=0.32, angle=0, rgb=((255, 0), (120, 120, 1), (40, 180, 
 
 
 def pulsar(rng):
-    """A tiny white-blue neutron star sweeping two beams, in a faint wind nebula."""
+    """A white-blue neutron star sweeping two bright beams out to the edge of
+    its hex, ringed by the wind nebula they stir up."""
     W = HEX * S
     x, y = _grid(W); x, y = x / S, y / S
     d = np.sqrt(x ** 2 + y ** 2)
     th = math.radians(rng.uniform(50, 75))
     along = x * math.cos(th) + y * math.sin(th); across = -x * math.sin(th) + y * math.cos(th)
-    beam = np.clip(1 - np.abs(across) / (1.4 + np.abs(along) * 0.1), 0, 1) * np.clip(1 - np.abs(along) / 40, 0, 1)
-    core = np.clip((7 - d) * 0.8, 0, 1)
-    halo = np.clip(1 - d / 19, 0, 1) ** 2
+    reach = np.clip(1 - (d / 34) ** 2, 0, 1)                      # the beams fade out inside the hex
+    spine = np.clip(1 - np.abs(across) / (1.3 + np.abs(along) * 0.05), 0, 1) * reach
+    cone = np.clip(1 - np.abs(across) / (1.8 + np.abs(along) * 0.2), 0, 1) ** 1.3 * reach
+    glow = np.exp(-(across / (2.5 + np.abs(along) * 0.22)) ** 2) * reach ** 1.5
+    knots = 0.85 + 0.15 * np.sin(np.abs(along) * 0.7)            # pulses running out along the beams
+    beam = np.clip(spine + cone * 0.9 * knots + glow * 0.35, 0, 1)
+    core = np.clip((9 - d) * 0.9, 0, 1)
+    halo = np.clip(1 - d / 20, 0, 1) ** 2
+    ring = np.clip(1 - np.abs(np.sqrt((along * 2.6) ** 2 + across ** 2) - 15) / 3, 0, 1) * 0.55
     neb = np.clip(1 - d / 32, 0, 1) ** 1.5 * (0.3 + 0.4 * _noise(rng, W, 3, 4)) * 0.6
-    a = np.clip(np.maximum.reduce([core, halo * 0.9, beam, neb]), 0, 1)
-    w = np.clip(core + beam * 0.6, 0, 1)
-    rgb = np.dstack([110 + 145 * w, 160 + 95 * w, np.full_like(d, 255)])
+    a = np.clip(np.maximum.reduce([core, halo * 0.95, beam, neb, ring]), 0, 1)
+    w = np.clip(core + spine + cone * 0.55 * knots + halo * 0.3, 0, 1)
+    rgb = np.dstack([80 + 175 * w, 150 + 105 * w, np.full_like(d, 255)])
     return _rgba(rgb, a).resize((HEX, HEX), Image.LANCZOS)
 
 
