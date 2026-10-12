@@ -286,6 +286,26 @@ def centrepieces(grid):
     return grid
 
 
+# Added on request: loose asteroids gather round the big rocks. An open hex
+# next to a gas giant becomes an asteroid field, and so do some of the open
+# hexes next to a debris disk (asteroid wall). Picked by a fixed hash on
+# the west half and mirrored, so both teams get the same.
+NEAR_GIANT, NEAR_DISK = 1.0, 0.3
+
+
+def asteroid_skirts(grid):
+    H, W = len(grid), len(grid[0])
+    for y in range(H):
+        for x in range(W // 2 + 1):
+            if grid[y][x] != ".":
+                continue
+            near = [grid[v][u] for u, v in neighbours(x, y) if 0 <= u < W and 0 <= v < H]
+            chance = NEAR_GIANT if "G" in near else NEAR_DISK if "w" in near else 0
+            if chance and (x * 7919 + y * 104729) % 100 < chance * 100:
+                grid[y][x] = grid[y][W - 1 - x] = "a"
+    return grid
+
+
 def barriers(grid):
     W = len(grid[0])
     for ch, hexes in BARRIERS + CENTRE_BARRIERS:
@@ -335,7 +355,7 @@ def write(grid, keeps, path, table=T, base_only=("Yk", "Ys^Vyp")):
 
 if __name__ == "__main__":
     grid, keeps = pad_top(*build())
-    grid = centrepieces(barriers(grid))
+    grid = asteroid_skirts(centrepieces(barriers(grid)))
     write(grid, keeps,
           os.path.join(sys.argv[1], "maps/4p_Manufacturing_Consent.map"))
     write(grid, keeps, os.path.join(

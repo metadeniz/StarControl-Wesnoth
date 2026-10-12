@@ -250,7 +250,7 @@ heat-proof Chenjesu (2 / 50%) are at home in red nebulae.
   dense asteroids, deep water → badlands, shallow water and swamp → light
   badlands, ford → thin badlands, castles (also ruins in water or swamp)
   → docking rings, villages → planets, impassable → star (touching impassable hexes →
-  asteroid wall). Isar's Cross, The Freelands, Weldyn Channel, Fallenstar
+  debris disk). Isar's Cross, The Freelands, Weldyn Channel, Fallenstar
   Lake and Caves of the Basilisk were made this way. Extra `X,Y=CODE`
   arguments place terrain afterwards; the Caves' statues became black
   holes: `27,14=Ys^Yxb 40,8=Ys^Yxb 39,8=Ys^Yxb 2,11=Ys^Yxb 8,18=Ys^Yxb
