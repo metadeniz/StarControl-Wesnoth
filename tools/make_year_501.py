@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Write maps/6p_Hegemony_or_Survival_West_East.map.
+"""Write maps/6p_Year_501.map.
 
-The team version of Hegemony or Survival (the six-player version is a
-hexagon, tools/make_hegemony_or_survival.py). An original space map for
-2 vs. 2 (or 3 vs. 3): west against east, with
-three starbases on each side so a 2 vs. 2 game can start from different
-places. Only the west half is laid out here; the east half is its mirror
+Year 501: an original space map for 2 vs. 2 (or 3 vs. 3), west against
+east, with three starting starbases on each side so a 2 vs. 2 game can
+start from different places, and three small forward starbases a side
+with one docking ring each (it began as the team version of Hegemony or
+Survival, tools/make_hegemony_or_survival.py). Only the west half is laid out here; the east half is its mirror
 image, hex for hex (the map is an odd number of hexes wide, so the middle
 column mirrors onto itself and every hex keeps its neighbours).
 
@@ -23,7 +23,7 @@ Ideas taken from the mod's other maps:
 - Isar's Cross: a ring of light badlands round the central nebula, for
   close fighting round the middle.
 
-Usage: make_hegemony_or_survival_west_east.py <add-on dir> [-v]
+Usage: make_year_501.py <add-on dir> [-v]
 """
 
 import heapq
@@ -151,10 +151,13 @@ def lake(m, line):
                 m.put(u, v, "b")
 
 
-def keep(m, x, y, rings):
+def keep(m, x, y, rings, skip=()):
+    """A starbase with docking rings on its neighbours (rings: how many,
+    skipping the neighbours in skip)."""
     m.put(x, y, "K")
-    for u, v in rings:
-        m.put(u, v, "c")
+    for u, v in [h for h in neighbours(x, y) if h not in skip][:rings]:
+        if 0 <= u < W and 0 <= v < H:
+            m.put(u, v, "c")
 
 
 def build():
@@ -172,7 +175,7 @@ def build():
     # ---------------------------------------------------- the north-west
     # start, Media Control style: a river of light badlands round the
     # corner, two fords out
-    keep(m, 4, 3, [(3, 3), (3, 4), (5, 3), (5, 4), (4, 4)])
+    keep(m, 4, 3, 5, skip=[(4, 2)])
     m.hexes(path([(0, 7), (7, 7), (9, 4), (9, 0)]), "b")
     m.hexes([(3, 7), (9, 2)], "f")                   # the two fords
     m.hexes([(1, 1), (7, 1)], "p")                   # home planets
@@ -180,7 +183,7 @@ def build():
 
     # -------------------------------------------- the west start, on the
     # edge, screened by debris disks (Manufacturing Consent)
-    keep(m, 1, 14, [(1, 13), (1, 15), (0, 13), (0, 14), (2, 13), (2, 14)])
+    keep(m, 1, 14, 6)
     m.hexes([(5, 12), (5, 13), (6, 12)], "w")
     m.hexes([(5, 16), (5, 17), (6, 17)], "w")
     m.hexes([(1, 11), (1, 17), (4, 14)], "p")
@@ -188,7 +191,7 @@ def build():
 
     # ------------------------------------ the south-west start, by a long
     # badland lake reaching to the south edge (Understanding Power)
-    keep(m, 4, 25, [(3, 25), (3, 26), (5, 25), (5, 26), (4, 24)])
+    keep(m, 4, 25, 5, skip=[(4, 26)])
     lake(m, [(8, 23), (9, 24), (9, 25), (10, 26), (10, 27), (11, 28)])
     m.hexes([(9, 27)], "f")                          # a calm passage
     m.hexes([(10, 24)], "q")                         # a sea planet in it
@@ -222,7 +225,7 @@ def build():
     m.hexes([(12, 2), (16, 1)], "p")
     # a brown dwarf in a nebula, a planet in asteroids beside it
     m.blob(15, 8, 1, "n")
-    m.big_object(diamond_slant(15, 8), ("Ygg3", "Ygg4"), "n")
+    m.big_object(diamond_slant(15, 8), ("Ygg1", "Ygg2"), "n")
     m.hexes([(13, 7)], "a")
     m.hexes([(13, 8)], "p")
     # south: a dark star in its dark nebula
@@ -269,6 +272,12 @@ def build():
     m.big_object(diamond_across(MID, 24), "Ygc", "R")
     m.hexes([(20, 28)], "p")
     m.blob(20, 28, 1, "a", keep="pR")
+    # small starbases with one docking ring, three a side: in front of the
+    # middle start, by the brown dwarf and by the dark star
+    for (x, y), ring in [((7, 14), (8, 14)), ((17, 10), (18, 10)),
+                         ((17, 21), (18, 21))]:
+        m.put(x, y, "K")
+        m.put(*ring, "c")
     return m
 
 
@@ -338,7 +347,7 @@ def report(m):
 
 if __name__ == "__main__":
     m = build()
-    write(m, os.path.join(sys.argv[1], "maps/6p_Hegemony_or_Survival_West_East.map"))
+    write(m, os.path.join(sys.argv[1], "maps/6p_Year_501.map"))
     report(m)
     if "-v" in sys.argv:
         for row in m.g:

@@ -48,7 +48,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | 4p — Manufacturing Consent | 2 vs 2 (west, players 1 & 3, vs east, players 2 & 4) |
 | 4p — Media Control | 2 vs 2, one player in each corner (players 1 & 3, northwest and southeast, vs 2 & 4, northeast and southwest) |
 | 6p — Hegemony or Survival | 2 vs 2 or 3 vs 3 on a hexagon, a player in each corner, numbered clockwise from the north: odd vs even; for 2 vs 2 leave one odd and one even side empty |
-| 6p — Hegemony or Survival (West vs. East) | 2 vs 2 or 3 vs 3, west (players 1, 3 & 5) vs east (2, 4 & 6); for 2 vs 2 leave a mirrored pair empty: 1 & 2 north, 3 & 4 middle, 5 & 6 south |
+| 6p — Year 501 | 2 vs 2 or 3 vs 3, west (players 1, 3 & 5) vs east (2, 4 & 6); for 2 vs 2 leave a mirrored pair empty: 1 & 2 north, 3 & 4 middle, 5 & 6 south |
 | 2p — The Freelands (Deep Space) | 1 vs 1 |
 | 2p — Weldyn Channel (Deep Space) | 1 vs 1 |
 | 2p — Fallenstar Lake (Deep Space) | 1 vs 1 |
@@ -242,9 +242,9 @@ heat-proof Chenjesu (2 / 50%) are at home in red nebulae.
   Wesnoth terrain.
 - `tools/make_hegemony_or_survival.py .` regenerates Hegemony or Survival, an
   original 6-player map on a hexagon, the same in all six corners (turned
-  and mirrored hex for hex), and
-  `tools/make_hegemony_or_survival_west_east.py .` its team version, west vs
-  east, mirrored west to east; both print each start's planet distances as
+  and mirrored hex for hex), and `tools/make_year_501.py .` regenerates
+  Year 501, an original team map, west vs east, mirrored west to east; both
+  print each start's planet distances as
   a balance check.
 - `tools/grid_overlay.py <map> <render.png> <out.png>` draws a hex grid with
   each hex's in-game coordinates over a `wesnoth --screenshot` render of the

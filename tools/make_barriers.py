@@ -9,8 +9,9 @@ Two kinds:
   its neighbours, so a blob reads as one cloud with a soft edge. This file
   only paints the clouds; make_art.py cuts them into hexes.
 * Single objects, drawn as overlays: black hole (four of them, picked per
-  hex), pulsar, and four that span four hexes: brown dwarf, supermassive
-  black hole, globular cluster and red supergiant (in its debris disk).
+  hex), pulsar, and five that span four hexes: brown dwarf, supergiant,
+  supermassive black hole, globular cluster and red supergiant (in its
+  debris disk).
 """
 import math
 
@@ -332,6 +333,8 @@ BROWN_DWARFS = [
     [(40, 22, 8), (195, 140, 50), (240, 200, 105), (255, 235, 170), (225, 100, 40), (3, 5), 0.0, "mottled"],  # mottled brown and ochre
     [(18, 10, 8), (70, 45, 30), (200, 95, 35), (255, 180, 100), (190, 90, 50), (3, 5), 0.25],      # dark, nearly cold
 ]
+# the looks kept for the maps, in order: the magenta and the mottled ones
+BROWN_DWARFS_KEPT = [5, 6]
 
 
 def _stretched(rng, s, octaves, base, sx=4):
@@ -402,6 +405,77 @@ def brown_dwarf(rng, style):
     out.alpha_composite(_rgba(np.broadcast_to(glow, (size, size, 3)), ga))
     out.alpha_composite(globe, ((size - globe.width) // 2,) * 2)
     return out
+
+# Supergiants: the biggest stars, each filling four hexes. Their colour
+# follows their surface heat, as on a star chart: blue (hottest, like
+# Rigel), white (like Deneb), yellow (like Rho Cassiopeiae), orange and
+# red (coolest, like Betelgeuse), and one green, which no real star shows
+# (a star that shines brightest in green looks white to the eye).
+# Each: core, middle, limb, glow; how big and bold its convection cells
+# are (cells across the disc, contrast), and how far the glow reaches.
+SUPERGIANT_D = 146             # a little bigger than a brown dwarf
+SUPERGIANT_SIZE = 216          # room for the glow round it
+SUPERGIANTS = [
+    [(255, 255, 240), (255, 222, 110), (205, 120, 25), (255, 205, 80), (10, 0.45), 1.0],    # yellow
+    [(240, 246, 255), (150, 182, 255), (70, 95, 225), (120, 165, 255), (32, 0.18), 1.5],    # blue
+    [(255, 205, 150), (230, 85, 35), (105, 18, 8), (225, 55, 25), (6, 0.6), 0.9],           # red
+    [(255, 255, 255), (228, 234, 255), (160, 175, 225), (215, 225, 255), (24, 0.18), 1.3],  # white
+    [(235, 255, 230), (110, 235, 135), (20, 120, 60), (90, 235, 120), (20, 0.3), 1.1],      # green
+    [(255, 240, 200), (255, 160, 65), (170, 65, 15), (255, 130, 45), (9, 0.45), 0.95],      # orange
+]
+
+
+def _cells(rng, s, n, R, warp):
+    """Cellular noise over a disc of radius R, its grid warped by up to
+    warp pixels so the cells are not straight-edged: (distance to the
+    nearest of n random points minus to the next nearest, which is 0 on
+    the lanes between cells; and each pixel's cell's own brightness)."""
+    x, y = _grid(s)
+    x = x + warp * (_noise(rng, s, 4, 4) - 0.5) * 2
+    y = y + warp * (_noise(rng, s, 4, 4) - 0.5) * 2
+    a = rng.uniform(0, 2 * np.pi, n); q = R * 1.1 * np.sqrt(rng.uniform(0, 1, n))
+    px, py, lum = q * np.cos(a), q * np.sin(a), rng.uniform(0, 1, n)
+    d = np.stack([np.hypot(x - u, y - v) for u, v in zip(px, py)])
+    order = np.argsort(d, axis=0)[:2]
+    d1 = np.take_along_axis(d, order[:1], 0)[0]
+    d2 = np.take_along_axis(d, order[1:2], 0)[0]
+    return d2 - d1, lum[order[0]]
+
+
+def supergiant(rng, style):
+    """A supergiant star: a bright disc dimming towards its limb, mottled
+    by convection cells (few and huge in the cool red ones, fine in the
+    hot blue ones), flares licking off its edge, and a wide soft glow."""
+    core, mid, limb, glow = [np.array(c, np.float32) for c in style[:4]]
+    (n, contrast), reach = style[4], style[5]
+    s = SUPERGIANT_SIZE * S
+    x, y = _grid(s)
+    R = SUPERGIANT_D / 2 * S
+    r = np.hypot(x, y)
+    mu = np.sqrt(np.clip(1 - (r / R) ** 2, 0, 1))
+    size = R * 1.8 / np.sqrt(n)                    # a cell's rough width
+    lane, lum = _cells(rng, s, n, R, 0.35 * size)
+    lane = np.clip(lane / (0.6 * size), 0, 1)
+    lane = lane * lane * (3 - 2 * lane)
+    wob = _noise(rng, s, 4, 10)
+    gran = _fblur(np.clip(lane * (0.6 + 0.4 * lum) + 0.3 * (wob - 0.5), 0, 1), 0.08 * size)
+    heat = np.clip(mu ** 0.5 * (1 - contrast + contrast * gran), 0, 1)
+    rgb = np.where(heat[..., None] < 0.6,
+                   _mix(limb, mid, np.clip(heat / 0.6, 0, 1)),
+                   _mix(mid, core, np.clip((heat - 0.6) / 0.4, 0, 1) ** 1.3))
+    disc = np.clip(R - r + 1, 0, 1)
+    # flares: ragged tongues of glow just past the limb
+    flick = _noise(rng, s, 4, 7)
+    out_r = np.clip(r - R, 0, None)
+    tongue = np.clip((flick - 0.5) / 0.3, 0, 1) * np.exp(-out_r / (0.07 * R))
+    halo = 0.8 * np.exp(-out_r / (0.1 * R * reach)) + 0.4 * np.exp(-out_r / (0.3 * R * reach))
+    edge = np.clip((s / 2 - r) / (0.1 * s), 0, 1) ** 1.5  # gone by the image's edge
+    ga = np.clip(halo * (0.75 + 0.5 * flick) + tongue * 0.7, 0, 1) * (1 - disc) * edge
+    grgb = _mix(glow, _mix(limb, mid, np.full_like(r, 0.6)), np.clip(np.exp(-out_r / (0.04 * R)), 0, 1) * 0.5)
+    grgb = _mix(grgb, core, np.clip(tongue * 0.5, 0, 1))
+    out = _rgba(rgb * disc[..., None] + grgb * (1 - disc)[..., None], np.clip(disc + ga, 0, 1))
+    return out.resize((SUPERGIANT_SIZE, SUPERGIANT_SIZE), Image.LANCZOS)
+
 
 def gas_giant(rng, palette):
     g = banded_sphere(rng, GIANT_D * 2, palette).resize((GIANT_D + 8, GIANT_D + 8), Image.LANCZOS)
@@ -767,17 +841,19 @@ def build_objects(rng, out, save, apply_mask, starfield, mask):
         # drawn (so the art after them stays the same) but not saved: the
         # gas giants became brown dwarfs, drawn below with their own seed
         gas_giant(rng, pal)
-    # Brown dwarfs, with their own seed.
+    # Brown dwarfs, with their own seed. All eight looks are still drawn,
+    # so the two kept stay the same, but only those two are saved.
     wrng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 7)
     dwarfs = []
     for i, pal in enumerate(BROWN_DWARFS):
         img = brown_dwarf(wrng, pal)
         dwarfs.append(img)
-        save(img, out, f"images/terrain/sc/brown-dwarf{'' if i == 0 else i + 1}.png", False)
         if i == 0:
             tile = apply_mask(starfield(wrng), mask)
-            tile.alpha_composite(img.resize((HEX - 4, HEX - 4), Image.LANCZOS), (2, 2))
-            save(apply_mask(tile, mask), out, "images/terrain/sc/brown-dwarf-tile.png", False)
+    for n, i in enumerate(BROWN_DWARFS_KEPT):
+        save(dwarfs[i], out, f"images/terrain/sc/brown-dwarf{'' if n == 0 else n + 1}.png", False)
+    tile.alpha_composite(dwarfs[BROWN_DWARFS_KEPT[0]].resize((HEX - 4, HEX - 4), Image.LANCZOS), (2, 2))
+    save(apply_mask(tile, mask), out, "images/terrain/sc/brown-dwarf-tile.png", False)
     # More black holes, added later with their own seed so the art above stays the same.
     brng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 1)
     for i, style in enumerate(BLACK_HOLES[1:]):
@@ -789,9 +865,10 @@ def build_objects(rng, out, save, apply_mask, starfield, mask):
     for name, (code, dark, light) in GIANT_VEILS.items():
         for i, img in enumerate(dwarfs):
             veil = veiled(vrng, img, dark, light)
-            if code.startswith("Yq"):       # impassable: no brown dwarfs there
-                continue
-            save(veil, out, f"images/terrain/sc/brown-dwarf-{name}{'' if i == 0 else i + 1}.png", False)
+            if code.startswith("Yq") or i not in BROWN_DWARFS_KEPT:
+                continue        # no brown dwarfs in impassable clouds
+            n = BROWN_DWARFS_KEPT.index(i)
+            save(veil, out, f"images/terrain/sc/brown-dwarf-{name}{'' if n == 0 else n + 1}.png", False)
     # The four-hex black holes and globular clusters, also with their own seed.
     grng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 2)
     for name, make, styles in [("black-hole-big", big_black_hole, BIG_BLACK_HOLES),
@@ -823,3 +900,12 @@ def build_objects(rng, out, save, apply_mask, starfield, mask):
             tile = apply_mask(starfield(drng), mask)
             tile.alpha_composite(img.resize((HEX - 4, HEX - 4), Image.LANCZOS), (2, 2))
             save(apply_mask(tile, mask), out, "images/terrain/sc/dark-star-tile.png", False)
+    # The supergiants, with their own seed.
+    urng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 8)
+    for i, style in enumerate(SUPERGIANTS):
+        img = supergiant(urng, style)
+        save(img, out, f"images/terrain/sc/supergiant{i + 1}.png", False)
+        if i == 0:
+            tile = apply_mask(starfield(urng), mask)
+            tile.alpha_composite(img.resize((HEX - 4, HEX - 4), Image.LANCZOS), (2, 2))
+            save(apply_mask(tile, mask), out, "images/terrain/sc/supergiant-tile.png", False)

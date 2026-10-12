@@ -22,8 +22,13 @@ Ideas taken from the mod's other maps:
 - Isar's Cross: a ring of light badlands round the central nebula, for
   close fighting round the middle, where a starbase waits.
 
-Brown dwarfs stand in nebulae between neighbours, never in impassable
-clouds. Outside the hexagon is the void (off the map).
+Six supergiants, one of each colour, stand in nebulae between neighbours,
+each with a small starbase (two docking rings) beside it. Three more small
+starbases, one docking ring each, wait outside every other ford into the
+central ring: one between each pair of neighbours 1 & 2, 3 & 4 and 5 & 6,
+so those three keep the map's three-way turn and its mirror images, but
+not the full six-way symmetry. Outside the hexagon is the void (off the
+map).
 
 Usage: make_hegemony_or_survival.py <add-on dir> [-v]
 """
@@ -247,11 +252,14 @@ def build():
         m.put(h, "B")
     m.edge([g for h in lake for g in images(*h)], "b")
     m.put(at(8, 8), "q")
-    # a brown dwarf in a nebula, nearer the centre
+    # a supergiant in a nebula, nearer the centre, each its own colour:
+    # yellow, blue, red, white, green, orange (^Ysu1..6), clockwise
     m.blob(at(5, 5), 1, "n")
-    # eight looks of brown dwarf: these six here, the other two on the
-    # West vs. East map
-    m.diamond(at(5, 5), ["Ygg5", "Ygg1", "Ygg6", "Ygg8", "Ygg7", "Ygg2"], "n")
+    m.diamond(at(5, 5), ["Ysu1", "Ysu2", "Ysu3", "Ysu4", "Ysu5", "Ysu6"], "n")
+    # and a small starbase beside it, two docking rings (a mirror pair, as
+    # one ring cannot sit on the mirror line)
+    m.put(at(6, 6), "K")
+    m.put(at(5, 6), "c")
 
     # -------------------------------- rich planets in asteroid fields
     m.blob(at(9, 3), 1, "a", keep="bfn")
@@ -275,7 +283,17 @@ def build():
     m.put((CX, CY), "K")
     for h in neighbours(CX, CY):
         m.put(h, "c")
+    # three small starbases with one docking ring, outside every other ford
+    # into the ring: turned three ways only, not mirrored
+    for k in INNER_SIDES:
+        x, y = at(3, 3, k)
+        m.g[y][x] = "K"
+        x, y = at(3, 2, k)
+        m.g[y][x] = "c"
     return m
+
+
+INNER_SIDES = (0, 2, 4)        # the sixths with an inner small starbase
 
 
 def keeps():
@@ -332,6 +350,9 @@ def report(m):
     print(f"{len(planets)} planets")
     ks = keeps()
     ds = [moves(m, k) for k in ks]
+    small = [(x, y) for y in range(H) for x in range(W)
+             if m.get(x, y) == "K" and (x, y) not in ks and (x, y) != (CX, CY)]
+    print(f"{len(small)} small starbases")
     open_hexes = {(x, y) for y in range(H) for x in range(W)
                   if inside(x, y) and m.get(x, y) not in BARRIER}
     print("unreachable:", sorted(open_hexes - set(ds[0])) or "none")
@@ -340,7 +361,8 @@ def report(m):
                      if d.get(p, 99) == min(e.get(p, 99) for e in ds))
         print(f"start {k[0] + 1},{k[1] + 1}: nearest planets {own}, "
               f"centre {d.get((CX, CY))}, neighbours "
-              f"{sorted(d.get(o) for o in ks if o != k)}")
+              f"{sorted(d.get(o) for o in ks if o != k)}, small starbases "
+              f"{sorted(d.get(b) for b in small)}")
 
 
 if __name__ == "__main__":
