@@ -9,8 +9,8 @@ Two kinds:
   its neighbours, so a blob reads as one cloud with a soft edge. This file
   only paints the clouds; make_art.py cuts them into hexes.
 * Single objects, drawn as overlays: black hole (four of them, picked per
-  hex), pulsar, and three that span four hexes: gas giant, supermassive
-  black hole and globular cluster.
+  hex), pulsar, and four that span four hexes: gas giant, supermassive
+  black hole, globular cluster and red supergiant (in its debris disk).
 """
 import math
 
@@ -444,6 +444,60 @@ def globular_cluster(rng, rc=13, rt=70, n=16000, warm=0.6):
     return out.resize((BIG, BIG), Image.LANCZOS)
 
 
+def red_supergiant(rng, n_rocks=420):
+    """A red supergiant seen through the debris disk round it: a huge,
+    dim, mottled red star (big convection cells, dark limb, a soft red
+    glow) with a tilted band of rocks across its face and more strewn over
+    it. Rocks against the star are dark, rimmed with its light on the side
+    facing it; those past its edge are lit from the star."""
+    S = 3
+    W = BIG * S
+    x, y = _grid(W)
+    R = GIANT_D / 2 * S
+    r = np.hypot(x, y)
+    mu = np.sqrt(np.clip(1 - (r / R) ** 2, 0, 1))
+    cells = _noise(rng, W, 3, 4)
+    grain = _noise(rng, W, 4, 14)
+    blobs = np.clip((cells - 0.35) * 2.2, 0, 1) ** 1.3
+    heat = np.clip(0.6 * blobs + 0.25 * grain + 0.2 * mu, 0, 1) * (0.35 + 0.65 * mu ** 0.8)
+    cols = np.array([(45, 4, 4), (120, 16, 10), (190, 40, 18), (235, 90, 35), (255, 165, 90)], np.float32)
+    idx = np.clip(heat * 1.15 * (len(cols) - 1), 0, len(cols) - 1.001); lo = np.floor(idx).astype(int)
+    f = (idx - lo)[..., None]
+    rgb = cols[lo] * (1 - f) + cols[lo + 1] * f
+    disc = np.clip(R - r + 1, 0, 1)
+    glow = np.exp(-np.clip(r - R, 0, None) / (7 * S)) * 0.75 * (1 - disc)
+    glow_rgb = np.broadcast_to(np.array([200, 35, 20], np.float32), rgb.shape)
+    out = _rgba(rgb * disc[..., None] + glow_rgb * (1 - disc)[..., None], np.clip(disc + glow, 0, 1))
+    # the rocks: most in a tilted band across the star, the rest strewn
+    d = ImageDraw.Draw(out)
+    tilt, ang = rng.uniform(0.25, 0.4), math.radians(rng.uniform(-25, -10))
+    for i in range(n_rocks):
+        if i < n_rocks * 0.7:                       # the band
+            t = rng.uniform(-1, 1)
+            u, v = t * R * 1.08, rng.normal(0, 0.16) * R * tilt * 2
+            px = u * math.cos(ang) - v * math.sin(ang)
+            py = u * math.sin(ang) + v * math.cos(ang)
+        else:                                       # strewn over the star
+            a, q = rng.uniform(0, 2 * math.pi), R * math.sqrt(rng.uniform(0, 1)) * 0.95
+            px, py = q * math.cos(a), q * math.sin(a)
+        size = S * min(0.7 + rng.pareto(2.6) * 1.0, 4.5)
+        k = int(rng.integers(6, 10))
+        pts = [(px + math.cos(2 * math.pi * j / k) * size * rng.uniform(0.6, 1.25),
+                py + math.sin(2 * math.pi * j / k) * size * rng.uniform(0.6, 1.25)) for j in range(k)]
+        q = math.hypot(px, py)
+        to_star = (-px / q, -py / q) if q > 1 else (0.0, -1.0)
+        on_star = q < R
+        shade = rng.uniform(0.7, 1.2)
+        rim = tuple(int(v * shade) for v in ((255, 110, 55) if on_star else (200, 120, 90)))
+        body = tuple(int(v * shade) for v in ((32, 20, 18) if on_star else (90, 68, 60)))
+        c = W / 2
+        sh = size * 0.3
+        d.polygon([(c + X + to_star[0] * sh, c + Y + to_star[1] * sh) for X, Y in pts], fill=rim + (255,))
+        d.polygon([(c + X - to_star[0] * sh * 0.5, c + Y - to_star[1] * sh * 0.5) for X, Y in pts],
+                  fill=body + (255,))
+    return out.resize((BIG, BIG), Image.LANCZOS)
+
+
 # A gas giant standing in a cloud has wisps of that cloud drifting in front
 # of it: (dark, light) colours of each cloud's veil, and its terrain code.
 GIANT_VEILS = {
@@ -518,6 +572,13 @@ def build_objects(rng, out, save, apply_mask, starfield, mask):
                 tile = apply_mask(starfield(grng), mask)
                 tile.alpha_composite(img.resize((HEX - 4, HEX - 4), Image.LANCZOS), (2, 2))
                 save(apply_mask(tile, mask), out, f"images/terrain/sc/{name}-tile.png", False)
+    # The red supergiant in its debris disk, with its own seed.
+    srng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 5)
+    img = red_supergiant(srng)
+    save(img, out, "images/terrain/sc/red-supergiant.png", False)
+    tile = apply_mask(starfield(srng), mask)
+    tile.alpha_composite(img.resize((HEX - 4, HEX - 4), Image.LANCZOS), (2, 2))
+    save(apply_mask(tile, mask), out, "images/terrain/sc/red-supergiant-tile.png", False)
     mrng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 4)
     for i, style in enumerate(BIG_BLACK_HOLES_MORE):
         save(big_black_hole(mrng, **style), out,

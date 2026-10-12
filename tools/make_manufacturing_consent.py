@@ -39,13 +39,13 @@ T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
      "s": "Yis", "m": "Yr",
      # barriers that replace most of the asteroid walls (see BARRIERS)
      "D": "Yqd", "R": "Yqr", "P": "Yqp", "E": "Yqe", "G": "Yqd^Ygg",
-     "H": "Yqr^Ygc", "X": "Yqe^Yxb", "U": "Yqr^Yxp", "S": "Ys^Yx",
+     "H": "Yqr^Ygc", "X": "Yqe^Yxb", "U": "Yqr^Yxp", "S": "Ys^Yx", "M": "Ys^Ysg",
      "O": "Yqe^Ybh", "T": "Yqp^Yx", "V": "Yqp^Yxp",
      **{str(n): f"Yqe^Ybh{n}" for n in range(1, 7)}}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "r": "Re", "B": "Wo", "f": "Wo^Bsb\\",
            "s": "Ss", "m": "Gg^Tf"}
-WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUSOTV123456"})
+WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUSOTVM123456"})
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 
 # The north-west quarter, in screenshot pixels (x < 562, y < 485)
@@ -329,6 +329,11 @@ HAND_EDITS = [
     *[((x, y), "B") for x in (23, 19) for y in (21, 8)],
     # 1,16 kept open
     *[((x, y), ".") for x in (1, 41) for y in (16, 13)],
+    # a red supergiant in its debris disk, its top at 5,16 and 6,16
+    # (mirrored west to east only)
+    *[((x, y), "M") for x in (5, 6, 36, 37) for y in (16, 17)],
+    # the channel's south crossing becomes red nebula
+    ((21, 22), "m"),
 ]
 
 
