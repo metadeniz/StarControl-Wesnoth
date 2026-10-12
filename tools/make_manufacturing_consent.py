@@ -390,6 +390,9 @@ HAND_EDITS = [
     # ways)
     *[(h, ch) for xy, ch in [((9, 5), "p"), ((10, 5), "a")]
       for h in mirrored4(*xy)],
+    # 2,15 and 4,14 open, 1,16 an asteroid field (mirrored west to east)
+    ((2, 15), "."), ((40, 15), "."), ((4, 14), "."), ((38, 14), "."),
+    ((1, 16), "a"), ((41, 16), "a"),
 ]
 
 
