@@ -44,11 +44,11 @@ T = {".": "Ys", "n": "Yn", "r": "Yr", "d": "Yd", "B": "Yi", "b": "Yis",
 # the impassable clouds, by corner: X is the cloud, O its heart. They all
 # block alike, so the six-way symmetry of play holds.
 FLAVOURS = [("Yqe", "Yqe^Yxb1"),      # gravity eddy round a black hole
-            ("Yqp", "Yqp^Yx"),        # plasma storm round a sun
+            ("Yqp", "Yqp^Yxs4"),      # plasma storm round a big cyan sun
             ("Yqr", "Yqr^Yxp"),       # radiation zone round a pulsar
             ("Yqd", "Yqd^Yx"),        # dark nebula round a star
             ("Yqe", "Yqe^Yxb3"),      # gravity eddy round a red black hole
-            ("Yqp", "Yqp^Yx")]        # plasma storm round a sun
+            ("Yqp", "Yqp^Yxs5")]      # plasma storm round a pink sun
 BARRIER = "wXOZ "
 
 # a medium ship's moves into each terrain (README), for the balance check
@@ -109,6 +109,14 @@ def corner_of(x, y):
     px, py = 1.5 * (x - CX), math.sqrt(3) * (y - CY + 0.5 * (x & 1))
     angle = math.degrees(math.atan2(px, -py)) % 360
     return round(angle / 60) % 6
+
+
+def sixth_of(x, y):
+    """Which sixth between two corners a hex lies in: 0 between corners 0
+    and 1, and so on clockwise."""
+    px, py = 1.5 * (x - CX), math.sqrt(3) * (y - CY + 0.5 * (x & 1))
+    angle = math.degrees(math.atan2(px, -py)) % 360
+    return int(angle // 60) % 6
 
 
 def path(a, b):
@@ -187,7 +195,9 @@ class Map:
         for h in d:
             for x, y in images(*h):
                 self.g[y][x] = "Z"
-                self.big[x, y] = f"{T[under]}^{code}"
+                # each copy its own look: code is a list, one per sixth,
+                # clockwise from the one between corners 0 and 1
+                self.big[x, y] = f"{T[under]}^{code[sixth_of(x, y)]}"
         return d
 
 
@@ -239,7 +249,9 @@ def build():
     m.put(at(8, 8), "q")
     # a brown dwarf in a nebula, nearer the centre
     m.blob(at(5, 5), 1, "n")
-    m.diamond(at(5, 5), "Ygg", "n")
+    # eight looks of brown dwarf: these six here, the other two on the
+    # West vs. East map
+    m.diamond(at(5, 5), ["Ygg5", "Ygg1", "Ygg6", "Ygg8", "Ygg7", "Ygg2"], "n")
 
     # -------------------------------- rich planets in asteroid fields
     m.blob(at(9, 3), 1, "a", keep="bfn")

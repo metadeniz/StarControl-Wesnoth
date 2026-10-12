@@ -222,7 +222,7 @@ def build():
     m.hexes([(12, 2), (16, 1)], "p")
     # a brown dwarf in a nebula, a planet in asteroids beside it
     m.blob(15, 8, 1, "n")
-    m.big_object(diamond_slant(15, 8), "Ygg", "n")
+    m.big_object(diamond_slant(15, 8), ("Ygg3", "Ygg4"), "n")
     m.hexes([(13, 7)], "a")
     m.hexes([(13, 8)], "p")
     # south: a dark star in its dark nebula
@@ -303,6 +303,8 @@ def write(m, path):
             y = min(max(Y - 1, 0), H - 1)
             ch = m.get(x, y)
             code = m.big.get((x, y), T.get(ch))
+            if ch == "s":           # each storm's sun its own look
+                code = "Yqp^Yxs3" if x < MID else "Yqp^Yxs6"
             border = (X - 1, Y - 1) != (x, y)
             if border:
                 # the border shows the terrain next to it, but no

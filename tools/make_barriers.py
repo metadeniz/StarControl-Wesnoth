@@ -321,10 +321,16 @@ def banded_sphere(rng, d, palette, light=(-0.55, -0.55, 0.63)):
 # Brown dwarfs: failed stars, still glowing with the heat of their birth.
 # Each look: dark band, light band, hot streak, white-hot core, corona.
 BROWN_DWARFS = [
-    [(45, 8, 4), (175, 50, 14), (255, 125, 25), (255, 225, 130), (255, 150, 40)],    # ember
-    [(55, 6, 4), (200, 35, 12), (255, 95, 20), (255, 215, 110), (255, 120, 30)],     # red-hot
-    [(30, 14, 8), (110, 60, 28), (230, 140, 60), (255, 225, 160), (240, 150, 70)],   # brown, banded
-    [(22, 4, 6), (100, 22, 22), (240, 80, 40), (255, 190, 110), (230, 90, 60)],     # dim
+    # dark band, light band, hot streak, white-hot core, corona; then how
+    # many bands (from, to) and how much of the deck breaks open (0..1)
+    [(45, 8, 4), (175, 50, 14), (255, 125, 25), (255, 225, 130), (255, 150, 40), (5, 8), 0.5],     # ember
+    [(55, 6, 4), (200, 35, 12), (255, 95, 20), (255, 215, 110), (255, 120, 30), (5, 8), 0.5],      # red-hot
+    [(30, 14, 8), (110, 60, 28), (230, 140, 60), (255, 225, 160), (240, 150, 70), (5, 8), 0.5],    # brown, banded
+    [(22, 4, 6), (100, 22, 22), (240, 80, 40), (255, 190, 110), (230, 90, 60), (5, 8), 0.5],       # dim
+    [(38, 22, 8), (115, 72, 30), (255, 225, 40), (255, 252, 190), (255, 215, 60), (6, 9), 0.75],   # brown and bright yellow
+    [(40, 8, 30), (140, 35, 95), (255, 95, 165), (255, 215, 235), (235, 95, 185), (4, 6), 0.4],    # magenta (the coolest)
+    [(50, 26, 6), (190, 105, 20), (255, 185, 40), (255, 240, 170), (255, 175, 50), (8, 12), 0.6],  # amber, fine bands
+    [(18, 10, 8), (70, 45, 30), (200, 95, 35), (255, 180, 100), (190, 90, 50), (3, 5), 0.25],      # dark, nearly cold
 ]
 
 
@@ -339,7 +345,8 @@ def brown_dwarf(rng, style):
     """Lit from inside, not by a sun: dark bands and glowing ones, with hot
     streaks where the cloud deck breaks open, dimmer at the limb, and a
     ragged corona brightest on one side."""
-    dark, mid, hot, core, glow = [np.array(c, np.float32) for c in style]
+    dark, mid, hot, core, glow = [np.array(c, np.float32) for c in style[:5]]
+    (k0, k1), breaks = style[5], style[6]
     d = GIANT_D * 2; s = d + 8
     x, y = _grid(s); r = d / 2
     nx, ny = x / r, y / r; d2 = nx ** 2 + ny ** 2
@@ -350,13 +357,14 @@ def brown_dwarf(rng, style):
     warp = _noise(rng, s, 4, 3) - 0.5
     lat = lat + 0.10 * warp + 0.06 * (_stretched(rng, s, 4, 5) - 0.5) + 0.03 * np.sin(nx * rng.uniform(5, 9) + rng.uniform(0, 6.3))
     # dark and light bands
-    k = rng.uniform(5, 8)
+    k = rng.uniform(k0, k1)
     bands = 0.5 + 0.5 * np.sin(lat * np.pi * k + rng.uniform(0, 6.3))
     bands = np.clip(bands * 0.6 + 0.6 * _stretched(rng, s, 5, 4) - 0.1, 0, 1)
     # hot streaks: ragged ridges of the smeared noise, glowing where the
     # cloud deck breaks open, mostly inside the light bands
     st = _ridged(_stretched(rng, s, 5, 6, 5))
-    streak = np.clip((st - 0.70) / 0.25, 0, 1) ** 1.1 * np.clip(bands * 1.8 - 0.35, 0, 1)
+    cut = 0.70 + 0.2 * (0.5 - breaks)
+    streak = np.clip((st - cut) / 0.25, 0, 1) ** 1.1 * np.clip(bands * 1.8 - 0.35, 0, 1)
     flecks = np.clip((_stretched(rng, s, 3, 16, 3) - 0.78) / 0.22, 0, 1) * bands
     heat = np.clip(streak + flecks * 0.5, 0, 1)
     rgb = dark + (mid - dark) * bands[..., None]

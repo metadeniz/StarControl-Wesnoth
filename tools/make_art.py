@@ -1466,9 +1466,18 @@ STORM_STARS = [((90, 150, 255), (220, 235, 255)),    # blue
 # ...a purple one for gravity eddies and an orange one for dust clouds
 OTHER_STARS = {"star-eddy": ((185, 90, 255), (235, 210, 255)),
                "star-dust": ((255, 140, 30), (255, 220, 160))}
+# The suns at the heart of plasma storms, each its own: corona and core
+# colours, the core's radius and how many rays the corona has (^Yxs1 to
+# ^Yxs6 always draw the same one; a plain ^Yx in a plasma storm picks one).
+PLASMA_STARS = [((90, 150, 255), (220, 235, 255), 17, (11, 7)),     # blue giant
+                ((235, 240, 255), (255, 255, 255), 11, (13, 5)),    # small white dwarf
+                ((150, 110, 255), (225, 215, 255), 15, (9, 4)),     # violet
+                ((60, 220, 255), (210, 250, 255), 20, (7, 11)),     # big cyan
+                ((255, 110, 200), (255, 220, 240), 14, (11, 3)),    # pink
+                ((255, 205, 120), (255, 245, 215), 13, (15, 6))]    # pale gold
 
 
-def star_image(tex, corona_rgb=None, core_rgb=None):
+def star_image(tex, corona_rgb=None, core_rgb=None, core_r=17, rays=(11, 7)):
     """A sun on a STAR_SIZE square: a white-hot core in a rayed corona and a
     soft glow that fades out beyond its hex. Yellow unless given colours."""
     s = STAR_SIZE
@@ -1476,8 +1485,7 @@ def star_image(tex, corona_rgb=None, core_rgb=None):
     c = (s - 1) / 2
     d = np.sqrt((xx - c) ** 2 + (yy - c) ** 2)
     ang = np.arctan2(yy - c, xx - c)
-    rays = 0.5 + 0.5 * np.sin(ang * 11 + 1.3) * np.sin(ang * 7)
-    core_r = 17
+    rays = 0.5 + 0.5 * np.sin(ang * rays[0] + 1.3) * np.sin(ang * rays[1])
     corona = np.clip(1 - (d - core_r) / (11 + 9 * rays), 0, 1) ** 1.6
     glow = np.clip(1 - (d - core_r) / (s / 2 - core_r - 2), 0, 1) ** 2.4 * 0.55
     core = np.clip(core_r + 1 - d, 0, 1)
@@ -1509,6 +1517,9 @@ def build_star(rng, out):
              f"images/terrain/sc/star-storm{i + 2}.png", False)
     for name, (corona_rgb, core_rgb) in OTHER_STARS.items():
         save(star_image(tex, corona_rgb, core_rgb), out, f"images/terrain/sc/{name}.png", False)
+    for i, (corona_rgb, core_rgb, core_r, rays) in enumerate(PLASMA_STARS):
+        save(star_image(tex, corona_rgb, core_rgb, core_r, rays), out,
+             f"images/terrain/sc/star-plasma{i + 1}.png", False)
     tile = apply_mask(starfield(rng), hex_mask_cache)
     o = (s - HEX) // 2
     tile.alpha_composite(img.crop((o, o, o + HEX, o + HEX)))
