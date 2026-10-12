@@ -195,22 +195,24 @@ end
 -- Each player hears their own faction's playlist (the scenario's default is
 -- the Alliance one, which spectators and AI-only games keep). Music is not
 -- game state, so playing it only on the local client is safe in multiplayer.
+-- Track files are prefixed with their faction: 0. shared, 1. Alliance,
+-- 2. Hierarchy, 3. New Alliance, 4. Death March.
 local PLAYLISTS = {
-	SC_Alliance = { "commander", "chenjesu-titus", "mmrnmhrm-titus", "yehat", "syreen", "arilou", "shofixti", "quasispace", "quasispace-3do",
-		"intro", "victory", "starbase", "outfit" },
+	SC_Alliance = { "1. commander", "1. chenjesu-titus", "1. mmrnmhrm-titus", "1. yehat", "1. syreen", "1. arilou", "1. shofixti", "1. quasispace", "1. quasispace-3do",
+		"1. intro", "1. victory", "0. starbase", "1. outfit" },
 	-- the New Alliance hears the Precursors' remixes (and a cover and a
 	-- re-imagined Melnorme theme)
-	SC_NewAlliance = { "remix-chmmr", "remix-zoqfotpik", "remix-pkunk", "remix-supox", "remix-utwig",
-		"remix-utwig-ultron", "remix-commander", "remix-arilou", "remix-melnorme", "melnorme-lipavsky", "remix-syreen", "syreen-ramen-rider",
-		"remix-mystic-shadows", "remix-quasispace", "remix-intro", "remix-ending", "remix-starbase",
-		"remix-outfit" },
+	SC_NewAlliance = { "3. remix-chmmr", "3. remix-zoqfotpik", "3. remix-pkunk", "3. remix-supox", "3. remix-utwig",
+		"3. remix-utwig-ultron", "3. remix-commander", "3. remix-arilou", "3. remix-melnorme", "3. melnorme-lipavsky", "3. remix-syreen", "3. syreen-ramen-rider",
+		"3. remix-mystic-shadows", "3. remix-quasispace", "3. remix-intro", "3. remix-ending", "0. remix-starbase",
+		"3. remix-outfit" },
 	-- the Agents of Chaos hear modern versions: the Precursors' remixes
-	SC_DeathMarch = { "kohrah-cleansing-required", "kohrah-eternal-doctrine", "kohrah-battle",
-		"druuge-crimson-corporation", "thraddash-culture-19", "slylandro-we-come-in-peace",
-		"orz-squeezing-the-juice", "mycon-rebirth", "ilwrath-all-evil", "samatra-battle",
-		"remix-starbase" },
-	SC_Hierarchy = { "urquan", "urquan-now-and-forever", "mycon", "spathi", "umgah", "vux", "ilwrath", "thraddash",
-		"androsynth-duoled", "starbase" },
+	SC_DeathMarch = { "4. kohrah-cleansing-required", "4. kohrah-eternal-doctrine", "4. kohrah-battle",
+		"4. druuge-crimson-corporation", "4. thraddash-culture-19", "4. slylandro-we-come-in-peace",
+		"4. orz-squeezing-the-juice", "4. mycon-rebirth", "4. ilwrath-all-evil", "4. samatra-battle",
+		"0. remix-starbase" },
+	SC_Hierarchy = { "2. urquan", "2. urquan-now-and-forever", "2. mycon", "2. spathi", "2. umgah", "2. vux", "2. ilwrath", "2. thraddash",
+		"2. androsynth-duoled", "0. starbase" },
 }
 
 -- Theme played when you win. It is a sound effect, not music, so it follows

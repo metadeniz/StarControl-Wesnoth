@@ -491,30 +491,30 @@ def build_ditties(uqm, out, remix=None):
 # Music: each faction's races' Star Control II themes, plus SC2's victory music.
 MUSIC = {
     # Alliance playlist
-    "commander": "base/comm/commander/commander.mod",   # Earthlings
-    "yehat": "base/comm/yehat/yehat.mod",
-    "syreen": "base/comm/syreen/syreen.mod",
-    "arilou": "base/comm/arilou/arilou.mod",
-    "shofixti": "base/comm/shofixti/shofixti.mod",
-    "intro": "base/cutscene/intro/introx.mod",          # SC2 opening
-    "victory": "base/cutscene/ending/victoryf.mod",     # SC2 final victory
+    "1. commander": "base/comm/commander/commander.mod",   # Earthlings
+    "1. yehat": "base/comm/yehat/yehat.mod",
+    "1. syreen": "base/comm/syreen/syreen.mod",
+    "1. arilou": "base/comm/arilou/arilou.mod",
+    "1. shofixti": "base/comm/shofixti/shofixti.mod",
+    "1. intro": "base/cutscene/intro/introx.mod",          # SC2 opening
+    "1. victory": "base/cutscene/ending/victoryf.mod",     # SC2 final victory
     "victory-fanfare": "base/cutscene/ending/victory1.mod",
-    "quasispace": "base/nav/quasispace.mod",
+    "1. quasispace": "base/nav/quasispace.mod",
     # Alliance and Hierarchy
-    "starbase": "base/ui/starbase.mod",
-    "outfit": "base/ui/outfit.mod",
+    "0. starbase": "base/ui/starbase.mod",
+    "1. outfit": "base/ui/outfit.mod",
     # Hierarchy playlist
-    "urquan": "base/comm/urquan/urquan.mod",
-    "mycon": "base/comm/mycon/mycon.mod",
-    "spathi": "base/comm/spathi/spathi.mod",
-    "umgah": "base/comm/umgah/umgah.mod",
-    "vux": "base/comm/vux/vux.mod",
-    "ilwrath": "base/comm/ilwrath/ilwrath.mod",
-    "thraddash": "base/comm/thraddash/thraddash.mod",
+    "2. urquan": "base/comm/urquan/urquan.mod",
+    "2. mycon": "base/comm/mycon/mycon.mod",
+    "2. spathi": "base/comm/spathi/spathi.mod",
+    "2. umgah": "base/comm/umgah/umgah.mod",
+    "2. vux": "base/comm/vux/vux.mod",
+    "2. ilwrath": "base/comm/ilwrath/ilwrath.mod",
+    "2. thraddash": "base/comm/thraddash/thraddash.mod",
     # (the New Alliance and the Death March play Precursors remixes: REMIXES)
 }
 
-MUSIC_GAIN_DB = {"starbase": 4, "quasispace": -2}   # match the other tracks' loudness
+MUSIC_GAIN_DB = {"0. starbase": 4, "1. quasispace": -2}   # match the other tracks' loudness
 
 # Precursors' UQM Remix Packs (sourceforge.net/projects/sc2, "UQM Remix
 # Packs"): the disc .uqm files unzipped into one directory, and packs 2 and
@@ -523,43 +523,43 @@ MUSIC_GAIN_DB = {"starbase": 4, "quasispace": -2}   # match the other tracks' lo
 REMIX_LOUDNESS = -16.7   # mean volume, dB, like the other music
 REMIXES = {
     # Death March
-    "kohrah-eternal-doctrine": "extras3/aliens/blackur-the_eternal_doctrine.ogg",
-    "kohrah-battle": "extras3/battle/battle-Kohr-Ah.ogg",
-    "kohrah-cleansing-required": "remix/3/07_-_Kohr-Ah_-_Cleansing_Required.ogg",
-    "slylandro-we-come-in-peace": "remix/2/03_-_Slylandro_Probes_-_We_Come_In_Peace.ogg",
-    "samatra-battle": "remix/1/05_-_Melee_-_The_Battle_of_the_Sa-Matra.ogg",
-    "orz-squeezing-the-juice": "remix/4/10_-_Orz_-_Squeezing_the_Juice.ogg",
-    "mycon-rebirth": "remix/3/05_-_Mycon_-_Rebirth.ogg",
-    "ilwrath-all-evil": "remix/3/02_-_Ilwrath_-_All_Evil.ogg",
-    "druuge-crimson-corporation": "remix/2/07_-_Druuge_-_Property_of_the_Crimson_Corporation.ogg",
-    "thraddash-culture-19": "remix/3/06_-_Thraddash_-_Culture_19.ogg",
+    "4. kohrah-eternal-doctrine": "extras3/aliens/blackur-the_eternal_doctrine.ogg",
+    "4. kohrah-battle": "extras3/battle/battle-Kohr-Ah.ogg",
+    "4. kohrah-cleansing-required": "remix/3/07_-_Kohr-Ah_-_Cleansing_Required.ogg",
+    "4. slylandro-we-come-in-peace": "remix/2/03_-_Slylandro_Probes_-_We_Come_In_Peace.ogg",
+    "4. samatra-battle": "remix/1/05_-_Melee_-_The_Battle_of_the_Sa-Matra.ogg",
+    "4. orz-squeezing-the-juice": "remix/4/10_-_Orz_-_Squeezing_the_Juice.ogg",
+    "4. mycon-rebirth": "remix/3/05_-_Mycon_-_Rebirth.ogg",
+    "4. ilwrath-all-evil": "remix/3/02_-_Ilwrath_-_All_Evil.ogg",
+    "4. druuge-crimson-corporation": "remix/2/07_-_Druuge_-_Property_of_the_Crimson_Corporation.ogg",
+    "4. thraddash-culture-19": "remix/3/06_-_Thraddash_-_Culture_19.ogg",
     # Hierarchy
-    "urquan-now-and-forever": "remix/3/01_-_Ur-Quan_-_Now_and_Forever.ogg",
+    "2. urquan-now-and-forever": "remix/3/01_-_Ur-Quan_-_Now_and_Forever.ogg",
     # New Alliance: every track a remix
-    "remix-chmmr": "remix/4/03_-_Chmmr_-_Photosynthesis.ogg",
-    "remix-zoqfotpik": "remix/4/09_-_Zoq-Fot-Pik_-_Frungy_Party.ogg",
-    "remix-pkunk": "remix/4/07_-_Pkunk_-_Pkunks_Not_Dead.ogg",
-    "remix-supox": "remix/4/12_-_Supox_-_Shake_Yer_Rootz.ogg",
-    "remix-utwig": "remix/4/08_-_Utwig_-_Mask_of_Ultimate_Embarrassment_and_Shame.ogg",
-    "remix-utwig-ultron": "remix/4/11_-_Utwig_-_The_Ultron.ogg",
-    "remix-commander": "remix/1/02_-_Starbase_Commander_-_Corridor_Nine.ogg",
-    "remix-arilou": "remix/2/02_-_Arilou_-_Welcome_to_Falayalaralfali.ogg",
-    "remix-melnorme": "remix/2/10_-_Melnorme_-_Turning_Purple.ogg",
-    "remix-syreen": "remix/4/05_-_Syreen_-_Close_Encounters_of_the_Seventh_Kind.ogg",
-    "remix-mystic-shadows": "extras2/extraspack/Bonus/arispace_bonus.ogg",   # quasispace
-    "remix-quasispace": "remix/2/01_-_Quasispace_-_Through_the_Angles_of_Space.ogg",
+    "3. remix-chmmr": "remix/4/03_-_Chmmr_-_Photosynthesis.ogg",
+    "3. remix-zoqfotpik": "remix/4/09_-_Zoq-Fot-Pik_-_Frungy_Party.ogg",
+    "3. remix-pkunk": "remix/4/07_-_Pkunk_-_Pkunks_Not_Dead.ogg",
+    "3. remix-supox": "remix/4/12_-_Supox_-_Shake_Yer_Rootz.ogg",
+    "3. remix-utwig": "remix/4/08_-_Utwig_-_Mask_of_Ultimate_Embarrassment_and_Shame.ogg",
+    "3. remix-utwig-ultron": "remix/4/11_-_Utwig_-_The_Ultron.ogg",
+    "3. remix-commander": "remix/1/02_-_Starbase_Commander_-_Corridor_Nine.ogg",
+    "3. remix-arilou": "remix/2/02_-_Arilou_-_Welcome_to_Falayalaralfali.ogg",
+    "3. remix-melnorme": "remix/2/10_-_Melnorme_-_Turning_Purple.ogg",
+    "3. remix-syreen": "remix/4/05_-_Syreen_-_Close_Encounters_of_the_Seventh_Kind.ogg",
+    "3. remix-mystic-shadows": "extras2/extraspack/Bonus/arispace_bonus.ogg",   # quasispace
+    "3. remix-quasispace": "remix/2/01_-_Quasispace_-_Through_the_Angles_of_Space.ogg",
 
-    "remix-intro": "remix/4/02_-_Intro_-_Into_the_Void.ogg",
-    "remix-ending": "remix/4/16_-_Outro_-_Awaking_Dreams.ogg",
-    "remix-starbase": "remix/1/01_-_Starbase_-_Under_a_Red_Sky.ogg",
-    "remix-outfit": "remix/1/06_-_Outfit_-_Outfit_the_Vindicator.ogg",
+    "3. remix-intro": "remix/4/02_-_Intro_-_Into_the_Void.ogg",
+    "3. remix-ending": "remix/4/16_-_Outro_-_Awaking_Dreams.ogg",
+    "0. remix-starbase": "remix/1/01_-_Starbase_-_Under_a_Red_Sky.ogg",
+    "3. remix-outfit": "remix/1/06_-_Outfit_-_Outfit_the_Vindicator.ogg",
 }
 
 
 # Star Control II's 3DO soundtrack (UQM's "3domusic" add-on,
 # uqm-0.8.0-3domusic.uqm), unzipped into one directory.
 THREEDO = {
-    "quasispace-3do": "3domusic/quasispace.ogg",
+    "1. quasispace-3do": "3domusic/quasispace.ogg",
 }
 
 
@@ -1605,15 +1605,15 @@ def main():
 
     # Added by hand, not built here: Chenjesu and Mmrnmhrm themes by Titus
     # (supplied as MP3s, loudness-matched to the other music).
-    manifest.extend(["music/sc/chenjesu-titus.ogg", "music/sc/mmrnmhrm-titus.ogg"])
+    manifest.extend(["music/sc/1. chenjesu-titus.ogg", "music/sc/1. mmrnmhrm-titus.ogg"])
     # ...and Star Control 1's Alliance and Hierarchy victory themes (MP3s;
     # played as sound effects).
     manifest.extend(["sounds/sc/alliance-victory.ogg", "sounds/sc/hierarchy-victory.ogg"])
     # ...an Androsynth theme by TheMisterCat (DUOLED), and the Melnorme theme
     # re-imagined by DJ Yan Yan Lipavsky (MP3s).
-    manifest.extend(["music/sc/androsynth-duoled.ogg", "music/sc/melnorme-lipavsky.ogg"])
+    manifest.extend(["music/sc/2. androsynth-duoled.ogg", "music/sc/3. melnorme-lipavsky.ogg"])
     # ...and Ramen Rider's cover of the Syreen theme (MP3).
-    manifest.append("music/sc/syreen-ramen-rider.ogg")
+    manifest.append("music/sc/3. syreen-ramen-rider.ogg")
     # ...and the Death March victory theme, the opening phrase of Chopin's
     # Funeral March (MP3, trimmed with a fade-out; played as a sound effect).
     manifest.append("sounds/sc/funeral-march.ogg")
