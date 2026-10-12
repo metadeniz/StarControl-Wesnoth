@@ -116,7 +116,7 @@ leaves them as loud as before.
 | Pkunk Fury | fast triple gun; **reincarnation**: reborn at full HP when destroyed, 80% the first time, halving with each rebirth | Slylandro Probe | 7 moves; seeking lightning (**magical**); repairs 8 HP a turn in asteroid fields |
 | Supox Blade | **skirmisher**; globs of goo | Orz Nemesis | hard-hitting space marines (**boarding**: ignore armour and shields); light howitzer |
 | Utwig Jugger | six-lance volleys; absorbing shield (+30% resistance when attacked) | Mycon Podship | as in the Hierarchy |
-| Melnorme Trader | 4-shot blaster up close; one heavy charged shot and a confusion ray (**slows**) at range; heals +4 (Veteran +8, Elite cures) | Ilwrath Avenger | as in the Hierarchy |
+| Melnorme Trader | 4-shot blaster up close; one heavy charged shot and a confusion ray (**slows**) at range; heals +4 (Veteran and Elite cure) | Ilwrath Avenger | as in the Hierarchy |
 
 **Hull size.** Every ship shows its hull class (large, medium, small or
 tiny) as a trait in the side panel; hover over it for that hull's moves and
