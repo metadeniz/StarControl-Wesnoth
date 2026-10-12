@@ -110,6 +110,10 @@ WALLS = [
 # a star, pulsar and black hole in the middle of their clouds
 OBJECTS = [("S", "D", (375, 170)), ("U", "R", (100, 440)),
            ("X", "E", (55, 492))]
+# Gaps opened on request (asked for at in-game 25,25 and 29,22 and their
+# turned copies): the tip of the dark nebula, to open space, and the end
+# of the S-shaped ridge, to nebula
+OPENINGS = [((330, 226), "D", "."), ((206, 333), "w", "n")]
 GAS_GIANT = (450, 125)           # 4 hexes at the dark nebula's bend
 RIVER = [(0, 192), (140, 192), (152, 175), (150, 110), (175, 88),
          (208, 70), (216, 40), (218, 0)]
@@ -275,6 +279,14 @@ def build():
             x, y = nearest(*to_map(*p, turn))
             if grid[y][x] == cloud:
                 grid[y][x] = ch
+    for p, kind, ch in OPENINGS:
+        for turn in range(4):    # the hex of that feature nearest the point
+            mx, my = to_map(*p, turn)
+            near = [h for h in [nearest(mx, my)] + neighbours(*nearest(mx, my))
+                    if 0 <= h[0] < W and 0 <= h[1] < H
+                    and grid[h[1]][h[0]] == kind]
+            x, y = min(near, key=lambda h: math.dist(centre(*h), (mx, my)))
+            grid[y][x] = ch
     giants = []
     for turn in range(4):        # a diamond: 2 hexes and the 2 beside them
         x, y = nearest(*to_map(*GAS_GIANT, turn))
