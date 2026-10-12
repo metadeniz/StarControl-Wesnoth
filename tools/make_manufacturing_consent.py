@@ -48,6 +48,29 @@ WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
 WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUSOTVM123456"})
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 
+# The dark stars: each diamond of "G" (gas giant in dark nebula) becomes one
+# of the four dark star looks, in reading order, so each shows once
+DARK_STARS = "JLNQ"
+T.update({ch: f"Yqd^Yds{n}" for n, ch in enumerate(DARK_STARS, 1)})
+WESNOTH.update({ch: "Md^Xm" for ch in DARK_STARS})
+
+
+def number_dark_stars(grid):
+    cells = sorted((y, x) for y, row in enumerate(grid) for x, ch in enumerate(row) if ch == "G")
+    groups = []
+    for y, x in cells:
+        for g in groups:
+            if any(abs(y - gy) <= 1 and abs(x - gx) <= 1 for gy, gx in g):
+                g.append((y, x)); break
+        else:
+            groups.append([(y, x)])
+    assert len(groups) <= len(DARK_STARS) and all(len(g) == 4 for g in groups), groups
+    for ch, g in zip(DARK_STARS, groups):
+        for y, x in g:
+            grid[y][x] = ch
+    return grid
+
+
 # The north-west quarter, in screenshot pixels (x < 562, y < 485)
 WALLS = [
     # the S-shaped ridge in the north-west, with its hook at the top
@@ -392,7 +415,7 @@ def write(grid, keeps, path, table=T, base_only=("Yk", "Ys^Vyp")):
 
 if __name__ == "__main__":
     grid, keeps = pad_top(*build())
-    grid = hand_edits(asteroid_skirts(centrepieces(barriers(grid))))
+    grid = number_dark_stars(hand_edits(asteroid_skirts(centrepieces(barriers(grid)))))
     write(grid, keeps,
           os.path.join(sys.argv[1], "maps/4p_Manufacturing_Consent.map"))
     write(grid, keeps, os.path.join(

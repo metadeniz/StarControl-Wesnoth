@@ -499,6 +499,132 @@ def red_supergiant(rng, n_rocks=420):
     return out.resize((BIG, BIG), Image.LANCZOS)
 
 
+def _fblur(a, r):
+    """Gaussian blur of a float array (2-D, or 3-D by channel) through the FFT."""
+    h, w = a.shape[:2]
+    fy = np.fft.fftfreq(h)[:, None]; fx = np.fft.fftfreq(w)[None, :]
+    k = np.exp(-2 * (np.pi * r) ** 2 * (fx ** 2 + fy ** 2))
+    if a.ndim == 2:
+        return np.real(np.fft.ifft2(np.fft.fft2(a) * k))
+    return np.dstack([np.real(np.fft.ifft2(np.fft.fft2(a[..., c]) * k)) for c in range(a.shape[2])])
+
+
+def _polar_noise(rng, W, r, th, n_th=24, n_r=3, octaves=4):
+    """Noise wrapped round the angle: streaky when n_th >> n_r."""
+    side = 256
+    base = _noise(rng, side, octaves, 4)
+    base = np.concatenate([base, base[:, ::-1]], 1)          # mirror so it wraps in angle
+    u = ((th / (2 * np.pi)) % 1) * (2 * side - 1)
+    v = np.clip(r / (W / 2), 0, 1) * (side - 1)
+    # stretch: n_th cycles round, n_r along the radius
+    u = (u * n_th / 4) % (2 * side - 1); v = (v * n_r / 4) % (side - 1)
+    return base[v.astype(int), u.astype(int)]
+
+
+def _tone(light):
+    """Additive light (float rgb, 0..) to rgb + alpha on a transparent ground."""
+    L = light.max(-1)
+    T = 1 - np.exp(-L * 1.6)
+    hue = light / np.maximum(L, 1e-4)[..., None]
+    rgb = np.clip(hue * T[..., None] + np.clip(T - 0.75, 0, 1)[..., None] * 1.6, 0, 1) * 255
+    return rgb, np.clip(T * 1.2, 0, 1)
+
+
+def _layers(back_light, disc, globe_rgb, front_light):
+    """Light behind the globe, the globe (black, rgb given), then light in front."""
+    rgb, a = _tone(back_light)
+    img = _rgba(rgb, a)
+    img.alpha_composite(_rgba(globe_rgb, disc))
+    rgb, a = _tone(front_light)
+    img.alpha_composite(_rgba(rgb, a))
+    return img
+
+
+def _ring_frame(x, y, tilt, angle):
+    ca, sa = math.cos(math.radians(angle)), math.sin(math.radians(angle))
+    u = x * ca + y * sa; v = (-x * sa + y * ca) / tilt
+    return u, v, np.hypot(u, v), np.arctan2(v, u)
+
+
+def dark_star_eclipse(rng, light_angle=200, ring_tilt=0.22, ring_angle=-14,
+                      rim=(1.0, 0.85, 1.0), edge=(0.75, 0.3, 1.0), flare=(0.35, 0.6, 1.0)):
+    """A dark star eclipsing the light behind it: a black globe with a thin
+    crescent of white-violet light round one side, blue flares licking off
+    the crescent and its ends, and a thin tilted ring."""
+    S = 3; W = BIG * S
+    x, y = _grid(W); x, y = x / S, y / S
+    r = np.hypot(x, y); th = np.arctan2(y, x)
+    R = GIANT_D * 0.35
+    face = np.cos(th - math.radians(light_angle))              # 1 on the lit side
+    lit = np.clip(face + 0.2, 0, 1.2) / 1.2
+    out_r = np.clip(r - R, 0, None)
+    band = np.exp(-(out_r / (0.6 + 1.6 * lit)) ** 2)           # thicker mid-crescent
+    crescent = band * lit ** 1.5 * 3.5 + np.exp(-out_r / 5) * lit ** 2.5 * 1.0
+    ends = np.exp(-((face - 0.1) / 0.35) ** 2)                 # where the crescent thins out
+    streak = _ridged(_polar_noise(rng, W, r * S, th, n_th=60, n_r=2)) ** 5
+    wisp = _polar_noise(rng, W, r * S, th, n_th=14, n_r=3)
+    flares = streak * np.exp(-out_r / (4 + 10 * wisp)) * (lit ** 1.5 * 0.6 + ends * 1.4)
+    back = (crescent[..., None] * np.array(rim)
+            + (np.exp(-out_r / 9) * lit ** 2 * 0.5)[..., None] * np.array(edge)
+            + flares[..., None] * np.array(flare) * 1.8)
+    back = back + _fblur(back, 2.5 * S) * 0.8
+    u, v, rr, ang = _ring_frame(x, y, ring_tilt, ring_angle)
+    ringl = sum(w * np.exp(-((rr - R * k) / 0.75) ** 2)
+                for k, w in [(1.36, 1.0), (1.42, 0.5), (1.5, 0.8), (1.56, 0.3)])
+    ringl = ringl * (0.45 + 0.55 * np.clip(np.cos(ang - math.radians(light_angle - ring_angle)) * 0.5 + 0.5, 0, 1))
+    ring_light = ringl[..., None] * np.array([1.0, 0.8, 0.95]) * 1.3
+    front = v > 0
+    disc = np.clip(R - r + 0.7, 0, 1)
+    sheen = np.exp(-(R - r) / 3) * lit ** 2 * 0.5
+    globe = np.array([45, 12, 80])[None, None] * sheen[..., None]
+    img = _layers(back + np.where(front[..., None], 0, ring_light), disc, globe,
+                  np.where(front[..., None], ring_light, 0))
+    return img.resize((BIG, BIG), Image.LANCZOS)
+
+
+def dark_star_halo(rng, ring_tilt=0.42, ring_angle=-28, haze=(0.42, 0.32, 0.95), ring=(0.55, 0.95, 1.0)):
+    """A dark star in a lensed violet haze: a black globe edged with a
+    violet photon ring, the light round it smeared into a swirl, and a
+    wispy cyan ring of gas circling it, half behind and half in front."""
+    S = 3; W = BIG * S
+    x, y = _grid(W); x, y = x / S, y / S
+    r = np.hypot(x, y); th = np.arctan2(y, x)
+    R = GIANT_D * 0.29
+    swirl = _polar_noise(rng, W, r * S, th + r / 12, n_th=12, n_r=4)
+    fine = _polar_noise(rng, W, r * S, th + r / 9, n_th=60, n_r=6)
+    blob = _noise(rng, W, 3, 2)
+    hz = (np.exp(-np.clip(r - R, 0, None) / 14) * (0.3 + 0.7 * swirl) * (0.75 + 0.35 * fine)
+          * (0.4 + 1.1 * np.clip(blob - 0.25, 0, 1)) * np.clip((W / S / 2 - 4 - r) / 10, 0, 1))
+    photon = np.exp(-((r - R * 1.03) / 1.2) ** 2) * 1.2 + np.exp(-((r - R * 1.15) / 3.5) ** 2) * 0.4
+    back = hz[..., None] * np.array(haze) * 1.1 + photon[..., None] * np.array([0.72, 0.62, 1.0])
+    u, v, rr, ang = _ring_frame(x, y, ring_tilt, ring_angle)
+    width = (1.4 + 2.4 * _polar_noise(rng, W, rr * S * 0.6, ang, n_th=10, n_r=1)) * (0.6 + 0.4 * np.abs(np.sin(ang)))
+    wobble = 2.5 * (_polar_noise(rng, W, rr * S * 0.6, ang + 1, n_th=7, n_r=1) - 0.5)
+    tuft = _ridged(_polar_noise(rng, W, rr * S, ang, n_th=90, n_r=8)) ** 3
+    ringl = np.exp(-((rr - R * 1.85 - wobble) * ring_tilt ** 0.5 / width) ** 2) * (0.7 + 0.6 * tuft)
+    ringl = ringl * (1 - 0.35 * np.cos(ang - 2.4))                # one side brighter
+    ring_light = ringl[..., None] * np.array(ring) * 2.2
+    ring_light = ring_light + _fblur(ring_light, 4 * S) * 1.4
+    front = v > 0
+    disc = np.clip(R - r + 0.7, 0, 1)
+    globe = np.array([60, 55, 78])[None, None] * (0.05 + 0.12 * np.clip(r / R, 0, 1) ** 4)[..., None]
+    img = _layers(back + np.where(front[..., None], 0, ring_light), disc, globe,
+                  np.where(front[..., None], ring_light, 0))
+    return img.resize((BIG, BIG), Image.LANCZOS)
+
+
+# Dark stars, for the dark nebulae (where gas giants used to stand): one
+# black globe eclipsing the light behind it, ringed; one in a lensed haze
+# with a wispy ring of gas round it. Two of each look.
+DARK_STARS = [
+    ("eclipse", dict()),
+    ("halo", dict()),
+    ("eclipse", dict(light_angle=-30, ring_tilt=0.3, ring_angle=18,
+                     rim=(0.9, 0.95, 1.0), edge=(0.4, 0.5, 1.0), flare=(0.3, 0.75, 1.0))),
+    ("halo", dict(ring_tilt=0.32, ring_angle=22, haze=(0.55, 0.28, 0.9), ring=(0.7, 0.85, 1.0))),
+]
+
+
 # A gas giant standing in a cloud has wisps of that cloud drifting in front
 # of it: (dark, light) colours of each cloud's veil, and its terrain code.
 GIANT_VEILS = {
@@ -560,8 +686,10 @@ def build_objects(rng, out, save, apply_mask, starfield, mask):
     vrng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 3)
     for name, (code, dark, light) in GIANT_VEILS.items():
         for i, img in enumerate(giants):
-            save(veiled(vrng, img, dark, light), out,
-                 f"images/terrain/sc/gas-giant-{name}{'' if i == 0 else i + 1}.png", False)
+            veil = veiled(vrng, img, dark, light)
+            if name == "darknebula":        # dark stars stand there now; drawn so the rest stay the same
+                continue
+            save(veil, out, f"images/terrain/sc/gas-giant-{name}{'' if i == 0 else i + 1}.png", False)
     # The four-hex black holes and globular clusters, also with their own seed.
     grng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 2)
     for name, make, styles in [("black-hole-big", big_black_hole, BIG_BLACK_HOLES),
@@ -584,3 +712,12 @@ def build_objects(rng, out, save, apply_mask, starfield, mask):
     for i, style in enumerate(BIG_BLACK_HOLES_MORE):
         save(big_black_hole(mrng, **style), out,
              f"images/terrain/sc/black-hole-big{len(BIG_BLACK_HOLES) + i + 1}.png", False)
+    # The dark stars, with their own seed.
+    drng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 6)
+    for i, (kind, style) in enumerate(DARK_STARS):
+        img = (dark_star_eclipse if kind == "eclipse" else dark_star_halo)(drng, **style)
+        save(img, out, f"images/terrain/sc/dark-star{'' if i == 0 else i + 1}.png", False)
+        if i == 0:
+            tile = apply_mask(starfield(drng), mask)
+            tile.alpha_composite(img.resize((HEX - 4, HEX - 4), Image.LANCZOS), (2, 2))
+            save(apply_mask(tile, mask), out, "images/terrain/sc/dark-star-tile.png", False)
