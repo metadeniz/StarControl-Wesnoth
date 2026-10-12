@@ -386,6 +386,10 @@ HAND_EDITS = [
     # a keep at 21,1 with a docking ring at 21,2, and their north-south
     # copy at the bottom edge: keep at 21,27, ring at 21,26
     ((21, 1), "K"), ((21, 2), "c"), ((21, 27), "K"), ((21, 26), "c"),
+    # the asteroid field at 9,5 and the planet at 10,5 swap (mirrored four
+    # ways)
+    *[(h, ch) for xy, ch in [((9, 5), "p"), ((10, 5), "a")]
+      for h in mirrored4(*xy)],
 ]
 
 
