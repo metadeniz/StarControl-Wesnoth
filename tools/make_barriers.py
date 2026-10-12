@@ -441,7 +441,7 @@ def globular_cluster(rng, rc=13, rt=70, n=16000, warm=0.6):
 # A gas giant standing in a cloud has wisps of that cloud drifting in front
 # of it: (dark, light) colours of each cloud's veil, and its terrain code.
 GIANT_VEILS = {
-    "darknebula": ("Yqd", (22, 9, 34), (80, 46, 110)),
+    "darknebula": ("Yqd", (38, 15, 58), (105, 60, 145)),
     "plasmastorm": ("Yqp", (55, 12, 70), (160, 60, 175)),
     "radiation": ("Yqr", (50, 85, 15), (160, 210, 55)),
     "eddy": ("Yqe", (35, 22, 75), (140, 105, 220)),
@@ -457,10 +457,10 @@ def veiled(rng, giant, dark, light):
     size = giant.width
     x, y = _grid(size)
     r = np.hypot(x, y)
-    patch = np.clip(_noise(rng, size, 4, 3) * 2.3 - 0.95, 0, 1)
+    patch = np.clip(_noise(rng, size, 4, 3) * 2.4 - 0.7, 0, 1)
     wisp = _ridged(_noise(rng, size, 4, 6)) ** 4
     shade = _noise(rng, size, 3, 4)
-    a = np.clip(patch * 0.8 + wisp * patch * 0.3, 0, 0.88) * np.clip((GIANT_D / 2 + 5 - r) / 9, 0, 1)
+    a = np.clip(patch * 0.85 + wisp * patch * 0.3, 0, 0.9) * np.clip((GIANT_D / 2 + 5 - r) / 9, 0, 1)
     veil = _rgba(_mix(dark, light, np.clip(shade * 0.8 + wisp * 0.5, 0, 1)), a)
     out = giant.copy()
     out.alpha_composite(veil)
