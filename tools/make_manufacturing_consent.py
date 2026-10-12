@@ -333,6 +333,13 @@ def asteroid_skirts(grid):
 
 # Hand edits asked for by hex, in-game coordinates, each with its copies on
 # the other three sides: (hex, new terrain letter).
+def mirrored4(X, Y):
+    """An in-game hex and its copies mirrored west-east and north-south."""
+    def flip(X, Y):
+        return X, (29 - Y if X % 2 else 28 - Y)
+    return list(dict.fromkeys([(X, Y), (42 - X, Y), flip(X, Y), flip(42 - X, Y)]))
+
+
 HAND_EDITS = [
     # the badlands channel opens at 21,21 and 21,8
     *[((21, y), ".") for y in (21, 8)],
@@ -357,6 +364,13 @@ HAND_EDITS = [
     *[((x, y), "M") for x in (5, 6, 36, 37) for y in (16, 17)],
     # red nebula in the channel at 21,22, and its north-south mirror 21,7
     ((21, 22), "m"), ((21, 7), "m"),
+    # asteroid field at 16,25 and 19,24, open space at 17,25, 17,24 and
+    # 18,23, light badlands (swamp) at 15,20, 16,20, 17,21 and 18,20; all
+    # mirrored four ways
+    *[(h, ch) for xy, ch in [((16, 25), "a"), ((19, 24), "a"),
+                             ((17, 25), "."), ((17, 24), "."), ((18, 23), "."),
+                             ((15, 20), "s"), ((16, 20), "s"), ((17, 21), "s"), ((18, 20), "s")]
+      for h in mirrored4(*xy)],
 ]
 
 
