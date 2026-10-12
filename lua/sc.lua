@@ -652,3 +652,41 @@ function sc.ambush_moveto()
 	local u = wesnoth.units.get(c.x1, c.y1)
 	if u and u.id == a.id and u.moves == 0 then u.moves = a.moves end
 end
+
+------------------------------------------------------------------ Held cones
+
+-- The Umgah antimatter cone stays lit for a whole fight: it is an item halo
+-- on the Drone's hex, pointing at its opponent, from the attack event until
+-- the fight ends or a ship is destroyed. The images are baked per facing by
+-- tools/make_umgah_cone_halos.py.
+local CONE_WEAPON = "antimatter_cone"
+local held_cones = {}
+
+-- Facing from (x1, y1) to the adjacent hex (x2, y2). Even columns sit half a
+-- hex lower than odd ones.
+local function facing(x1, y1, x2, y2)
+	if x2 == x1 then return y2 < y1 and "n" or "s" end
+	local up = y2 < y1 or (y2 == y1 and x1 % 2 == 0)
+	if x2 > x1 then return up and "ne" or "se" end
+	return up and "nw" or "sw"
+end
+
+local function hold(weapon, x1, y1, x2, y2)
+	if not weapon or weapon.name ~= CONE_WEAPON then return end
+	local halo = "halo/sc/umgah-cone-" .. facing(x1, y1, x2, y2) .. ".png"
+	wesnoth.wml_actions.item { x = x1, y = y1, halo = halo }
+	table.insert(held_cones, { x = x1, y = y1, halo = halo })
+end
+
+function sc.cone_hold()
+	local c = wesnoth.current.event_context
+	hold(c.weapon, c.x1, c.y1, c.x2, c.y2)
+	hold(c.second_weapon, c.x2, c.y2, c.x1, c.y1)
+end
+
+function sc.cone_release()
+	for _, h in ipairs(held_cones) do
+		wesnoth.wml_actions.remove_item { x = h.x, y = h.y, image = h.halo }
+	end
+	held_cones = {}
+end
