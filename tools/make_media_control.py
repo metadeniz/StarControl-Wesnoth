@@ -117,9 +117,11 @@ OPENINGS = [((330, 226), "D", "."), ((206, 333), "w", "n")]
 GAS_GIANT = (450, 125)
 # keeps by the gas giants moved on request (0-based): the one at in-game
 # 9,18 was too close to the centre and went to 5,14, and the one on the
-# opposite side, at 29,15, to 31,18
+# opposite side, at 29,15, to 31,18; then the north and south ones went to
+# the same places turned by 90 degrees, 21,5 and 16,27, so each player has
+# one keep near their base
 # (by gas giant: 0 north-west, 1 north-east, 2 south-east, 3 south-west)
-MOVED_KEEPS = {3: (4, 13), 1: (30, 17)}           # 4 hexes at the dark nebula's bend
+MOVED_KEEPS = {3: (4, 13), 1: (30, 17), 0: (20, 4), 2: (15, 26)}           # 4 hexes at the dark nebula's bend
 RIVER = [(0, 192), (140, 192), (152, 175), (150, 110), (175, 88),
          (208, 70), (216, 40), (218, 0)]
 FORDS = [(75, 192), (146, 192)]  # where the start's two roads cross it
