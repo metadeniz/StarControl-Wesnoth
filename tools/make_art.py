@@ -1449,8 +1449,7 @@ STAR_SIZE = 128   # bigger than a hex, so the glow fades out past the hex edge
 
 
 # Coloured suns for plasma storms: (corona rgb, core rgb), picked per hex.
-STORM_STARS = [((255, 70, 50), (255, 200, 170)),     # red
-               ((90, 150, 255), (220, 235, 255)),    # blue
+STORM_STARS = [((90, 150, 255), (220, 235, 255)),    # blue
                ((80, 235, 120), (215, 255, 220))]    # green
 # ...a purple one for gravity eddies and an orange one for dust clouds
 OTHER_STARS = {"star-eddy": ((185, 90, 255), (235, 210, 255)),
@@ -1495,7 +1494,7 @@ def build_star(rng, out):
     save(img, out, "images/terrain/sc/star.png", False)
     for i, (corona_rgb, core_rgb) in enumerate(STORM_STARS):
         save(star_image(tex, corona_rgb, core_rgb), out,
-             f"images/terrain/sc/star-storm{'' if i == 0 else i + 1}.png", False)
+             f"images/terrain/sc/star-storm{i + 2}.png", False)
     for name, (corona_rgb, core_rgb) in OTHER_STARS.items():
         save(star_image(tex, corona_rgb, core_rgb), out, f"images/terrain/sc/{name}.png", False)
     tile = apply_mask(starfield(rng), hex_mask_cache)
