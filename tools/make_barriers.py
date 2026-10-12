@@ -451,19 +451,28 @@ GIANT_VEILS = {
 }
 
 
-def veiled(rng, giant, dark, light):
+def veiled(rng, giant, dark, light, sun=(-0.55, -0.55, 0.63)):
     """`giant` with patches of cloud in front of it: thick in places, gone
-    in others, fading out just past the planet's rim."""
+    in others, fading out just past the planet's rim. The cloud follows the
+    planet's light: thin and see-through on the sunlit side, thick and dark
+    over the shadowed side."""
     size = giant.width
     x, y = _grid(size)
     r = np.hypot(x, y)
+    R = GIANT_D / 2
+    # how sunlit the planet is behind each pixel (as in banded_sphere)
+    nx, ny = x / R, y / R
+    nz = np.sqrt(np.clip(1 - nx ** 2 - ny ** 2, 0, 1))
+    L = np.array(sun) / np.linalg.norm(sun)
+    lit = np.clip(nx * L[0] + ny * L[1] + nz * L[2], 0, 1) * (r < R)
     patch = np.clip(_noise(rng, size, 4, 3) * 2.4 - 0.7, 0, 1)
     wisp = _ridged(_noise(rng, size, 4, 6)) ** 4
     shade = _noise(rng, size, 3, 4)
-    a = np.clip(patch * 0.85 + wisp * patch * 0.3, 0, 0.9) * np.clip((GIANT_D / 2 + 5 - r) / 9, 0, 1)
-    veil = _rgba(_mix(dark, light, np.clip(shade * 0.8 + wisp * 0.5, 0, 1)), a)
+    a = np.clip(patch * 0.85 + wisp * patch * 0.3, 0, 0.9) * np.clip((R + 5 - r) / 9, 0, 1)
+    a = np.clip(a * (0.2 + 1.15 * (1 - lit ** 1.6)), 0, 0.9)
+    rgb = _mix(dark, light, np.clip(shade * 0.8 + wisp * 0.5, 0, 1)) * (0.55 + 0.45 * lit)[..., None]
     out = giant.copy()
-    out.alpha_composite(veil)
+    out.alpha_composite(_rgba(rgb, a))
     return out
 
 
