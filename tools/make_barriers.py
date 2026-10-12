@@ -113,6 +113,11 @@ def gas_painters(rng, w, h, noise):
         return _rgba(rgb, np.clip(0.75 + 0.2 * (b - 0.5) + g * 0.3, 0, 0.97))
     painters["plasmastorm"] = storm
 
+    def calm_storm(sl, col, row):       # the same cloud with no lightning, round a star or pulsar
+        a, b = p1[sl], p2[sl]
+        return _rgba(_mix((32, 6, 42), (125, 35, 125), a), np.clip(0.75 + 0.2 * (b - 0.5), 0, 0.97))
+    painters["plasmastorm-calm"] = calm_storm
+
     # Gravity eddy: a whirl in every hex, neighbours turning opposite ways,
     # pulling the light of the stars into violet arcs round a dark core.
     pts = _hex_centres(w, h)
