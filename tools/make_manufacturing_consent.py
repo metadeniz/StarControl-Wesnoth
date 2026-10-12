@@ -332,8 +332,8 @@ HAND_EDITS = [
     # a red supergiant in its debris disk, its top at 5,16 and 6,16
     # (mirrored west to east only)
     *[((x, y), "M") for x in (5, 6, 36, 37) for y in (16, 17)],
-    # the channel's south crossing becomes red nebula
-    ((21, 22), "m"),
+    # red nebula in the channel at 21,22, and its north-south mirror 21,7
+    ((21, 22), "m"), ((21, 7), "m"),
 ]
 
 
