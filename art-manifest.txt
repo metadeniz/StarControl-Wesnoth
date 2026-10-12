@@ -66,6 +66,12 @@ images/halo/sc/hellfire-5.png
 images/halo/sc/hellfire-6.png
 images/halo/sc/hellfire-7.png
 images/halo/sc/hellfire-8.png
+images/halo/sc/umgah-cone-n.png
+images/halo/sc/umgah-cone-ne.png
+images/halo/sc/umgah-cone-nw.png
+images/halo/sc/umgah-cone-s.png
+images/halo/sc/umgah-cone-se.png
+images/halo/sc/umgah-cone-sw.png
 images/projectiles/sc/blaster-n.png
 images/projectiles/sc/blaster-ne.png
 images/projectiles/sc/bubble-n.png
