@@ -333,8 +333,8 @@ BROWN_DWARFS = [
     [(40, 22, 8), (195, 140, 50), (240, 200, 105), (255, 235, 170), (225, 100, 40), (3, 5), 0.0, "mottled"],  # mottled brown and ochre
     [(18, 10, 8), (70, 45, 30), (200, 95, 35), (255, 180, 100), (190, 90, 50), (3, 5), 0.25],      # dark, nearly cold
 ]
-# the looks kept for the maps, in order: the magenta and the mottled ones
-BROWN_DWARFS_KEPT = [5, 6]
+# the looks kept for the maps, in order: the magenta and the dark, nearly cold ones
+BROWN_DWARFS_KEPT = [5, 7]
 
 
 def _stretched(rng, s, octaves, base, sx=4):
