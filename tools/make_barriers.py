@@ -126,27 +126,21 @@ def gas_painters(rng, w, h, noise):
         spin = np.where(near, 1.0 if s else -1.0, spin)
     r = np.sqrt(best); th = np.arctan2(yy - cy, xx - cx)
     en = noise(rng, w, h, 4, 50)
-    arms = (0.5 + 0.5 * np.sin(r / 4.5 - spin * th * 3 + en * 4)) ** 4 * np.exp(-r / 34)
+    phase = r / 4.5 - spin * th * 3 + en * 4
+    arms = (0.5 + 0.5 * np.sin(phase)) ** 4 * np.exp(-r / 34)
     core = np.clip(1 - r / 11, 0, 1)
-    # streaks: stars smeared into short arcs about the nearest whirl
-    streak = Image.new("L", (w, h)); sd = ImageDraw.Draw(streak)
-    for _ in range(w * h // 260):
-        x, y = rng.uniform(0, w), rng.uniform(0, h)
-        i = int(np.argmin((pts[:, 0] - x) ** 2 + (pts[:, 1] - y) ** 2))
-        px, py, s = pts[i]
-        rad = math.hypot(x - px, y - py); a0 = math.degrees(math.atan2(y - py, x - px))
-        if rad < 6:
-            continue
-        sweep = rng.uniform(15, 45)
-        sd.arc([px - rad, py - rad, px + rad, py + rad], a0, a0 + sweep, fill=int(rng.uniform(90, 230)), width=1)
-    streaks = np.asarray(streak, np.float32) / 255
+    # faint wisps of starlight in the dark lanes between the arms, curving
+    # with them, broken up by noise
+    wn = noise(rng, w, h, 4, 18)
+    lane = np.exp(-((1 + np.sin(phase)) / 0.09) ** 2)
+    wisps = lane * np.clip((wn - 0.35) * 2.5, 0, 1) * np.clip((r - 9) / 6, 0, 1) * np.exp(-r / 40)
 
     def eddy(sl, col, row):
-        a, k, c, st = arms[sl], core[sl], en[sl], streaks[sl]
+        a, k, c, st = arms[sl], core[sl], en[sl], wisps[sl]
         rgb = _mix((22, 12, 46), (170, 120, 255), np.clip(a * 1.1, 0, 1))
-        rgb = _mix(rgb, (225, 215, 255), st)
+        rgb = _mix(rgb, (200, 175, 255), st * 0.8)
         rgb = _mix(rgb, (3, 1, 10), k)
-        return _rgba(rgb, np.clip(0.62 + 0.15 * (c - 0.5) + a * 0.4 + st * 0.4 + k, 0, 0.97))
+        return _rgba(rgb, np.clip(0.62 + 0.15 * (c - 0.5) + a * 0.4 + st * 0.25 + k, 0, 0.97))
     painters["eddy"] = eddy
     return painters
 
