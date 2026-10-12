@@ -227,6 +227,9 @@ heat-proof Chenjesu (2 / 50%) are at home in red nebulae.
 - `tools/make_art.py --uqm <UQM-MegaMod-Content checkout> --out . [--remix <unzipped UQM Remix Packs>]`
   regenerates all images and sounds. `art-manifest.txt`
   lists every UQM-derived file (what a published version must replace).
+- `tools/make_reach_shade.py` regenerates `reach/images/terrain/darken.png`,
+  the solid dark shade over hexes a selected ship cannot reach this turn
+  (it replaces core Wesnoth's striped shade, in Star Control games only).
 - `tools/make_maps.py .` regenerates the 2p maps.
 - `tools/make_understanding_power.py .` regenerates Understanding Power, and
   `maps/default-terrain/2p_Understanding_Power.map`, the same map in default
