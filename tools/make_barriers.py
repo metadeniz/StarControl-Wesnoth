@@ -318,36 +318,73 @@ def banded_sphere(rng, d, palette, light=(-0.55, -0.55, 0.63)):
     return _rgba(rgb, np.clip((1 - np.sqrt(d2)) * r, 0, 1))
 
 
-# Brown dwarfs: failed stars, barely warm enough to glow. The four looks
-# run from a dim red-brown to the magenta of the coolest ones.
+# Brown dwarfs: failed stars, still glowing with the heat of their birth.
+# Each look: dark band, light band, hot streak, white-hot core, corona.
 BROWN_DWARFS = [
-    [(45, 12, 10), (95, 32, 20), (150, 62, 35), (70, 22, 15), (120, 48, 28)],     # ember brown
-    [(40, 14, 22), (90, 30, 45), (150, 65, 85), (65, 20, 32), (120, 45, 65)],     # magenta
-    [(55, 20, 8), (110, 45, 15), (175, 95, 40), (80, 30, 10), (140, 70, 28)],     # rust
-    [(35, 8, 8), (80, 18, 14), (140, 40, 25), (60, 12, 10), (110, 28, 18)],       # deep red
+    [(45, 8, 4), (175, 50, 14), (255, 125, 25), (255, 225, 130), (255, 150, 40)],    # ember
+    [(55, 6, 4), (200, 35, 12), (255, 95, 20), (255, 215, 110), (255, 120, 30)],     # red-hot
+    [(30, 14, 8), (110, 60, 28), (230, 140, 60), (255, 225, 160), (240, 150, 70)],   # brown, banded
+    [(22, 4, 6), (100, 22, 22), (240, 80, 40), (255, 190, 110), (230, 90, 60)],     # dim
 ]
 
 
-def brown_dwarf(rng, palette):
-    """Lit from inside, not by a sun: banded like a gas giant, darker at
-    the limb than in the middle, in a faint red glow."""
-    g = banded_sphere(rng, GIANT_D * 2, palette, light=(0.0, 0.0, 1.0))
-    a = np.array(g).astype(np.float32)
-    x, y = _grid(a.shape[0])
-    r = np.hypot(x, y) / (GIANT_D)
-    heat = np.clip(1 - r, 0, 1) ** 0.6
-    a[..., :3] = a[..., :3] * (0.55 + 0.6 * heat[..., None]) + np.array([30, 6, 0]) * heat[..., None]
-    g = Image.fromarray(a.clip(0, 255).astype(np.uint8), "RGBA")
-    g = g.resize((GIANT_D + 8, GIANT_D + 8), Image.LANCZOS)
+def _stretched(rng, s, octaves, base, sx=4):
+    """noise smeared sideways, sx times wider than tall"""
+    n = _noise(rng, s, octaves, base)
+    im = Image.fromarray((n * 255).astype(np.uint8)).resize((s * sx, s), Image.BICUBIC)
+    off = int(rng.integers(0, s * (sx - 1)))
+    return np.asarray(im, np.float32)[:, off:off + s] / 255
+
+def brown_dwarf(rng, style):
+    """Lit from inside, not by a sun: dark bands and glowing ones, with hot
+    streaks where the cloud deck breaks open, dimmer at the limb, and a
+    ragged corona brightest on one side."""
+    dark, mid, hot, core, glow = [np.array(c, np.float32) for c in style]
+    d = GIANT_D * 2; s = d + 8
+    x, y = _grid(s); r = d / 2
+    nx, ny = x / r, y / r; d2 = nx ** 2 + ny ** 2
+    inside = d2 < 1
+    nz = np.sqrt(np.clip(1 - d2, 0, 1))
+    # latitude on the globe, so bands bunch up towards the poles
+    lat = np.arcsin(np.clip(ny, -1, 1)) / (np.pi / 2)
+    warp = _noise(rng, s, 4, 3) - 0.5
+    lat = lat + 0.10 * warp + 0.06 * (_stretched(rng, s, 4, 5) - 0.5) + 0.03 * np.sin(nx * rng.uniform(5, 9) + rng.uniform(0, 6.3))
+    # dark and light bands
+    k = rng.uniform(5, 8)
+    bands = 0.5 + 0.5 * np.sin(lat * np.pi * k + rng.uniform(0, 6.3))
+    bands = np.clip(bands * 0.6 + 0.6 * _stretched(rng, s, 5, 4) - 0.1, 0, 1)
+    # hot streaks: ragged ridges of the smeared noise, glowing where the
+    # cloud deck breaks open, mostly inside the light bands
+    st = _ridged(_stretched(rng, s, 5, 6, 5))
+    streak = np.clip((st - 0.70) / 0.25, 0, 1) ** 1.1 * np.clip(bands * 1.8 - 0.35, 0, 1)
+    flecks = np.clip((_stretched(rng, s, 3, 16, 3) - 0.78) / 0.22, 0, 1) * bands
+    heat = np.clip(streak + flecks * 0.5, 0, 1)
+    rgb = dark + (mid - dark) * bands[..., None]
+    rgb = rgb + (hot - rgb) * np.clip(heat * 1.4, 0, 1)[..., None]
+    rgb = rgb + (core - rgb) * np.clip(heat * 2.2 - 1.3, 0, 1)[..., None]
+    # self-lit: dimmer at the limb, a little brighter towards one side
+    limb = 0.45 + 0.55 * nz ** 0.5
+    side = 0.85 + 0.25 * np.clip(-nx * 0.6 - ny * 0.4, -1, 1)
+    rgb = rgb * (limb * side)[..., None]
+    # a hot rim: the edge glows as the light comes through the thin outer air
+    glowside = np.clip(0.35 + 0.65 * (-nx * 0.7 - ny * 0.7), 0, 1)
+    rim = np.clip((np.sqrt(d2) - 0.84) / 0.16, 0, 1) ** 2 * inside * glowside
+    rgb = rgb + (glow - rgb) * (rim * 0.55)[..., None]
+    a = np.clip((1 - np.sqrt(d2)) * r, 0, 1)
+    globe = _rgba(rgb, a).resize((GIANT_D + 8, GIANT_D + 8), Image.LANCZOS)
     size = GIANT_D + 24
     out = Image.new("RGBA", (size, size))
-    halo = Image.new("RGBA", (size, size)); c = size / 2
-    ImageDraw.Draw(halo).ellipse([c - GIANT_D / 2 - 4, c - GIANT_D / 2 - 4, c + GIANT_D / 2 + 4, c + GIANT_D / 2 + 4],
-                                 fill=tuple(palette[2]) + (120,))
-    out.alpha_composite(halo.filter(ImageFilter.GaussianBlur(6)))
-    out.alpha_composite(g, ((size - g.width) // 2,) * 2)
+    # the corona: a ragged glow just outside the limb
+    gx, gy = _grid(size); gr = np.hypot(gx, gy) / (GIANT_D / 2)
+    ang = np.arctan2(gy, gx)
+    flick = _noise(rng, size, 4, 8)
+    ring = np.exp(-((gr - 1.0) / (0.045 + 0.05 * flick)) ** 2) * (gr > 0.97)
+    halo = np.exp(-np.clip(gr - 1, 0, None) / 0.08) * (gr > 1) * 0.5
+    side = np.clip(0.25 + 0.75 * (-np.cos(ang) * 0.7 - np.sin(ang) * 0.7), 0.15, 1)
+    ga = np.clip((ring * (0.5 + 1.0 * flick) + halo * 1.3) * side, 0, 1)
+    out.alpha_composite(_rgba(np.broadcast_to(glow, (size, size, 3)), ga))
+    out.alpha_composite(globe, ((size - globe.width) // 2,) * 2)
     return out
-
 
 def gas_giant(rng, palette):
     g = banded_sphere(rng, GIANT_D * 2, palette).resize((GIANT_D + 8, GIANT_D + 8), Image.LANCZOS)
