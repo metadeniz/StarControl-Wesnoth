@@ -329,7 +329,7 @@ BROWN_DWARFS = [
     [(22, 4, 6), (100, 22, 22), (240, 80, 40), (255, 190, 110), (230, 90, 60), (5, 8), 0.5],       # dim
     [(38, 22, 8), (115, 72, 30), (255, 225, 40), (255, 252, 190), (255, 215, 60), (6, 9), 0.75],   # brown and bright yellow
     [(40, 8, 30), (140, 35, 95), (255, 95, 165), (255, 215, 235), (235, 95, 185), (4, 6), 0.4],    # magenta (the coolest)
-    [(50, 26, 6), (190, 105, 20), (255, 185, 40), (255, 240, 170), (255, 175, 50), (8, 12), 0.6],  # amber, fine bands
+    [(40, 22, 8), (195, 140, 50), (240, 200, 105), (255, 235, 170), (225, 100, 40), (3, 5), 0.0, "mottled"],  # mottled brown and ochre
     [(18, 10, 8), (70, 45, 30), (200, 95, 35), (255, 180, 100), (190, 90, 50), (3, 5), 0.25],      # dark, nearly cold
 ]
 
@@ -367,6 +367,15 @@ def brown_dwarf(rng, style):
     streak = np.clip((st - cut) / 0.25, 0, 1) ** 1.1 * np.clip(bands * 1.8 - 0.35, 0, 1)
     flecks = np.clip((_stretched(rng, s, 3, 16, 3) - 0.78) / 0.22, 0, 1) * bands
     heat = np.clip(streak + flecks * 0.5, 0, 1)
+    if style[7:] == ["mottled"]:
+        # no glowing streaks: broad soft bands broken into blotches of
+        # ochre and dark brown, the light patches a little paler
+        blot = warp + 0.5
+        sharp = np.clip((bands - 0.35) / 0.3, 0, 1)
+        tone = 0.35 * sharp + 0.15 * st + 0.75 * blot - 0.2
+        tone = (tone - 0.45) * 1.5 + 0.45 + 0.12 * (st - 0.5)
+        bands = np.clip(tone, 0, 1)
+        heat = np.clip((tone - 0.8) / 0.3, 0, 1) * 0.6
     rgb = dark + (mid - dark) * bands[..., None]
     rgb = rgb + (hot - rgb) * np.clip(heat * 1.4, 0, 1)[..., None]
     rgb = rgb + (core - rgb) * np.clip(heat * 2.2 - 1.3, 0, 1)[..., None]
