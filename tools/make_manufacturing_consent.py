@@ -363,6 +363,31 @@ HAND_EDITS = [
 def hand_edits(grid):
     for (X, Y), ch in HAND_EDITS:
         grid[Y - 1][X - 1] = ch
+    return swap_east_clusters(grid)
+
+
+def swap_east_clusters(grid):
+    """On the east side only, the dark nebula with its gas giant (north) and
+    the radiation zone with its globular cluster (south) trade places: the
+    clouds flipped north to south, and each 4-hex object moved onto the
+    other's diamond, so both keep their shape."""
+    east = [(X, Y) for X in range(28, 35) for Y in range(1, 28)]
+    giant = [(X, Y) for X, Y in east if grid[Y - 1][X - 1] == "G"]
+    cluster = [(X, Y) for X, Y in east if grid[Y - 1][X - 1] == "H"]
+    for X, Y in giant:
+        grid[Y - 1][X - 1] = "D"
+    for X, Y in cluster:
+        grid[Y - 1][X - 1] = "R"
+    for X in range(28, 35):
+        for Y in range(3, 9):
+            Y2 = 29 - Y if X % 2 else 28 - Y
+            a, b = grid[Y - 1][X - 1], grid[Y2 - 1][X - 1]
+            if a in "DR" or b in "DR":
+                grid[Y - 1][X - 1], grid[Y2 - 1][X - 1] = b, a
+    for X, Y in giant:
+        grid[Y - 1][X - 1] = "H"
+    for X, Y in cluster:
+        grid[Y - 1][X - 1] = "G"
     return grid
 
 
