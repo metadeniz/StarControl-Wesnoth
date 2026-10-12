@@ -47,6 +47,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | 4p — Isar’s Cross (Deep Space) | 2 vs 2 (players 1 & 4 vs 2 & 3) |
 | 4p — Manufacturing Consent | 2 vs 2 (west, players 1 & 3, vs east, players 2 & 4) |
 | 4p — Media Control | 2 vs 2, one player in each corner (players 1 & 3, northwest and southeast, vs 2 & 4, northeast and southwest) |
+| 6p — Hegemony or Survival | 2 vs 2 or 3 vs 3, west (players 1, 3 & 5) vs east (2, 4 & 6); for 2 vs 2 leave a mirrored pair empty: 1 & 2 north, 3 & 4 middle, 5 & 6 south |
 | 2p — The Freelands (Deep Space) | 1 vs 1 |
 | 2p — Weldyn Channel (Deep Space) | 1 vs 1 |
 | 2p — Fallenstar Lake (Deep Space) | 1 vs 1 |
@@ -238,6 +239,9 @@ heat-proof Chenjesu (2 / 50%) are at home in red nebulae.
   player per corner, turned four ways about the centre), and
   `maps/default-terrain/4p_Media_Control.map`, the same map in default
   Wesnoth terrain.
+- `tools/make_hegemony_or_survival.py .` regenerates Hegemony or Survival
+  (6 starts, west vs east), an original map mirrored west to east; it also
+  prints each start's planet distances as a balance check.
 - `tools/grid_overlay.py <map> <render.png> <out.png>` draws a hex grid with
   each hex's in-game coordinates over a `wesnoth --screenshot` render of the
   map, so changes can be asked for by hex.
