@@ -233,12 +233,63 @@ GAS_GIANTS = [
     [(150, 100, 60), (210, 170, 110), (240, 220, 180), (190, 130, 80), (230, 200, 150)],   # tan
     [(40, 70, 150), (70, 120, 200), (150, 190, 235), (60, 100, 180), (120, 170, 225)],     # blue
     [(120, 140, 110), (170, 190, 150), (220, 225, 200), (140, 160, 120), (200, 210, 180)],  # sage
+    [(110, 25, 20), (175, 55, 35), (235, 150, 115), (145, 40, 30), (210, 95, 65)],         # red
 ]
 GIANT_D = 134          # fits the diamond of four hexes it stands on
 
 
+def banded_sphere(rng, d, palette, light=(-0.55, -0.55, 0.63)):
+    """A gas giant's globe: bands of uneven width and contrast, some broad
+    and soft, some thin and sharp, with wavy, turbulent edges, a few
+    eddies along them and now and then a big oval storm. Every call draws
+    a different pattern."""
+    s = d + 8
+    x, y = _grid(s); r = d / 2
+    nx, ny = x / r, y / r; d2 = nx ** 2 + ny ** 2
+    nz = np.sqrt(np.clip(1 - d2, 0, 1))
+    L = np.array(light); L /= np.linalg.norm(L)
+    shade = 0.1 + 0.9 * np.clip(nx * L[0] + ny * L[1] + nz * L[2], 0, 1)
+    # latitude, bent by turbulence and by waves running along the bands
+    tex = _noise(rng, s, 5, 3)
+    fine = _noise(rng, s, 4, 9)
+    waves = sum(rng.uniform(0.005, 0.02) * np.sin(nx * rng.uniform(4, 14) + rng.uniform(0, 6.3)
+                                                    + ny * rng.uniform(-3, 3)) for _ in range(3))
+    lat = ny + 0.07 * (tex - 0.5) + 0.025 * (fine - 0.5) + waves
+    # the band profile: a random walk of band edges, each band its own colour
+    edges = np.sort(rng.uniform(-1.1, 1.1, int(rng.integers(7, 13))))
+    edges = np.concatenate([[-1.5], edges, [1.5]])
+    values = rng.uniform(0, 1, len(edges) - 1)
+    soft = rng.uniform(0.01, 0.06, len(edges))           # how sharp each edge is
+    t = np.full_like(lat, values[0])
+    for i in range(1, len(values)):
+        step = np.clip((lat - edges[i]) / soft[i] * 0.5 + 0.5, 0, 1)
+        t = t * (1 - step) + values[i] * step
+    # thin streaks inside the bands
+    streaks = np.sin(lat * rng.uniform(30, 60) + 6 * tex) * 0.5 + 0.5
+    patchy = np.clip(fine * 2 - 0.5, 0, 1)          # streaks come and go
+    t = np.clip(t + (streaks - 0.5) * patchy * rng.uniform(0.05, 0.14), 0, 1)
+    # small eddies along band edges, and maybe one big storm
+    spots = []
+    for e in rng.choice(edges[1:-1], size=min(3, len(edges) - 2), replace=False):
+        spots.append((rng.uniform(-0.7, 0.7), e, rng.uniform(0.06, 0.12), rng.uniform(0.03, 0.06)))
+    if rng.uniform() < 0.7:
+        spots.append((rng.uniform(-0.4, 0.4), rng.uniform(-0.55, 0.55),
+                      rng.uniform(0.18, 0.28), rng.uniform(0.08, 0.13)))
+    for sx, sy, rx, ry in spots:
+        q = ((nx - sx) / rx) ** 2 + ((ny - sy) / ry) ** 2
+        swirl = np.clip(1 - q, 0, 1)
+        ring = np.clip(1 - np.abs(q - 0.8) / 0.25, 0, 1)
+        t = t * (1 - swirl) + rng.choice([0.0, 1.0]) * swirl * 0.8 + t * swirl * 0.2
+        t = np.clip(t - ring * 0.25, 0, 1)
+    cols = np.array(palette, np.float32)
+    idx = np.clip(t * (len(cols) - 1), 0, len(cols) - 1.001); lo = np.floor(idx).astype(int)
+    f = (idx - lo)[..., None]
+    rgb = (cols[lo] * (1 - f) + cols[lo + 1] * f) * shade[..., None]
+    return _rgba(rgb, np.clip((1 - np.sqrt(d2)) * r, 0, 1))
+
+
 def gas_giant(rng, palette):
-    g = sphere(rng, GIANT_D * 2, palette, "gas").resize((GIANT_D + 8, GIANT_D + 8), Image.LANCZOS)
+    g = banded_sphere(rng, GIANT_D * 2, palette).resize((GIANT_D + 8, GIANT_D + 8), Image.LANCZOS)
     size = GIANT_D + 24
     out = Image.new("RGBA", (size, size))
     halo = Image.new("RGBA", (size, size)); c = size / 2

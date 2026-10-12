@@ -20,9 +20,12 @@ of the centre badlands in a ring of dust. The dirt road ringing the centre
 is a ring of dust clouds; the centre building is a planet in a moat of
 light badlands, with a keep with 2 docking rings west and east of it
 (added on request). The ridges just inside the ring became badlands
-(water) on request. The other roads and the houses are open space. Each player
-starts at the corner's player-start marker: a starbase with 5 docking
-rings.
+(water) on request, and the four planets round the ring sea planets
+(swamp villages); a keep with 1 docking ring stands on the centre side of
+each gas giant. The other roads and the houses are open space. Each
+player starts at the corner's player-start marker: a starbase with 6
+docking rings (the one towards the centre a swamp castle in default
+terrain).
 
 Also writes maps/default-terrain/4p_Media_Control.map: the same map in
 default Wesnoth terrain (grass, woods, hills, impassable ridges, rivers,
@@ -53,10 +56,10 @@ T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
      "e": "Yd", "o": "Ys",
      # impassable terrains that replace most of the asteroid walls
      "D": "Yqd", "R": "Yqr", "P": "Yqp", "E": "Yqe", "S": "Yqd^Yx",
-     "U": "Yqr^Yxp", "X": "Yqe^Yxb", "G": "Yqd^Ygg"}
+     "U": "Yqr^Yxp", "X": "Yqe^Yxb", "G": "Yqd^Ygg", "q": "Yis^Vys", "C": "Yc"}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "r": "Ww", "f": "Wwf", "B": "Wo", "d": "Re",
-           "e": "Ds", "o": "Re"}
+           "e": "Ds", "o": "Re", "q": "Ss^Vhs", "C": "Chs"}
 BARRIER = "wDRPESUXG"
 WESNOTH.update({ch: "Md^Xm" for ch in BARRIER})
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
@@ -71,6 +74,7 @@ FIELDS = [                       # tiberium fields: centre x, y, radius x, y
     (385, 365, 18, 18),          # the blue field (no tree)
 ]
 PLANETS = [(97, 22), (25, 305), (325, 12), (542, 85), (482, 362)]
+SWAMP_PLANETS = [(482, 362)]     # sea planets (swamp villages), on request
 WOODS = [
     (240, 275, 45, 50), (190, 230, 35, 30), (390, 165, 32, 38),
     (480, 112, 30, 18), (475, 30, 20, 25), (450, 365, 40, 32),
@@ -181,7 +185,7 @@ def neighbours(x, y):
 
 
 COST = {".": 1, "n": 2, "a": 2, "r": 3, "f": 1, "B": 3, "d": 2, "e": 2,
-        "p": 1, "K": 1, "c": 1, "o": 1}       # a medium ship's moves
+        "p": 1, "K": 1, "c": 1, "o": 1, "q": 1, "C": 1}       # a medium ship's moves
 
 
 def moves(grid, start):
@@ -200,7 +204,7 @@ def moves(grid, start):
     return dist
 
 
-def place_planet(grid, keeps, p):
+def place_planet(grid, keeps, p, ch="p"):
     """Put a planet and its three turned copies on the map. Turning lands
     them on slightly different hexes for each player, so each copy may
     move up to two hexes to put it as many moves from its own player's
@@ -220,7 +224,7 @@ def place_planet(grid, keeps, p):
     placed = []
     for s in spots:
         d, step, (x, y) = min(s, key=lambda c: (abs(c[0] - target), c[1]))
-        grid[y][x] = "p"
+        grid[y][x] = ch
         placed.append(((x, y), d))
     return placed
 
@@ -271,11 +275,14 @@ def build():
             x, y = nearest(*to_map(*p, turn))
             if grid[y][x] == cloud:
                 grid[y][x] = ch
+    giants = []
     for turn in range(4):        # a diamond: 2 hexes and the 2 beside them
         x, y = nearest(*to_map(*GAS_GIANT, turn))
         up = y - 1 if x % 2 == 0 else y
-        for u, v in [(x, y), (x, y + 1), (x + 1, up), (x + 1, up + 1)]:
+        diamond = [(x, y), (x, y + 1), (x + 1, up), (x + 1, up + 1)]
+        for u, v in diamond:
             grid[v][u] = "G"
+        giants.append(diamond)
     for w in INNER:
         line("B", w)
     line("r", RIVER)
@@ -288,13 +295,34 @@ def build():
         x, y = nearest(*to_map(*START, turn))
         grid[y][x] = "K"
         keeps.append((x, y))
-        # 5 docking rings: every neighbour but the one towards the centre
+        # 6 docking rings; on request the one towards the centre is a
+        # swamp castle in the default-terrain map
         ring = sorted(neighbours(x, y),
                       key=lambda n: (n[0] - CX) ** 2 + (n[1] - CY) ** 2)
         for u, v in ring[1:]:
             grid[v][u] = "c"
+        grid[ring[0][1]][ring[0][0]] = "C"
     for p in PLANETS:
-        place_planet(grid, keeps, p)
+        place_planet(grid, keeps, p, "q" if p in SWAMP_PLANETS else "p")
+    dists = [moves(grid, k) for k in keeps]
+    for diamond in giants:
+        # added on request: a keep with 1 docking ring two hexes from the
+        # gas giant on its centre side, the ring towards the centre
+        gx = sum(centre(*h)[0] for h in diamond) / 4
+        gy = sum(centre(*h)[1] for h in diamond) / 4
+        dx, dy = MID[0] - gx, MID[1] - gy
+        r = math.hypot(dx, dy)
+        kx, ky = nearest(gx + dx / r * 150, gy + dy / r * 150)
+        # it lies between two players' bases: move it a hex if that puts
+        # it as many moves from the one as from the other
+        def gap(h):
+            a, b = sorted(d.get(h, 99) for d in dists)[:2]
+            return b - a, h != (kx, ky)
+        kx, ky = min([(kx, ky)] + [h for h in neighbours(kx, ky)
+                                   if grid[h[1]][h[0]] in ".n"], key=gap)
+        ring = min(neighbours(kx, ky), key=lambda h: math.dist(centre(*h), MID))
+        grid[ky][kx] = "K"
+        grid[ring[1]][ring[0]] = "c"
     grid[CY][CX] = "p"                               # the centre building
     for u, v in neighbours(CX, CY):                  # in its moat
         grid[v][u] = "r"
