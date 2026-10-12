@@ -626,10 +626,27 @@ function sc.ambush_enter_hex()
 	if ambush.zoc and u:ability("skirmisher") then ambush.zoc = false end
 end
 
+-- A hidden ship (cloaked or in ambush) that ends up next to an enemy has
+-- been found: it stays uncovered until its own side's next turn starts (the
+-- engine clears the status then), instead of vanishing again as soon as the
+-- enemy moves away.
+local function uncover_hidden(u)
+	local enemies = wesnoth.units.find_on_map {
+		T.filter_side { T.enemy_of { side = u.side } },
+		T.filter_adjacent { id = u.id },
+	}
+	for _, e in ipairs(enemies) do
+		if e:ability("hides") then e.status.uncovered = true end
+	end
+	if #enemies > 0 and u:ability("hides") then u.status.uncovered = true end
+end
+
 function sc.ambush_moveto()
 	local a = ambush
 	ambush = nil
 	local c = wesnoth.current.event_context
+	local mover = wesnoth.units.get(c.x1, c.y1)
+	if mover then uncover_hidden(mover) end
 	if not a or not a.moves or a.x ~= c.x1 or a.y ~= c.y1 then return end
 	if a.zoc or a.capture then return end
 	local u = wesnoth.units.get(c.x1, c.y1)
