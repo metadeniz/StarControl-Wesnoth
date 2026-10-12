@@ -335,6 +335,12 @@ BIG_BLACK_HOLES = [
     dict(tilt=0.1, angle=8, tint=(1.0, 0.35, 0.2), hot=(1.0, 0.85, 0.7)),           # red, edge-on
     dict(tint=(1.0, 0.45, 0.12), hot=(1.0, 0.85, 0.5), eht=True),                    # orange ring, from the pole
 ]
+# two more, added later (drawn with their own seed), so a map can show six
+# different ones
+BIG_BLACK_HOLES_MORE = [
+    dict(tilt=0.22, angle=-20, tint=(1.0, 0.88, 0.62), hot=(1.0, 1.0, 0.95)),      # white-gold, tilted
+    dict(tilt=0.4, angle=16, tint=(0.78, 0.5, 1.0), hot=(0.95, 0.9, 1.0)),          # violet, tilted
+]
 GLOBULAR_CLUSTERS = [dict(), dict(rc=9, warm=0.9), dict(rc=16, warm=0.3, n=20000), dict(rc=11, warm=0.75, rt=64)]
 
 
@@ -512,3 +518,7 @@ def build_objects(rng, out, save, apply_mask, starfield, mask):
                 tile = apply_mask(starfield(grng), mask)
                 tile.alpha_composite(img.resize((HEX - 4, HEX - 4), Image.LANCZOS), (2, 2))
                 save(apply_mask(tile, mask), out, f"images/terrain/sc/{name}-tile.png", False)
+    mrng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 4)
+    for i, style in enumerate(BIG_BLACK_HOLES_MORE):
+        save(big_black_hole(mrng, **style), out,
+             f"images/terrain/sc/black-hole-big{len(BIG_BLACK_HOLES) + i + 1}.png", False)

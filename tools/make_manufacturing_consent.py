@@ -40,11 +40,12 @@ T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
      # barriers that replace most of the asteroid walls (see BARRIERS)
      "D": "Yqd", "R": "Yqr", "P": "Yqp", "E": "Yqe", "G": "Yqd^Ygg",
      "H": "Yqr^Ygc", "X": "Yqe^Yxb", "U": "Yqr^Yxp", "S": "Ys^Yx",
-     "O": "Yqe^Ybh", "T": "Yqp^Yx", "V": "Yqp^Yxp", "Z": "Yqp^Yxb2"}
+     "O": "Yqe^Ybh", "T": "Yqp^Yx", "V": "Yqp^Yxp",
+     **{str(n): f"Yqe^Ybh{n}" for n in range(1, 7)}}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "r": "Re", "B": "Wo", "f": "Wo^Bsb\\",
            "s": "Ss", "m": "Gg^Tf"}
-WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUSOTVZ"})
+WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUSOTV123456"})
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 
 # The north-west quarter, in screenshot pixels (x < 562, y < 485)
@@ -262,24 +263,25 @@ CENTRE_BARRIERS = [("X", [(21, 12), (21, 17)]), ("E", [(20, 12), (22, 12), (20, 
 # Added on request: every cluster of barriers has a centrepiece. Each
 # cluster of gravity eddies has a supermassive black hole (4 hexes, which
 # takes one more hex, open before, to make the diamond), each plasma storm a
-# star, pulsar or black hole at its corner, and the radiation zones round
+# star or a pulsar at its corner (stars in storms are red, blue or green), and the radiation zones round
 # the south gas giants hold globular clusters instead (see "H" in T).
 # In-game coordinates, both halves.
 CENTREPIECES = [
-    ("O", [(16, 9), (17, 9), (17, 10), (18, 9)]),       # north-west eddies
-    ("O", [(24, 9), (25, 9), (25, 10), (26, 9)]),       # north-east
-    ("O", [(16, 19), (17, 19), (17, 20), (18, 19)]),    # south-west
-    ("O", [(24, 19), (25, 19), (25, 20), (26, 19)]),    # south-east
-    ("O", [(20, 12), (21, 12), (22, 12), (21, 13)]),    # the centre ring's north arc
-    ("O", [(20, 16), (21, 16), (22, 16), (21, 17)]),    # and south arc
+    # (each a different one of the six looks, 1-6)
+    ("1", [(16, 9), (17, 9), (17, 10), (18, 9)]),       # north-west eddies
+    ("2", [(24, 9), (25, 9), (25, 10), (26, 9)]),       # north-east
+    ("3", [(16, 19), (17, 19), (17, 20), (18, 19)]),    # south-west
+    ("4", [(24, 19), (25, 19), (25, 20), (26, 19)]),    # south-east
+    ("5", [(20, 12), (21, 12), (22, 12), (21, 13)]),    # the centre ring's north arc
+    ("6", [(20, 16), (21, 16), (22, 16), (21, 17)]),    # and south arc
     ("T", [(18, 3)]), ("V", [(24, 3)]),                 # the plasma storms
-    ("Z", [(18, 25)]), ("T", [(24, 25)]),
+    ("V", [(18, 25)]), ("T", [(24, 25)]),
 ]
 
 
 def centrepieces(grid):
     for ch, hexes in CENTREPIECES:
-        cloud = "E" if ch == "O" else "P"
+        cloud = "E" if ch in "O123456" else "P"
         for X, Y in hexes:
             assert grid[Y - 1][X - 1] in (cloud, "X", "."), (X, Y, grid[Y - 1][X - 1])
             grid[Y - 1][X - 1] = ch

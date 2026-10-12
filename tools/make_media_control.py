@@ -62,6 +62,17 @@ WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "e": "Ds", "o": "Re", "q": "Ss^Vhs", "C": "Chs"}
 BARRIER = "wDRPESUXG"
 WESNOTH.update({ch: "Md^Xm" for ch in BARRIER})
+# the four black holes, each drawn with a different one of the four looks
+T.update({str(n): f"Yqe^Yxb{n}" for n in range(1, 5)})
+WESNOTH.update({str(n): "Md^Xm" for n in range(1, 5)})
+
+
+def number_black_holes(grid):
+    holes = sorted((y, x) for y, row in enumerate(grid) for x, ch in enumerate(row) if ch == "X")
+    assert len(holes) == 4, holes
+    for n, (y, x) in enumerate(holes, 1):
+        grid[y][x] = str(n)
+    return grid
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 
 # The north-west quarter, in screenshot pixels (x < 547, y < 539)
@@ -385,6 +396,7 @@ def write(grid, keeps, path, table=T, base_only=("Yk", "Ys^Vyp")):
 
 if __name__ == "__main__":
     grid, keeps = build()
+    grid = number_black_holes(grid)
     write(grid, keeps, os.path.join(sys.argv[1], "maps/4p_Media_Control.map"))
     write(grid, keeps, os.path.join(
         sys.argv[1], "maps/default-terrain/4p_Media_Control.map"),
