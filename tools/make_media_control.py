@@ -10,12 +10,17 @@ quarters. A hex grid can't be turned by 90 degrees exactly, so each turned
 feature lands on the hexes nearest to it: the four quarters match to within
 a hex.
 
-Cliffs became asteroid walls, woods nebulae, tiberium fields asteroid
+Cliffs became impassable terrain (asteroid walls by the starts, dark
+nebula, radiation, plasma storms and gravity eddies elsewhere, with a gas
+giant, star, pulsar and black hole among them), woods nebulae (more were
+added on request), tiberium fields asteroid
 fields with a planet at each tiberium tree (the blue field has no tree),
 rivers light badlands with thin badlands at the fords, and the pond west
 of the centre badlands in a ring of dust. The dirt road ringing the centre
 is a ring of dust clouds; the centre building is a planet in a moat of
-light badlands. The other roads and the houses are open space. Each player
+light badlands, with a keep with 2 docking rings west and east of it
+(added on request). The ridges just inside the ring became badlands
+(water) on request. The other roads and the houses are open space. Each player
 starts at the corner's player-start marker: a starbase with 5 docking
 rings.
 
@@ -45,10 +50,15 @@ HX = 36 * math.sqrt(3)
 
 T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
      "K": "Yk", "c": "Yc", "r": "Yis", "f": "Yif", "B": "Yi", "d": "Yd",
-     "e": "Yd", "o": "Ys"}
+     "e": "Yd", "o": "Ys",
+     # impassable terrains that replace most of the asteroid walls
+     "D": "Yqd", "R": "Yqr", "P": "Yqp", "E": "Yqe", "S": "Yqd^Yx",
+     "U": "Yqr^Yxp", "X": "Yqe^Yxb", "G": "Yqd^Ygg"}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "r": "Ww", "f": "Wwf", "B": "Wo", "d": "Re",
            "e": "Ds", "o": "Re"}
+BARRIER = "wDRPESUXG"
+WESNOTH.update({ch: "Md^Xm" for ch in BARRIER})
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 
 # The north-west quarter, in screenshot pixels (x < 547, y < 539)
@@ -66,30 +76,46 @@ WOODS = [
     (480, 112, 30, 18), (475, 30, 20, 25), (450, 365, 40, 32),
     (405, 420, 30, 20), (100, 440, 50, 30), (25, 470, 25, 18),
     (205, 530, 22, 32), (510, 330, 35, 18),
+    # added on request: more nebulae in the open
+    (290, 140, 25, 20), (150, 330, 25, 20), (330, 475, 25, 18),
+    (440, 250, 25, 20), (60, 100, 20, 18),
 ]
 LONE_TREES = [(470, 463), (432, 487), (520, 445),   # inside the ring
-              (250, 200), (290, 352)]
+              (250, 200), (290, 352),
+              (300, 60), (270, 420), (350, 300), (190, 130), (400, 50),
+              (110, 360), (520, 250)]
+# Impassable features: (terrain, line). The ridges by each start stay
+# asteroid walls; on request the rest became other impassable terrain
+# (dark nebula, radiation, plasma storm, gravity eddies).
 WALLS = [
     # the S-shaped ridge south-east of the start
-    [(200, 228), (248, 228), (258, 255), (268, 270), (255, 292),
-     (238, 310), (225, 335), (200, 350)],
-    # the long ridge from the north edge, bending south-west
-    [(470, 0), (483, 30), (493, 60), (498, 90), (458, 98), (446, 120),
-     (445, 145), (410, 155), (375, 170), (356, 192), (348, 222)],
-    [(498, 45), (547, 50)],
-    # the two ridges on the west side, above the pond
-    [(152, 388), (145, 412), (128, 430), (100, 440), (70, 448), (62, 470),
-     (65, 495)],
-    [(30, 475), (55, 492), (68, 515), (73, 545)],
-    # the L-shaped ridge north-west of the ring, and the short one east of it
-    [(365, 405), (400, 405), (422, 395), (430, 370), (426, 348)],
-    [(468, 342), (500, 325), (530, 312), (547, 310)],
+    ("w", [(200, 228), (248, 228), (258, 255), (268, 270), (255, 292),
+           (238, 310), (225, 335), (200, 350)]),
     # the cliffs on the far bank of the river north-east of the start
-    [(233, 2), (234, 40), (230, 72)],
+    ("w", [(233, 2), (234, 40), (230, 72)]),
+    # the long ridge from the north edge, bending south-west
+    ("P", [(470, 0), (483, 30), (493, 60), (498, 90)]),
+    ("P", [(498, 45), (547, 50)]),
+    ("D", [(498, 90), (458, 98), (446, 120), (445, 145), (410, 155),
+           (375, 170), (356, 192), (348, 222)]),
+    # the two ridges on the west side, above the pond
+    ("R", [(152, 388), (145, 412), (128, 430), (100, 440), (70, 448),
+           (62, 470), (65, 495)]),
+    ("E", [(30, 475), (55, 492), (68, 515), (73, 545)]),
 ]
+# a star, pulsar and black hole in the middle of their clouds
+OBJECTS = [("S", "D", (375, 170)), ("U", "R", (100, 440)),
+           ("X", "E", (55, 492))]
+GAS_GIANT = (450, 125)           # 4 hexes at the dark nebula's bend
 RIVER = [(0, 192), (140, 192), (152, 175), (150, 110), (175, 88),
          (208, 70), (216, 40), (218, 0)]
 FORDS = [(75, 192), (146, 192)]  # where the start's two roads cross it
+# the L-shaped ridge north-west of the ring and the short one east of it:
+# asteroid walls in the screenshot, turned into water (badlands) on request
+INNER = [
+    [(365, 405), (400, 405), (422, 395), (430, 370), (426, 348)],
+    [(468, 342), (500, 325), (530, 312), (547, 310)],
+]
 ROADS = [                        # only drawn in the default-terrain map
     [(98, 150), (75, 170), (72, 195), (80, 225), (105, 247)],
     [(98, 150), (130, 150), (148, 175), (152, 195), (168, 205), (150, 218)],
@@ -166,7 +192,7 @@ def moves(grid, start):
         if d > dist[x, y]:
             continue
         for u, v in neighbours(x, y):
-            if 0 <= u < W and 0 <= v < H and grid[v][u] != "w":
+            if 0 <= u < W and 0 <= v < H and grid[v][u] not in BARRIER:
                 n = d + COST[grid[v][u]]
                 if n < dist.get((u, v), n + 1):
                     dist[u, v] = n
@@ -233,12 +259,25 @@ def build():
     line("d", RING)
     for r in ROADS:
         line("o", r)
-    for w in WALLS:
-        line("w", w)
+    for ch, w in WALLS:
+        line(ch, w)
     for x in range(W):               # walls stay off the edges, so ships
         for y in range(H):           # can pass along them
-            if grid[y][x] == "w" and (x in (0, W - 1) or y in (0, H - 1)):
+            if grid[y][x] in BARRIER and (x in (0, W - 1)
+                                          or y in (0, H - 1)):
                 grid[y][x] = "."
+    for ch, cloud, p in OBJECTS:
+        for turn in range(4):
+            x, y = nearest(*to_map(*p, turn))
+            if grid[y][x] == cloud:
+                grid[y][x] = ch
+    for turn in range(4):        # a diamond: 2 hexes and the 2 beside them
+        x, y = nearest(*to_map(*GAS_GIANT, turn))
+        up = y - 1 if x % 2 == 0 else y
+        for u, v in [(x, y), (x, y + 1), (x + 1, up), (x + 1, up + 1)]:
+            grid[v][u] = "G"
+    for w in INNER:
+        line("B", w)
     line("r", RIVER)
     for p in FORDS:
         put("f", *p)
@@ -259,6 +298,11 @@ def build():
     grid[CY][CX] = "p"                               # the centre building
     for u, v in neighbours(CX, CY):                  # in its moat
         grid[v][u] = "r"
+    # added on request: a keep west and east of the moat, each with 2
+    # docking rings (north and south of it); no side starts there
+    for x in (CX - 3, CX + 3):
+        grid[CY][x] = "K"
+        grid[CY - 1][x] = grid[CY + 1][x] = "c"
     return grid, keeps
 
 
