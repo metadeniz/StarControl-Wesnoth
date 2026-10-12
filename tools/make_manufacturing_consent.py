@@ -306,6 +306,26 @@ def asteroid_skirts(grid):
     return grid
 
 
+# Hand edits asked for by hex, in-game coordinates, each with its copies on
+# the other three sides: (hex, new terrain letter).
+HAND_EDITS = [
+    # the badlands channel opens at 21,21 and 21,8
+    *[((21, y), ".") for y in (21, 8)],
+    # the planets at 24,24 and its copies move two hexes outwards
+    *[((x, y), ".") for x in (24, 18) for y in (24, 4)],
+    *[((x, y), "p") for x in (26, 16) for y in (24, 4)],
+    # the planet at 24,23 and the asteroid field at 25,23 swap
+    ((24, 23), "a"), ((25, 23), "p"), ((18, 23), "a"), ((17, 23), "p"),
+    ((24, 5), "a"), ((25, 6), "p"), ((18, 5), "a"), ((17, 6), "p"),
+]
+
+
+def hand_edits(grid):
+    for (X, Y), ch in HAND_EDITS:
+        grid[Y - 1][X - 1] = ch
+    return grid
+
+
 def barriers(grid):
     W = len(grid[0])
     for ch, hexes in BARRIERS + CENTRE_BARRIERS:
@@ -355,7 +375,7 @@ def write(grid, keeps, path, table=T, base_only=("Yk", "Ys^Vyp")):
 
 if __name__ == "__main__":
     grid, keeps = pad_top(*build())
-    grid = asteroid_skirts(centrepieces(barriers(grid)))
+    grid = hand_edits(asteroid_skirts(centrepieces(barriers(grid))))
     write(grid, keeps,
           os.path.join(sys.argv[1], "maps/4p_Manufacturing_Consent.map"))
     write(grid, keeps, os.path.join(
