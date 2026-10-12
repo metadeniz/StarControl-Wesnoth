@@ -379,6 +379,13 @@ HAND_EDITS = [
     # them: keeps at 20,10 and 22,10, ring at 21,10 (mirrored north-south)
     *[((x, y), "K") for x in (20, 22) for y in (10, 18)],
     ((21, 10), "c"), ((21, 19), "c"),
+    # the planet at 26,24 and the asteroid field at 26,25 swap (mirrored
+    # four ways)
+    *[(h, ch) for xy, ch in [((26, 24), "a"), ((26, 25), "p")]
+      for h in mirrored4(*xy)],
+    # a keep at 21,1 with a docking ring at 21,2, and their north-south
+    # copy at the bottom edge: keep at 21,27, ring at 21,26
+    ((21, 1), "K"), ((21, 2), "c"), ((21, 27), "K"), ((21, 26), "c"),
 ]
 
 
@@ -451,7 +458,7 @@ def write(grid, keeps, path, table=T, base_only=("Yk", "Ys^Vyp")):
                     code = LEAFY
             border = (X - 1, Y - 1) != (x, y)
             if border and code in base_only:
-                code = table["c"] if grid[y][x] == "K" else table["."]
+                code = table["."]
             elif (x, y) in starts:
                 code = f"{starts[x, y]} {code}"
             row.append(code)
