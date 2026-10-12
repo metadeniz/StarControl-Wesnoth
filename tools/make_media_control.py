@@ -67,6 +67,28 @@ T.update({str(n): f"Yqe^Yxb{n}" for n in range(1, 5)})
 WESNOTH.update({str(n): "Md^Xm" for n in range(1, 5)})
 
 
+# The dark stars: each diamond of "G" (gas giant in dark nebula) becomes one
+# of the four dark star looks, in reading order, so each shows once
+DARK_STARS = "JLNQ"
+T.update({ch: f"Yqd^Yds{n}" for n, ch in enumerate(DARK_STARS, 1)})
+WESNOTH.update({ch: "Md^Xm" for ch in DARK_STARS})
+
+
+def number_dark_stars(grid):
+    cells = sorted((y, x) for y, row in enumerate(grid) for x, ch in enumerate(row) if ch == "G")
+    groups = []
+    for y, x in cells:
+        for g in groups:
+            if any(abs(y - gy) <= 1 and abs(x - gx) <= 1 for gy, gx in g):
+                g.append((y, x)); break
+        else:
+            groups.append([(y, x)])
+    assert len(groups) <= len(DARK_STARS) and all(len(g) == 4 for g in groups), groups
+    for ch, g in zip(DARK_STARS, groups):
+        for y, x in g:
+            grid[y][x] = ch
+    return grid
+
 def number_black_holes(grid):
     holes = sorted((y, x) for y, row in enumerate(grid) for x, ch in enumerate(row) if ch == "X")
     assert len(holes) == 4, holes
@@ -396,7 +418,7 @@ def write(grid, keeps, path, table=T, base_only=("Yk", "Ys^Vyp")):
 
 if __name__ == "__main__":
     grid, keeps = build()
-    grid = number_black_holes(grid)
+    grid = number_dark_stars(number_black_holes(grid))
     write(grid, keeps, os.path.join(sys.argv[1], "maps/4p_Media_Control.map"))
     write(grid, keeps, os.path.join(
         sys.argv[1], "maps/default-terrain/4p_Media_Control.map"),

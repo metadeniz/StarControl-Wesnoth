@@ -48,6 +48,29 @@ WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
 WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUSOTVM123456"})
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 
+# The dark stars: each diamond of "G" (gas giant in dark nebula) becomes one
+# of the four dark star looks, in reading order, so each shows once
+DARK_STARS = "JLNQ"
+T.update({ch: f"Yqd^Yds{n}" for n, ch in enumerate(DARK_STARS, 1)})
+WESNOTH.update({ch: "Md^Xm" for ch in DARK_STARS})
+
+
+def number_dark_stars(grid):
+    cells = sorted((y, x) for y, row in enumerate(grid) for x, ch in enumerate(row) if ch == "G")
+    groups = []
+    for y, x in cells:
+        for g in groups:
+            if any(abs(y - gy) <= 1 and abs(x - gx) <= 1 for gy, gx in g):
+                g.append((y, x)); break
+        else:
+            groups.append([(y, x)])
+    assert len(groups) <= len(DARK_STARS) and all(len(g) == 4 for g in groups), groups
+    for ch, g in zip(DARK_STARS, groups):
+        for y, x in g:
+            grid[y][x] = ch
+    return grid
+
+
 # The north-west quarter, in screenshot pixels (x < 562, y < 485)
 WALLS = [
     # the S-shaped ridge in the north-west, with its hook at the top
@@ -310,6 +333,13 @@ def asteroid_skirts(grid):
 
 # Hand edits asked for by hex, in-game coordinates, each with its copies on
 # the other three sides: (hex, new terrain letter).
+def mirrored4(X, Y):
+    """An in-game hex and its copies mirrored west-east and north-south."""
+    def flip(X, Y):
+        return X, (29 - Y if X % 2 else 28 - Y)
+    return list(dict.fromkeys([(X, Y), (42 - X, Y), flip(X, Y), flip(42 - X, Y)]))
+
+
 HAND_EDITS = [
     # the badlands channel opens at 21,21 and 21,8
     *[((21, y), ".") for y in (21, 8)],
@@ -332,14 +362,68 @@ HAND_EDITS = [
     # a red supergiant in its debris disk, its top at 5,16 and 6,16
     # (mirrored west to east only)
     *[((x, y), "M") for x in (5, 6, 36, 37) for y in (16, 17)],
-    # the channel's south crossing becomes red nebula
-    ((21, 22), "m"),
+    # red nebula in the channel at 21,22, and its north-south mirror 21,7
+    ((21, 22), "m"), ((21, 7), "m"),
+    # asteroid field at 16,25 and 19,24, open space at 17,25, 17,24 and
+    # 18,23, light badlands (swamp) at 15,20, 16,20, 17,21 and 18,20; all
+    # mirrored four ways
+    *[(h, ch) for xy, ch in [((16, 25), "a"), ((19, 24), "a"),
+                             ((17, 25), "."), ((17, 24), "."), ((18, 23), "."),
+                             ((15, 20), "s"), ((16, 20), "s"), ((17, 21), "s"), ((18, 20), "s")]
+      for h in mirrored4(*xy)],
+    # the asteroid field at 7,15 moves to 9,16, and 8,14 opens (mirrored
+    # west to east)
+    ((7, 15), "."), ((35, 15), "."), ((9, 16), "a"), ((33, 16), "a"),
+    ((8, 14), "."), ((34, 14), "."),
+    # the middle fortresses become two keeps with a docking ring between
+    # them: keeps at 20,10 and 22,10, ring at 21,10 (mirrored north-south)
+    *[((x, y), "K") for x in (20, 22) for y in (10, 18)],
+    ((21, 10), "c"), ((21, 19), "c"),
+    # the planet at 26,24 and the asteroid field at 26,25 swap (mirrored
+    # four ways)
+    *[(h, ch) for xy, ch in [((26, 24), "a"), ((26, 25), "p")]
+      for h in mirrored4(*xy)],
+    # a keep at 21,1 with a docking ring at 21,2, and their north-south
+    # copy at the bottom edge: keep at 21,27, ring at 21,26
+    ((21, 1), "K"), ((21, 2), "c"), ((21, 27), "K"), ((21, 26), "c"),
+    # the asteroid field at 9,5 and the planet at 10,5 swap (mirrored four
+    # ways)
+    *[(h, ch) for xy, ch in [((9, 5), "p"), ((10, 5), "a")]
+      for h in mirrored4(*xy)],
+    # 2,15 and 4,14 open, 1,16 an asteroid field (mirrored west to east)
+    ((2, 15), "."), ((40, 15), "."), ((4, 14), "."), ((38, 14), "."),
+    ((1, 16), "a"), ((41, 16), "a"),
 ]
 
 
 def hand_edits(grid):
     for (X, Y), ch in HAND_EDITS:
         grid[Y - 1][X - 1] = ch
+    return swap_east_clusters(grid)
+
+
+def swap_east_clusters(grid):
+    """On the east side only, the dark nebula with its gas giant (north) and
+    the radiation zone with its globular cluster (south) trade places: the
+    clouds flipped north to south, and each 4-hex object moved onto the
+    other's diamond, so both keep their shape."""
+    east = [(X, Y) for X in range(28, 35) for Y in range(1, 28)]
+    giant = [(X, Y) for X, Y in east if grid[Y - 1][X - 1] == "G"]
+    cluster = [(X, Y) for X, Y in east if grid[Y - 1][X - 1] == "H"]
+    for X, Y in giant:
+        grid[Y - 1][X - 1] = "D"
+    for X, Y in cluster:
+        grid[Y - 1][X - 1] = "R"
+    for X in range(28, 35):
+        for Y in range(3, 9):
+            Y2 = 29 - Y if X % 2 else 28 - Y
+            a, b = grid[Y - 1][X - 1], grid[Y2 - 1][X - 1]
+            if a in "DR" or b in "DR":
+                grid[Y - 1][X - 1], grid[Y2 - 1][X - 1] = b, a
+    for X, Y in giant:
+        grid[Y - 1][X - 1] = "H"
+    for X, Y in cluster:
+        grid[Y - 1][X - 1] = "G"
     return grid
 
 
@@ -381,7 +465,7 @@ def write(grid, keeps, path, table=T, base_only=("Yk", "Ys^Vyp")):
                     code = LEAFY
             border = (X - 1, Y - 1) != (x, y)
             if border and code in base_only:
-                code = table["c"] if grid[y][x] == "K" else table["."]
+                code = table["."]
             elif (x, y) in starts:
                 code = f"{starts[x, y]} {code}"
             row.append(code)
@@ -392,7 +476,7 @@ def write(grid, keeps, path, table=T, base_only=("Yk", "Ys^Vyp")):
 
 if __name__ == "__main__":
     grid, keeps = pad_top(*build())
-    grid = hand_edits(asteroid_skirts(centrepieces(barriers(grid))))
+    grid = number_dark_stars(hand_edits(asteroid_skirts(centrepieces(barriers(grid)))))
     write(grid, keeps,
           os.path.join(sys.argv[1], "maps/4p_Manufacturing_Consent.map"))
     write(grid, keeps, os.path.join(
