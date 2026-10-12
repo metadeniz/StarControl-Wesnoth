@@ -375,6 +375,10 @@ HAND_EDITS = [
     # west to east)
     ((7, 15), "."), ((35, 15), "."), ((9, 16), "a"), ((33, 16), "a"),
     ((8, 14), "."), ((34, 14), "."),
+    # the middle fortresses become two keeps with a docking ring between
+    # them: keeps at 20,10 and 22,10, ring at 21,10 (mirrored north-south)
+    *[((x, y), "K") for x in (20, 22) for y in (10, 18)],
+    ((21, 10), "c"), ((21, 19), "c"),
 ]
 
 
