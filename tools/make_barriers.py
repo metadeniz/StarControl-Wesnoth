@@ -74,13 +74,14 @@ def gas_painters(rng, w, h, noise):
     `noise(rng, w, h, octaves, cell)` is make_art's wrapping fractal noise."""
     painters = {}
 
-    # Dark nebula: dust so thick it blots out the stars, with faint warm folds.
+    # Dark nebula: dust so thick it blots out the stars, in dark purple
+    # folds, darker than the plasma storm.
     n1, n2, f = noise(rng, w, h, 5, 40), noise(rng, w, h, 4, 70), noise(rng, w, h, 5, 22)
 
     def dark(sl, col, row):
         a, b, fold = n1[sl], n2[sl], _ridged(f[sl])
-        rgb = _mix((8, 5, 8), (80, 44, 44), np.clip(a * 0.75 + fold ** 2 * 0.35, 0, 1))
-        rgb = _mix(rgb, (175, 110, 80), np.clip((a - 0.5) * 2.5, 0, 1) * fold ** 2 * 0.6)   # lit billows
+        rgb = _mix((6, 3, 10), (52, 24, 70), np.clip(a * 0.75 + fold ** 2 * 0.35, 0, 1))
+        rgb = _mix(rgb, (115, 70, 150), np.clip((a - 0.5) * 2.5, 0, 1) * fold ** 2 * 0.6)   # lit billows
         return _rgba(rgb, np.clip(0.9 + 0.1 * (b - 0.5) + 0.06 * fold, 0, 0.97))
     painters["darknebula"] = dark
 
@@ -437,14 +438,45 @@ def globular_cluster(rng, rc=13, rt=70, n=16000, warm=0.6):
     return out.resize((BIG, BIG), Image.LANCZOS)
 
 
+# A gas giant standing in a cloud has wisps of that cloud drifting in front
+# of it: (dark, light) colours of each cloud's veil, and its terrain code.
+GIANT_VEILS = {
+    "darknebula": ("Yqd", (22, 9, 34), (80, 46, 110)),
+    "plasmastorm": ("Yqp", (55, 12, 70), (160, 60, 175)),
+    "radiation": ("Yqr", (50, 85, 15), (160, 210, 55)),
+    "eddy": ("Yqe", (35, 22, 75), (140, 105, 220)),
+    "nebula": ("Yn", (40, 140, 90), (120, 200, 90)),
+    "rednebula": ("Yr", (150, 35, 40), (220, 80, 50)),
+    "dust": ("Yd", (110, 85, 60), (170, 140, 100)),
+}
+
+
+def veiled(rng, giant, dark, light):
+    """`giant` with patches of cloud in front of it: thick in places, gone
+    in others, fading out just past the planet's rim."""
+    size = giant.width
+    x, y = _grid(size)
+    r = np.hypot(x, y)
+    patch = np.clip(_noise(rng, size, 4, 3) * 2.3 - 0.95, 0, 1)
+    wisp = _ridged(_noise(rng, size, 4, 6)) ** 4
+    shade = _noise(rng, size, 3, 4)
+    a = np.clip(patch * 0.8 + wisp * patch * 0.3, 0, 0.88) * np.clip((GIANT_D / 2 + 5 - r) / 9, 0, 1)
+    veil = _rgba(_mix(dark, light, np.clip(shade * 0.8 + wisp * 0.5, 0, 1)), a)
+    out = giant.copy()
+    out.alpha_composite(veil)
+    return out
+
+
 def build_objects(rng, out, save, apply_mask, starfield, mask):
     for name, make in [("black-hole", black_hole), ("pulsar", pulsar)]:
         img = make(rng)
         save(img, out, f"images/terrain/sc/{name}.png", False)
         tile = apply_mask(starfield(rng), mask); tile.alpha_composite(img)
         save(apply_mask(tile, mask), out, f"images/terrain/sc/{name}-tile.png", False)
+    giants = []
     for i, pal in enumerate(GAS_GIANTS):
         img = gas_giant(rng, pal)
+        giants.append(img)
         save(img, out, f"images/terrain/sc/gas-giant{'' if i == 0 else i + 1}.png", False)
         if i == 0:
             tile = apply_mask(starfield(rng), mask)
@@ -454,6 +486,12 @@ def build_objects(rng, out, save, apply_mask, starfield, mask):
     brng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 1)
     for i, style in enumerate(BLACK_HOLES[1:]):
         save(black_hole(brng, **style), out, f"images/terrain/sc/black-hole{i + 2}.png", False)
+    # Gas giants veiled by the cloud they stand in, with their own seed too.
+    vrng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 3)
+    for name, (code, dark, light) in GIANT_VEILS.items():
+        for i, img in enumerate(giants):
+            save(veiled(vrng, img, dark, light), out,
+                 f"images/terrain/sc/gas-giant-{name}{'' if i == 0 else i + 1}.png", False)
     # The four-hex black holes and globular clusters, also with their own seed.
     grng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 2)
     for name, make, styles in [("black-hole-big", big_black_hole, BIG_BLACK_HOLES),
