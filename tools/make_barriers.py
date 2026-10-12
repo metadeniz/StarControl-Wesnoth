@@ -9,7 +9,8 @@ Two kinds:
   its neighbours, so a blob reads as one cloud with a soft edge. This file
   only paints the clouds; make_art.py cuts them into hexes.
 * Single objects, drawn as overlays: black hole (four of them, picked per
-  hex), pulsar, and a gas giant that spans four hexes.
+  hex), pulsar, and three that span four hexes: gas giant, supermassive
+  black hole and globular cluster.
 """
 import math
 
@@ -322,6 +323,120 @@ def gas_giant(rng, palette):
     return out
 
 
+# ---------------------------------------------------------------- big objects
+# Four-hex centrepieces, drawn like the gas giants over a diamond of four
+# hexes, each to sit in the middle of a cluster of the matching cloud.
+
+BIG = GIANT_D + 24     # the same size as a gas giant's image
+BIG_BLACK_HOLES = [
+    dict(),                                                                          # gold, edge-on
+    dict(tilt=0.3, angle=-12, tint=(0.55, 0.7, 1.0), hot=(0.92, 0.96, 1.0)),        # blue-white, tilted
+    dict(tilt=0.1, angle=8, tint=(1.0, 0.35, 0.2), hot=(1.0, 0.85, 0.7)),           # red, edge-on
+    dict(tint=(1.0, 0.45, 0.12), hot=(1.0, 0.85, 0.5), eht=True),                    # orange ring, from the pole
+]
+GLOBULAR_CLUSTERS = [dict(), dict(rc=9, warm=0.9), dict(rc=16, warm=0.3, n=20000), dict(rc=11, warm=0.75, rt=64)]
+
+
+def big_black_hole(rng, tilt=0.16, angle=0, tint=(1.0, 0.72, 0.42), hot=(1.0, 0.97, 0.9), beam=0.7, rs=23, lens_k=2.2, eht=False):
+    """A black hole as the simulations and photographs show it: a round
+    black shadow edged by a thin photon ring, the accretion disc seen nearly
+    edge-on across it, and the far side of the disc bent by gravity into
+    bands over the top and under the bottom of the shadow. The side of the
+    disc turning towards us is brighter. `eht` instead draws it seen down
+    the pole, a blurred ring of light as in the first photographs."""
+    S = 3
+    W = BIG * S
+    x, y = _grid(W); x, y = x / S, y / S
+    d = np.hypot(x, y); th = np.arctan2(y, x)
+    tex = _noise(rng, W, 5, 6)
+    rin, rout = rs * 1.45, 72
+    # the disc's own brightness at disc radius r and azimuth a: hot inside,
+    # fading out, in fine concentric streaks
+    def emis(r, a):
+        f = np.clip((r - rin) / 2.5, 0, 1) * np.clip((rout - r) / 25, 0, 1)
+        streak = 0.8 + 0.2 * np.sin(r * 0.9 + 5 * tex + a * 0.5) + 0.15 * (tex - 0.5)
+        return 1.7 * f * (rin / np.maximum(r, 1)) ** 1.3 * streak
+    # primary image: the disc seen nearly edge-on
+    X, Y = x, y / tilt
+    r = np.hypot(X, Y); a = np.arctan2(Y, X)
+    dop = np.clip(1 - beam * X / np.maximum(r, 1), 0.25, 2)
+    prim = emis(r, a) * dop
+    near = Y > 0
+    # lensed image of the far side, bent over the top of the shadow, and a
+    # fainter one of the underside, wrapped under it
+    w = (1 - tilt) * np.abs(np.sin(th)) ** 0.6 + tilt
+    rr = rin + (d - rs * 1.1) * lens_k / np.maximum(w, 0.05)
+    lens = emis(rr, th) * np.where(y < 0, 1.0, 0.55) * np.clip(1 - beam * np.cos(th), 0.25, 2) * (d > rs)
+    ring = np.exp(-((d - rs * 1.04) / 0.9) ** 2) * (1.0 + 0.3 * np.clip(-np.cos(th), 0, 1))
+    def colour(I):
+        I = np.clip(I, 0, None)
+        t = np.clip(I, 0, 1)[..., None]
+        base = np.array(tint)[None, None] * 255
+        white = np.array(hot)[None, None] * 255
+        return base * np.clip(I * 1.6, 0, 1)[..., None] * (1 - t ** 2) + white * t ** 2
+    def layer(I):
+        return _rgba(colour(I), np.clip(I * 1.8, 0, 1))
+    shadow = np.clip((rs - d) * 1.5, 0, 1)
+    img = Image.new("RGBA", (W, W))
+    if eht:     # seen from above the pole, as in the first photographs: a blurred ring of light
+        I = np.exp(-((d - rs * 1.3) / 7) ** 2) * (0.35 + 0.65 * np.clip(np.sin(th + 0.4), -0.6, 1) + 0.25) * (0.8 + 0.4 * tex) * 0.6
+        I = I + np.exp(-((d - rs * 1.3) / 16) ** 2) * 0.25
+        g = layer(I).filter(ImageFilter.GaussianBlur(2.5 * S))
+        img.alpha_composite(g)
+        img.alpha_composite(_rgba(np.zeros((W, W, 3)), np.clip((rs * 0.95 - d) * 0.25, 0, 1) * 0.92))
+        return img.resize((BIG, BIG), Image.LANCZOS)
+    back = layer(prim * ~near + lens)
+    glow_src = layer((prim + lens) * 0.9 + ring)
+    glow = glow_src.filter(ImageFilter.GaussianBlur(7 * S))
+    ga = np.asarray(glow, np.float32); ga[..., 3] *= 0.55
+    img.alpha_composite(Image.fromarray(ga.astype(np.uint8)))
+    img.alpha_composite(back)
+    img.alpha_composite(_rgba(np.zeros((W, W, 3)), shadow))
+    img.alpha_composite(layer(ring * 1.2))
+    img.alpha_composite(layer(prim * near))
+    if angle:
+        img = img.rotate(angle, Image.BICUBIC)
+    return img.resize((BIG, BIG), Image.LANCZOS)
+
+
+def globular_cluster(rng, rc=13, rt=70, n=16000, warm=0.6):
+    """A ball of countless old stars, packed tight towards a blazing core."""
+    S = 3
+    W = BIG * S
+    acc = np.zeros((W, W, 3), np.float32)
+    # Plummer-like profile: radius from the cumulative distribution, cut at rt
+    u = rng.uniform(0, 0.97, n)
+    r = rc * u ** (1 / 3) / np.sqrt(1 - u ** (2 / 3))
+    r = r[r < rt]
+    a = rng.uniform(0, 2 * np.pi, len(r))
+    xs = W / 2 + r * np.cos(a) * S; ys = W / 2 + r * np.sin(a) * S
+    lum = rng.pareto(2.5, len(r)) * 0.3 + 0.1
+    kind = rng.uniform(0, 1, len(r))
+    col = np.where((kind < 0.12)[:, None], [[255, 150, 90]],                 # red giants
+          np.where((kind > 0.96)[:, None], [[170, 200, 255]],               # blue stragglers
+                   [[255, 235 - 25 * warm, 200 - 60 * warm]])).astype(np.float32)
+    xi = np.clip(xs.astype(int), 0, W - 1); yi = np.clip(ys.astype(int), 0, W - 1)
+    np.add.at(acc, (yi, xi), col * lum[:, None])
+    fy = np.fft.fftfreq(W)[:, None]; fx = np.fft.fftfreq(W)[None, :]
+
+    def blur(a, r):         # gaussian blur in float, through the FFT
+        k = np.exp(-2 * (np.pi * r) ** 2 * (fx ** 2 + fy ** 2))
+        return np.dstack([np.real(np.fft.ifft2(np.fft.fft2(a[..., c]) * k)) for c in range(3)])
+    stars = blur(acc, 0.65 * S) * 2 * np.pi * (0.65 * S) ** 2 / 255
+    halo = blur(acc, 5 * S) * 8 / 255
+    x, y = _grid(W); d = np.hypot(x, y) / S
+    # the unresolved glow of the fainter stars, falling off like the stars do
+    core = (1 + (d / rc) ** 2)[..., None] ** -2 * np.array([1.0, 0.88, 0.66]) * 0.9 * np.clip((rt - d) / 15, 0, 1)[..., None]
+    light = stars + halo + core                     # 1 = full white
+    L = light.max(axis=2)
+    T = 1 - np.exp(-L * 1.1)                        # tone-mapped brightness
+    alpha = np.clip(T * 1.25, 0, 1)
+    hue = light / np.maximum(L, 1e-4)[..., None]
+    rgb = np.clip(hue * (0.6 + 0.4 * T)[..., None] + np.clip(T - 0.8, 0, 1)[..., None] * 1.5, 0, 1) * 255
+    out = _rgba(rgb, alpha)
+    return out.resize((BIG, BIG), Image.LANCZOS)
+
+
 def build_objects(rng, out, save, apply_mask, starfield, mask):
     for name, make in [("black-hole", black_hole), ("pulsar", pulsar)]:
         img = make(rng)
@@ -339,3 +454,14 @@ def build_objects(rng, out, save, apply_mask, starfield, mask):
     brng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 1)
     for i, style in enumerate(BLACK_HOLES[1:]):
         save(black_hole(brng, **style), out, f"images/terrain/sc/black-hole{i + 2}.png", False)
+    # The four-hex black holes and globular clusters, also with their own seed.
+    grng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 2)
+    for name, make, styles in [("black-hole-big", big_black_hole, BIG_BLACK_HOLES),
+                               ("globular-cluster", globular_cluster, GLOBULAR_CLUSTERS)]:
+        for i, style in enumerate(styles):
+            img = make(grng, **style)
+            save(img, out, f"images/terrain/sc/{name}{'' if i == 0 else i + 1}.png", False)
+            if i == 0:
+                tile = apply_mask(starfield(grng), mask)
+                tile.alpha_composite(img.resize((HEX - 4, HEX - 4), Image.LANCZOS), (2, 2))
+                save(apply_mask(tile, mask), out, f"images/terrain/sc/{name}-tile.png", False)

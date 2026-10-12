@@ -39,12 +39,12 @@ T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
      "s": "Yis", "m": "Yr",
      # barriers that replace most of the asteroid walls (see BARRIERS)
      "D": "Yqd", "R": "Yqr", "P": "Yqp", "E": "Yqe", "G": "Yqd^Ygg",
-     "H": "Yqr^Ygg", "X": "Yqe^Yxb", "U": "Yqr^Yxp", "S": "Ys^Yx",
-     "1": "Yqe^Yxb1", "2": "Yqe^Yxb2", "3": "Yqe^Yxb3", "4": "Yqe^Yxb4"}
+     "H": "Yqr^Ygc", "X": "Yqe^Yxb", "U": "Yqr^Yxp", "S": "Ys^Yx",
+     "O": "Yqe^Ybh", "T": "Yqp^Yx", "V": "Yqp^Yxp", "Z": "Yqp^Yxb2"}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "r": "Re", "B": "Wo", "f": "Wo^Bsb\\",
            "s": "Ss", "m": "Gg^Tf"}
-WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUS1234"})
+WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUSOTVZ"})
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 
 # The north-west quarter, in screenshot pixels (x < 562, y < 485)
@@ -259,18 +259,30 @@ BARRIERS = [
 CENTRE_BARRIERS = [("X", [(21, 12), (21, 17)]), ("E", [(20, 12), (22, 12), (20, 16), (22, 16)])]
 
 
-# Added on request: a black hole at the centre of every gravity eddy
-# cluster, each cluster's a different colour from its neighbours' (1 orange,
-# 2 blue-white, 3 red, 4 violet). Opposite corners match. In-game
-# coordinates, both halves.
-BLACK_HOLES = {(21, 12): "1", (21, 17): "4",
-               (17, 10): "3", (25, 19): "3", (25, 10): "2", (17, 19): "2"}
+# Added on request: every cluster of barriers has a centrepiece. Each
+# cluster of gravity eddies has a supermassive black hole (4 hexes, which
+# takes one more hex, open before, to make the diamond), each plasma storm a
+# star, pulsar or black hole at its corner, and the radiation zones round
+# the south gas giants hold globular clusters instead (see "H" in T).
+# In-game coordinates, both halves.
+CENTREPIECES = [
+    ("O", [(16, 9), (17, 9), (17, 10), (18, 9)]),       # north-west eddies
+    ("O", [(24, 9), (25, 9), (25, 10), (26, 9)]),       # north-east
+    ("O", [(16, 19), (17, 19), (17, 20), (18, 19)]),    # south-west
+    ("O", [(24, 19), (25, 19), (25, 20), (26, 19)]),    # south-east
+    ("O", [(20, 12), (21, 12), (22, 12), (21, 13)]),    # the centre ring's north arc
+    ("O", [(20, 16), (21, 16), (22, 16), (21, 17)]),    # and south arc
+    ("T", [(18, 3)]), ("V", [(24, 3)]),                 # the plasma storms
+    ("Z", [(18, 25)]), ("T", [(24, 25)]),
+]
 
 
-def black_holes(grid):
-    for (X, Y), ch in BLACK_HOLES.items():
-        assert grid[Y - 1][X - 1] in ("E", "X"), (X, Y, grid[Y - 1][X - 1])
-        grid[Y - 1][X - 1] = ch
+def centrepieces(grid):
+    for ch, hexes in CENTREPIECES:
+        cloud = "E" if ch == "O" else "P"
+        for X, Y in hexes:
+            assert grid[Y - 1][X - 1] in (cloud, "X", "."), (X, Y, grid[Y - 1][X - 1])
+            grid[Y - 1][X - 1] = ch
     return grid
 
 
@@ -323,7 +335,7 @@ def write(grid, keeps, path, table=T, base_only=("Yk", "Ys^Vyp")):
 
 if __name__ == "__main__":
     grid, keeps = pad_top(*build())
-    grid = black_holes(barriers(grid))
+    grid = centrepieces(barriers(grid))
     write(grid, keeps,
           os.path.join(sys.argv[1], "maps/4p_Manufacturing_Consent.map"))
     write(grid, keeps, os.path.join(
