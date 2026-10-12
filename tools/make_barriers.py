@@ -8,8 +8,8 @@ Two kinds:
   every few hexes, each hex shows its own piece of it and spills wisps onto
   its neighbours, so a blob reads as one cloud with a soft edge. This file
   only paints the clouds; make_art.py cuts them into hexes.
-* Single objects, drawn as overlays: black hole, pulsar, and a gas giant
-  that spans four hexes.
+* Single objects, drawn as overlays: black hole (four of them, picked per
+  hex), pulsar, and a gas giant that spans four hexes.
 """
 import math
 
@@ -186,30 +186,52 @@ def sphere(rng, d, palette, kind, light=(-0.55, -0.55, 0.63)):
 
 
 
-def black_hole(rng):
-    """Dead-black core in a lensed, glowing accretion disc."""
+# Disc colours for the black holes: (red, green, blue) as base + span * heat ** power,
+# heat being 1 at the inner edge of the disc and 0 at the outer.
+BLACK_HOLES = [
+    dict(),                                                                        # orange, the first one
+    dict(tilt=0.5, angle=-24, rgb=((150, 70), (190, 60, 1), (255, 0, 1)), glow=(120, 170, 255)),    # blue-white
+    dict(tilt=0.17, angle=18, rgb=((200, 55), (40, 120, 1.5), (30, 60, 2)), glow=(255, 70, 40), jets=True),  # red, edge-on
+    dict(tilt=0.72, angle=40, rgb=((170, 85), (60, 150, 1.5), (230, 25, 1)), glow=(190, 90, 255), arms=2),  # violet, face-on
+]
+
+
+def black_hole(rng, tilt=0.32, angle=0, rgb=((255, 0), (120, 120, 1), (40, 180, 2)),
+               glow=(255, 140, 60), jets=False, arms=3):
+    """Dead-black core in a lensed, glowing accretion disc. The disc is seen
+    at `tilt` (1 face-on, 0 edge-on) and turned `angle` degrees; `jets`
+    adds two faint beams along the axis."""
     W = HEX * S
     x, y = _grid(W); x, y = x / S, y / S
-    tilt = 0.32
     rd = np.sqrt(x ** 2 + (y / tilt) ** 2)
     ang = np.arctan2(y / tilt, x)
     tex = _noise(rng, W, 4, 5)
-    swirl = 0.55 + 0.45 * np.sin(ang * 3 + rd * 0.55 + tex * 4)
+    swirl = 0.55 + 0.45 * np.sin(ang * arms + rd * 0.55 + tex * 4)
     disc = np.clip((rd - 12) / 3, 0, 1) * np.clip((31 - rd) / 9, 0, 1) * swirl
     d = np.sqrt(x ** 2 + y ** 2)
     ring = np.clip(1 - np.abs(d - 13.5) / 2.5, 0, 1) * (0.6 + 0.4 * np.clip(-y / 13, 0, 1))
     hot = np.clip(1 - rd / 30, 0, 1)
     doppler = np.clip(1 + x / 40, 0.6, 1.4)
-    rgb = np.dstack([255 * np.ones_like(d), 120 + 120 * hot, 40 + 180 * hot ** 2]) * doppler[..., None]
-    img = _rgba(rgb, np.clip(disc + ring, 0, 1) * doppler)
+    if rgb == ((255, 0), (120, 120, 1), (40, 180, 2)):     # the first black hole, kept exactly as drawn
+        col = np.dstack([255 * np.ones_like(d), 120 + 120 * hot, 40 + 180 * hot ** 2])
+    else:
+        col = np.dstack([c[0] + (c[1] if len(c) > 1 else 0) * hot ** (c[2] if len(c) > 2 else 1) for c in rgb])
+    img = _rgba(col * doppler[..., None], np.clip(disc + ring, 0, 1) * doppler)
+    if jets:
+        beam = np.clip(1 - np.abs(x) / (0.8 + np.abs(y) * 0.06), 0, 1) * np.clip(1 - np.abs(y) / 34, 0, 1) * (np.abs(y) > 9)
+        jet = _rgba(np.dstack([np.full_like(d, 200), np.full_like(d, 225), np.full_like(d, 255)]), beam * 0.8)
+        jet.alpha_composite(img); img = jet
     core = np.clip((11 - d) * 1.5, 0, 1)
     front = (y > 0) & (rd > 12)                 # the near half of the disc passes in front
     img.alpha_composite(_rgba(np.zeros((W, W, 3)), core * np.where(front, 1 - np.clip(disc * 1.4, 0, 1), 1)))
-    glow = Image.new("RGBA", (W, W), (255, 140, 60, 0))
-    ImageDraw.Draw(glow).ellipse([W / 2 - 26 * S, W / 2 - 12 * S, W / 2 + 26 * S, W / 2 + 12 * S], fill=(255, 140, 60, 70))
-    glow = glow.filter(ImageFilter.GaussianBlur(5 * S))
-    glow.alpha_composite(img)
-    return glow.resize((HEX, HEX), Image.LANCZOS)
+    halo = Image.new("RGBA", (W, W), tuple(glow) + (0,))
+    gh = 12 + 14 * (tilt - 0.32) if tilt > 0.32 else 12
+    ImageDraw.Draw(halo).ellipse([W / 2 - 26 * S, W / 2 - gh * S, W / 2 + 26 * S, W / 2 + gh * S], fill=tuple(glow) + (70,))
+    halo = halo.filter(ImageFilter.GaussianBlur(5 * S))
+    halo.alpha_composite(img)
+    if angle:
+        halo = halo.rotate(angle, Image.BICUBIC)
+    return halo.resize((HEX, HEX), Image.LANCZOS)
 
 
 def pulsar(rng):
@@ -313,3 +335,7 @@ def build_objects(rng, out, save, apply_mask, starfield, mask):
             tile = apply_mask(starfield(rng), mask)
             tile.alpha_composite(img.resize((HEX - 4, HEX - 4), Image.LANCZOS), (2, 2))
             save(apply_mask(tile, mask), out, "images/terrain/sc/gas-giant-tile.png", False)
+    # More black holes, added later with their own seed so the art above stays the same.
+    brng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 1)
+    for i, style in enumerate(BLACK_HOLES[1:]):
+        save(black_hole(brng, **style), out, f"images/terrain/sc/black-hole{i + 2}.png", False)
