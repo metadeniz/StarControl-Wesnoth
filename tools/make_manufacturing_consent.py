@@ -39,11 +39,12 @@ T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
      "s": "Yis", "m": "Yr",
      # barriers that replace most of the asteroid walls (see BARRIERS)
      "D": "Yqd", "R": "Yqr", "P": "Yqp", "E": "Yqe", "G": "Yqd^Ygg",
-     "H": "Yqr^Ygg", "X": "Yqe^Yxb", "U": "Yqr^Yxp", "S": "Ys^Yx"}
+     "H": "Yqr^Ygg", "X": "Yqe^Yxb", "U": "Yqr^Yxp", "S": "Ys^Yx",
+     "1": "Yqe^Yxb1", "2": "Yqe^Yxb2", "3": "Yqe^Yxb3", "4": "Yqe^Yxb4"}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "r": "Re", "B": "Wo", "f": "Wo^Bsb\\",
            "s": "Ss", "m": "Gg^Tf"}
-WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUS"})
+WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUS1234"})
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 
 # The north-west quarter, in screenshot pixels (x < 562, y < 485)
@@ -258,6 +259,21 @@ BARRIERS = [
 CENTRE_BARRIERS = [("X", [(21, 12), (21, 17)]), ("E", [(20, 12), (22, 12), (20, 16), (22, 16)])]
 
 
+# Added on request: a black hole at the centre of every gravity eddy
+# cluster, each cluster's a different colour from its neighbours' (1 orange,
+# 2 blue-white, 3 red, 4 violet). Opposite corners match. In-game
+# coordinates, both halves.
+BLACK_HOLES = {(21, 12): "1", (21, 17): "4",
+               (17, 10): "3", (25, 19): "3", (25, 10): "2", (17, 19): "2"}
+
+
+def black_holes(grid):
+    for (X, Y), ch in BLACK_HOLES.items():
+        assert grid[Y - 1][X - 1] in ("E", "X"), (X, Y, grid[Y - 1][X - 1])
+        grid[Y - 1][X - 1] = ch
+    return grid
+
+
 def barriers(grid):
     W = len(grid[0])
     for ch, hexes in BARRIERS + CENTRE_BARRIERS:
@@ -307,7 +323,7 @@ def write(grid, keeps, path, table=T, base_only=("Yk", "Ys^Vyp")):
 
 if __name__ == "__main__":
     grid, keeps = pad_top(*build())
-    grid = barriers(grid)
+    grid = black_holes(barriers(grid))
     write(grid, keeps,
           os.path.join(sys.argv[1], "maps/4p_Manufacturing_Consent.map"))
     write(grid, keeps, os.path.join(
