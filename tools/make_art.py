@@ -16,6 +16,7 @@ Usage:
     make_art.py --only badlands --out <add-on dir>    (badlands art and rules only)
     make_art.py --only asteroids --out <add-on dir>   (asteroid fields, dense asteroids, walls)
     make_art.py --only fried --out <add-on dir>       (Kohr-Ah F.R.I.E.D. plumes)
+    make_art.py --only terrain --out <add-on dir>     (all terrain, no UQM content needed)
 """
 
 import argparse
@@ -737,11 +738,12 @@ def starfield(rng, density=1.0):
     """72x72 RGBA, opaque, deep-space colour with stars."""
     img = np.zeros((HEX, HEX, 4), np.float32)
     n = calm_edges(fractal_noise(rng, HEX, octaves=3, base=2))
-    # Dark navy rather than black: Wesnoth darkens hexes a selected ship
-    # cannot reach, and on near-black that darkening would be invisible.
-    img[:, :, 0] = 20 + 10 * n
-    img[:, :, 1] = 25 + 10 * n
-    img[:, :, 2] = 52 + 18 * n
+    # Near-black with a faint cool tint, so space reads as a dark starfield.
+    # (Wesnoth darkens hexes a selected ship cannot reach; on this dark a
+    # base that shows mostly in the stars and gas, which still dim.)
+    img[:, :, 0] = 7 + 5 * n
+    img[:, :, 1] = 8 + 5 * n
+    img[:, :, 2] = 13 + 8 * n
     img[:, :, 3] = 255
     pil = Image.fromarray(img.clip(0, 255).astype(np.uint8), "RGBA")
     d = ImageDraw.Draw(pil)
@@ -1538,6 +1540,21 @@ def build_attack_icons(out):
 hex_mask_cache = None
 
 
+def build_terrain(rng, mask, tmasks, args):
+    """All terrain art (original, needs no UQM content)."""
+    build_space(rng, mask, args.out)
+    build_nebula(rng, mask, tmasks, args.out)
+    build_planets(rng, args.out)
+    spend_old_asteroid_draws(rng)
+    build_star(rng, args.out)
+    build_starbase(rng, mask, args.out)
+    # Added later with its own seed so the art above stays byte-identical.
+    build_gas(args.seed, args.out)
+    build_badlands(np.random.default_rng(args.seed + 4), args.out)
+    build_asteroid_art(np.random.default_rng(args.seed + 20), args.out, save, TRANSITION_COMBOS, mask)
+    build_barrier_objects(np.random.default_rng(args.seed + 40), args.out, save, apply_mask, starfield, mask)
+
+
 def main():
     global hex_mask_cache
     ap = argparse.ArgumentParser()
@@ -1547,7 +1564,7 @@ def main():
     ap.add_argument("--threedo", help="unzipped UQM 3DO music add-on (optional)")
     ap.add_argument("--wesnoth-data", default="/usr/share/games/wesnoth/1.16/data")
     ap.add_argument("--seed", type=int, default=1990)
-    ap.add_argument("--only", choices=["badlands", "gas", "asteroids", "fried", "barriers"],
+    ap.add_argument("--only", choices=["badlands", "gas", "asteroids", "fried", "barriers", "terrain"],
                     help="rebuild just this terrain (barriers: all gas clouds and the barrier objects)")
     args = ap.parse_args()
     if not args.only and not args.uqm:
@@ -1574,6 +1591,10 @@ def main():
         build_asteroid_art(np.random.default_rng(args.seed + 20), args.out, save, TRANSITION_COMBOS, mask)
         return 0
 
+    if args.only == "terrain":
+        build_terrain(rng, mask, tmasks, args)
+        return 0
+
     build_ships(args.uqm, args.out)
     build_samatra(args.uqm, args.out)
     build_hierarchy_starbase(args.out)   # original art
@@ -1591,17 +1612,7 @@ def main():
     if args.threedo:
         build_remixes(args.threedo, args.out, table=THREEDO)
 
-    build_space(rng, mask, args.out)
-    build_nebula(rng, mask, tmasks, args.out)
-    build_planets(rng, args.out)
-    spend_old_asteroid_draws(rng)
-    build_star(rng, args.out)
-    build_starbase(rng, mask, args.out)
-    # Added later with its own seed so the art above stays byte-identical.
-    build_gas(args.seed, args.out)
-    build_badlands(np.random.default_rng(args.seed + 4), args.out)
-    build_asteroid_art(np.random.default_rng(args.seed + 20), args.out, save, TRANSITION_COMBOS, mask)
-    build_barrier_objects(np.random.default_rng(args.seed + 40), args.out, save, apply_mask, starfield, mask)
+    build_terrain(rng, mask, tmasks, args)
 
     # Added by hand, not built here: Chenjesu and Mmrnmhrm themes by Titus
     # (supplied as MP3s, loudness-matched to the other music).
