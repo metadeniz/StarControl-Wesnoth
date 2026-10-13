@@ -237,11 +237,14 @@ function sc.victory_theme()
 	if theme then wesnoth.audio.play(theme) end
 end
 
--- The engine's own shuffle only keeps a track from coming back within two
--- others, so each playlist is dealt like a deck instead: shuffled once and
--- then played in that order, looping, so every track plays before any repeats.
--- The shuffle uses the synced random numbers, so every client shuffles every
--- playlist (in the same order) to stay in sync, then plays only its own.
+-- Wesnoth 1.16 and 1.18 never move past a track marked shuffle=no: when it
+-- ends, the same track starts again (only 1.19 plays an unshuffled list in
+-- order). So the playlist keeps the engine's shuffle, which keeps a track
+-- from coming back within two others and from playing a third time before
+-- every other track has played. Only the opening track is ours to choose: it
+-- comes from a shuffle made with the synced random numbers, so every client
+-- shuffles every playlist (in the same order) to stay in sync, then plays
+-- only its own.
 local function shuffled(list)
 	local deck = {}
 	for i, track in ipairs(list) do deck[i] = track end
@@ -267,7 +270,7 @@ function sc.set_music()
 				name = "sc/" .. track .. ".ogg",
 				append = i > 1,
 				immediate = i == 1,
-				shuffle = false,
+				shuffle = true,
 			}
 		end
 	end
@@ -540,6 +543,13 @@ end
 -- Older versions turned the music down during a ditty; a game saved then
 -- must not load with the music turned down.
 wesnoth.audio.music_list.volume = 100
+
+-- Older versions also turned the engine's shuffle off, which on Wesnoth 1.16
+-- and 1.18 repeats the opening track for the whole game (see sc.set_music);
+-- a game saved then must load with the shuffle back on.
+for i = 1, #wesnoth.audio.music_list do
+	pcall(function() wesnoth.audio.music_list[i].shuffle = true end)
+end
 
 ------------------------------------------------------------------ Ambushes
 
