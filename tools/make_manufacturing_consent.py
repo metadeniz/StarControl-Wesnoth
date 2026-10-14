@@ -43,7 +43,7 @@ T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
      "o": "Ys^Yxd1", "y": "Yd^Yxd5",
      "O": "Yqe^Ybh", "T": "Yqp^Yx", "V": "Yqp^Yxp",
      **{str(n): f"Yqe^Ybh{n}" for n in range(1, 7)},
-     "Y": "Ys^Ysu5", "Z": "Ys^Ysu2",
+     "Y": "Ys^Ytu5", "Z": "Ys^Ytu2",
      "q": "Ys^Yxd7", "g": "Yd^Yxd6", "b": "Ys^Ysb"}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "r": "Re", "B": "Wo", "f": "Wo^Bsb\\",
@@ -397,11 +397,13 @@ HAND_EDITS = [
     *[(h, ch) for xy, ch in [((9, 5), "p"), ((10, 5), "a")]
       for h in mirrored4(*xy)],
     # the south-east black hole takes the look of the centre's south one,
-    # and the two centre black holes become supergiants (green north,
-    # blue south) in open space
+    # and the two centre black holes become 3-hex supergiants (green
+    # north, blue south) in open space, turned half a circle from each other
     *[((x, y), "6") for x, y in [(24, 19), (25, 19), (25, 20), (26, 19)]],
-    *[((x, y), "Y") for x, y in [(20, 12), (21, 12), (22, 12), (21, 13)]],
-    *[((x, y), "Z") for x, y in [(20, 16), (21, 16), (22, 16), (21, 17)]],
+    *[((x, y), ".") for x, y in [(20, 12), (21, 12), (22, 12), (21, 13),
+                                 (20, 16), (21, 16), (22, 16), (21, 17)]],
+    *[((x, y), "Y") for x, y in [(20, 12), (21, 12), (21, 13)]],
+    *[((x, y), "Z") for x, y in [(21, 16), (21, 17), (22, 16)]],
     # 2,15 and 4,14 open, 1,16 an asteroid field (mirrored west to east)
     ((2, 15), "."), ((40, 15), "."), ((4, 14), "."), ((38, 14), "."),
     ((1, 16), "a"), ((41, 16), "a"),
@@ -409,6 +411,10 @@ HAND_EDITS = [
     # 37,13, and at 37,16 a blue giant with a green star beside it
     ((37, 13), "q"), ((38, 16), "g"),
     *[((x, y), "b") for x in (36, 37) for y in (16, 17)],
+    # green nebula at 28,19 and 28,9, red nebula at 24,13 (mirrored west
+    # to east)
+    *[((x, y), "n") for x in (28, 14) for y in (19, 9)],
+    ((24, 13), "m"), ((18, 13), "m"),
 ]
 
 
