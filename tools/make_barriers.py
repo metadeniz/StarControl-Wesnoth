@@ -175,6 +175,20 @@ def gas_painters(rng, w, h, noise):
         return _rgba(_mix((32, 6, 42), (125, 35, 125), a), np.clip(0.75 + 0.2 * (b - 0.5), 0, 0.97))
     painters["plasmastorm-calm"] = calm_storm
 
+    # The storm hexes next to a star: a bolt in every one (its own seed),
+    # each fading out inside its own hex, so the star's hex stays calm
+    nbolt, nglow = _bolts(np.random.default_rng(rng.bit_generator.seed_seq.entropy + 2),
+                          w, h, (w // 54) * (h // 72))
+
+    def near_storm(sl, col, row):
+        a, b = p1[sl], p2[sl]
+        rgb = _mix((32, 6, 42), (125, 35, 125), a)
+        g = np.clip(nglow[sl] * 1.6, 0, 1)
+        rgb = _mix(rgb, (215, 95, 255), g * 0.7)
+        rgb = _mix(rgb, (255, 235, 255), nbolt[sl])
+        return _rgba(rgb, np.clip(0.75 + 0.2 * (b - 0.5) + g * 0.3, 0, 0.97))
+    painters["plasmastorm-near"] = near_storm
+
     # Gravity eddy: a whirl in every hex, neighbours turning opposite ways,
     # pulling the light of the stars into violet arcs round a dark core.
     pts = _hex_centres(w, h)
