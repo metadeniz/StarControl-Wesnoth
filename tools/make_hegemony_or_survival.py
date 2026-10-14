@@ -23,12 +23,12 @@ Ideas taken from the mod's other maps:
   close fighting round the middle, where a starbase waits.
 
 Six supergiants, one of each colour, stand in nebulae between neighbours,
-each with a small starbase (two docking rings) beside it. Three more small
-starbases, one docking ring each, wait outside every other ford into the
-central ring: one between each pair of neighbours 1 & 2, 3 & 4 and 5 & 6,
-so those three keep the map's three-way turn and its mirror images, but
-not the full six-way symmetry. Outside the hexagon is the void (off the
-map).
+each with a small starbase (two docking rings) beside it. Six more small
+starbases, also with two docking rings, wait just outside the central ring
+on the line from each start to the centre, beside the start's cloud. Like
+everything else they are turned six ways and mirrored, so every start
+still has the same hex counts to everything. Outside the hexagon is the
+void (off the map).
 
 Usage: make_hegemony_or_survival.py <add-on dir> [-v]
 """
@@ -283,17 +283,11 @@ def build():
     m.put((CX, CY), "K")
     for h in neighbours(CX, CY):
         m.put(h, "c")
-    # three small starbases with one docking ring, outside every other ford
-    # into the ring: turned three ways only, not mirrored
-    for k in INNER_SIDES:
-        x, y = at(3, 3, k)
-        m.g[y][x] = "K"
-        x, y = at(3, 2, k)
-        m.g[y][x] = "c"
+    # a small starbase in front of each start, just outside the ring and
+    # beside the start's cloud, with two docking rings (a mirror pair)
+    m.put(at(5, 0), "K")
+    m.put(at(4, 1), "c")
     return m
-
-
-INNER_SIDES = (0, 2, 4)        # the sixths with an inner small starbase
 
 
 def keeps():
