@@ -1031,7 +1031,7 @@ def build_gas(seed, out):
 
 # ---- badlands: plasma rivers over open space ----
 #
-# Badlands hexes show open space full of white plasma wisps. What outlines them is a glowing bank
+# Badlands hexes show open space under a dark blue haze laced with thin lightning. What outlines them is a glowing bank
 # line around each stretch of badlands, which runs on from hex to hex so a
 # channel of badlands hexes reads as one river with a continuous outline.
 #
@@ -1058,13 +1058,16 @@ BANK_PAD = 4          # extra pixels round the hex so gradients are exact at its
 BANK_VARIATIONS = 2
 # name -> (terrains inside, line, glow, haze colour, line, glow, haze opacity,
 #          inner flow lines, layer, seed, plasma inside (lightning, wisps) or None)
-# The outer region has no bank line: its white plasma just fades in across
-# the border. The deep badlands get a bank that glows inward and fades out.
+# The outer region has no bank line: its plasma just fades in across the
+# border. The deep badlands get a bank that glows inward and fades out.
+# Kept quiet on purpose: a dark blue haze tells badlands apart from open
+# space, and the plasma is only thin lightning, so the stars still show
+# through and the badlands don't outshine everything else on the map.
 BANKS = {
-    "shallow": ("Yi,Yi^*,Yi^Vyp,Yi^Vys,Yis,Yis^*,Yis^Vyp,Yis^Vys", (150, 205, 245), (70, 140, 220), (50, 110, 200),
-                0.0, 0.0, 0.05, [], -300, 21, (0.45, 0.24)),
-    "deep": ("Yi,Yi^*,Yi^Vyp,Yi^Vys", (225, 245, 255), (110, 200, 255), (70, 150, 230),
-             0.42, 0.26, 0.10, [], -299, 31, None),
+    "shallow": ("Yi,Yi^*,Yi^Vyp,Yi^Vys,Yis,Yis^*,Yis^Vyp,Yis^Vys", (150, 205, 245), (70, 140, 220), (35, 75, 160),
+                0.0, 0.0, 0.11, [], -300, 21, (0.40, 0.08)),
+    "deep": ("Yi,Yi^*,Yi^Vyp,Yi^Vys", (200, 235, 255), (100, 180, 255), (35, 75, 170),
+             0.36, 0.14, 0.09, [], -299, 31, None),
 }
 
 
@@ -1175,8 +1178,12 @@ def bank_code(centre, neighbours):
     return ("in" if centre else "out") + "-" + "".join("1" if v else "0" for v in neighbours)
 
 
-PLASMA_COLOUR = (200, 228, 255)
-DEEP_PLASMA = (0.4, 0.16)    # extra lightning and wisps in deep badlands
+PLASMA_COLOUR = (175, 215, 255)
+DEEP_PLASMA = (0.26, 0.04)   # extra lightning and wisps in deep badlands
+THIN_PLASMA = (0.16, 0.03)   # the trace of plasma in thin badlands (fords)
+# Sharpness of the plasma: higher powers draw thinner lightning (ridge) and
+# narrower wisps (streak), so less of the starfield is covered.
+PLASMA_RIDGE, PLASMA_STREAK = 16, 5
 
 
 def lattice_noise(rng, max_k=4):
@@ -1216,8 +1223,8 @@ def plasma_alpha(rng, field, strength, wisps):
         z = (w * own + (1 - w) * _LATTICE[key]) / np.sqrt(w * w + (1 - w) ** 2)
         blended.append(np.clip(0.5 + 0.17 * z, 0, 1))
     a, b = blended
-    ridge = (1 - np.abs(2 * a - 1)) ** 6
-    streak = (1 - np.abs(2 * b - 1)) ** 3
+    ridge = (1 - np.abs(2 * a - 1)) ** PLASMA_RIDGE
+    streak = (1 - np.abs(2 * b - 1)) ** PLASMA_STREAK
     return np.clip(0.75 * ridge * strength + streak * wisps * 1.25, 0, 1)
 
 
@@ -1266,7 +1273,7 @@ def build_badlands(rng, out):
 
     # Deep badlands add more plasma on top of the light badlands' (which the
     # outer bank layer draws). Thin badlands (fords) get only a trace, no bank.
-    for stem, count, (strength, wisps) in (("ionstorm", 11, DEEP_PLASMA), ("ionstorm-thin", 6, (0.24, 0.08))):
+    for stem, count, (strength, wisps) in (("ionstorm", 11, DEEP_PLASMA), ("ionstorm-thin", 6, THIN_PLASMA)):
         for v in range(count):
             img = starfield(rng)
             img.alpha_composite(crackle(rng, field, strength, wisps, fade=stem == "ionstorm-thin"))
