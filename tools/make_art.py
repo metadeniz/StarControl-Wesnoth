@@ -422,6 +422,23 @@ def build_samatra(uqm, out):
     orb = orb.filter(ImageFilter.GaussianBlur(1))
     for facing in ("n", "ne"):
         save(orb, out, f"images/projectiles/sc/sentinel-{facing}.png", False)
+    build_samatra_blobs(out)
+
+
+def build_samatra_blobs(out):
+    """The Sa-Matra's green blobs: lumpy glowing globs that ram ships off
+    course. Drawn here, not taken from UQM."""
+    blob = Image.new("RGBA", (24, 24), (0, 0, 0, 0))
+    d = ImageDraw.Draw(blob)
+    lumps = ((12, 12, 1.0), (9, 10, 0.7), (15, 11, 0.65), (12, 15, 0.6), (11, 8, 0.55))
+    for r, col in ((10, (40, 230, 60, 70)), (7, (60, 240, 80, 180)), (4, (190, 255, 170, 255))):
+        for x, y, k in lumps:
+            rr = r * k
+            d.ellipse([x - rr, y - rr, x + rr, y + rr], fill=col)
+    blob = blob.filter(ImageFilter.GaussianBlur(1))
+    for facing in ("n", "ne"):
+        save(rotated(blob, FACINGS[facing]) if facing == "ne" else blob, out,
+             f"images/projectiles/sc/samatra-blob-{facing}.png", False)
 
 
 # race id -> the ship's victory ditty (a tracker module) in the UQM content
@@ -1593,6 +1610,7 @@ def build_attack_icons(out):
     sources.update({lid: (f"images/projectiles/sc/{lid}-ne.png", False) for lid in LASERS})
     sources["blazer"] = ("images/units/sc/androsynth-blazer-l1-ne.png", True)
     sources["sentinel"] = ("images/projectiles/sc/sentinel-ne.png", False)
+    sources["samatra-blob"] = ("images/projectiles/sc/samatra-blob-ne.png", False)
     for iid, (rel, uqm) in sources.items():
         item = trim(Image.open(os.path.join(out, rel)).convert("RGBA"))
         k = 44 / max(item.size)
