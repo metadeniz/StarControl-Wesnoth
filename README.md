@@ -64,8 +64,8 @@ once before any repeats:
   quasispace theme (original and 3DO versions), Star Control II's opening
   and ending themes, and Starbase.
 - **Hierarchy:** the Ur-Quan, Mycon, Spathi, Umgah, VUX, Ilwrath and
-  Thraddash themes, an Androsynth theme by TheMisterCat (DUOLED), and
-  Starbase.
+  Thraddash themes, an Androsynth theme by TheMisterCat (DUOLED), Idan
+  Schneider's orchestral cover of the Ur-Quan theme, and Starbase.
 
 The Alliance and the Hierarchy have three music modes: those original
 tracks, the Precursors' remixes in place of the tracks they remix, or both.
@@ -83,8 +83,8 @@ right-click menu, which goes through the three in turn. The remixes are:
   from Remix Pack 3's extras), Mycon ("Rebirth"), Spathi ("Safe Haven",
   "Fwiffo's Starrunner"), Umgah ("Genetic Modification"), VUX
   ("Ultra-gross", "Acid in the Eye"), Ilwrath ("All Evil"), Thraddash
-  ("Culture 19") and Starbase ("Under a Red Sky"). The Androsynth theme has
-  no remix and stays.
+  ("Culture 19") and Starbase ("Under a Red Sky"). The Androsynth theme and
+  the orchestral Ur-Quan cover have no remix and stay.
 
 The New Alliance and the Agents of Chaos have one playlist each:
 

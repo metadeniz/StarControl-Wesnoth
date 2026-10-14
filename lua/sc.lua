@@ -224,6 +224,7 @@ local VERSIONS = {
 		{ "2. ilwrath", remix = { "0. ilwrath-all-evil" } },
 		{ "2. thraddash", remix = { "0. thraddash-culture-19" } },
 		{ "2. androsynth-duoled" },
+		{ "2. urquan-idan-schneider" },   -- an orchestral cover; no remix, so in every mode
 		{ "0. starbase", remix = { "0. remix-starbase" } },
 	},
 }
