@@ -183,9 +183,23 @@ def gas_painters(rng, w, h, noise):
         return _rgba(rgb, np.clip(0.75 + 0.2 * (b - 0.5) + g * 0.3, 0, 0.97))
     painters["plasmastorm"] = storm
 
-    def calm_storm(sl, col, row):       # the same cloud with no lightning, round a star or pulsar
+    # The hex holding a star or pulsar: the same cloud with no lightning,
+    # lit up round the star in the storm's own violet, with a few faint
+    # arcs of plasma swirling round it, so the star plainly sits inside
+    # the storm
+    ty, tx = np.mgrid[0:72, 0:72].astype(np.float32)
+    dist = np.hypot(tx - 35.5, ty - 35.5)
+    ang = np.arctan2(ty - 35.5, tx - 35.5)
+    lit = np.clip(1 - dist / 33, 0, 1) ** 0.9
+    arcs = np.clip(np.cos(3 * ang + dist / 5) * 0.5 + 0.5, 0, 1) ** 6 * np.clip((dist - 12) / 6, 0, 1) * np.clip((33 - dist) / 6, 0, 1)
+
+    def calm_storm(sl, col, row):
         a, b = p1[sl], p2[sl]
-        return _rgba(_mix((32, 6, 42), (125, 35, 125), a), np.clip(0.75 + 0.2 * (b - 0.5), 0, 0.97))
+        rgb = _mix((32, 6, 42), (125, 35, 125), a)
+        g = np.clip(lit + arcs * 0.7, 0, 1)
+        rgb = _mix(rgb, (215, 95, 255), g * 0.9)
+        rgb = _mix(rgb, (255, 220, 255), arcs * 0.5)
+        return _rgba(rgb, np.clip(0.75 + 0.2 * (b - 0.5) + g * 0.3, 0, 0.97))
     painters["plasmastorm-calm"] = calm_storm
 
     # The storm hexes next to a star: a bolt in every one (its own seed),
