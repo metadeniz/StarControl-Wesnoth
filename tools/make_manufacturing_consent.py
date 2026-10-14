@@ -43,11 +43,12 @@ T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
      "o": "Ys^Yxd1", "y": "Yd^Yxd5",
      "O": "Yqe^Ybh", "T": "Yqp^Yx", "V": "Yqp^Yxp",
      **{str(n): f"Yqe^Ybh{n}" for n in range(1, 7)},
-     "Y": "Ys^Ysu5", "Z": "Ys^Ysu2"}
+     "Y": "Ys^Ysu5", "Z": "Ys^Ysu2",
+     "q": "Ys^Yxd7", "g": "Yd^Yxd6", "b": "Ys^Ysb"}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "r": "Re", "B": "Wo", "f": "Wo^Bsb\\",
            "s": "Ss", "m": "Gg^Tf"}
-WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUSOTVMoy123456YZ"})
+WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUSOTVMoy123456YZqgb"})
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 
 # The dark stars: each diamond of "G" (gas giant in dark nebula) becomes one
@@ -404,6 +405,10 @@ HAND_EDITS = [
     # 2,15 and 4,14 open, 1,16 an asteroid field (mirrored west to east)
     ((2, 15), "."), ((40, 15), "."), ((4, 14), "."), ((38, 14), "."),
     ((1, 16), "a"), ((41, 16), "a"),
+    # the east side's stars get colours of their own: a purple star at
+    # 37,13, and at 37,16 a blue giant with a green star beside it
+    ((37, 13), "q"), ((38, 16), "g"),
+    *[((x, y), "b") for x in (36, 37) for y in (16, 17)],
 ]
 
 

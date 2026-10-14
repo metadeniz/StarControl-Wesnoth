@@ -699,6 +699,16 @@ SMALL_DISK_STAR_YELLOW = dict(d=50, n_rocks=190, rock=0.7, cols=[(80, 50, 6), (1
                               glow_rgb=(240, 190, 60), reach=5, cells=6, grain=20, limb=0.55, mottle=0.4, smooth=0.4,
                               rim=((255, 228, 130), (210, 170, 110)), body=((30, 24, 14), (92, 78, 56)))
 
+# and a green one and a purple one (^Yxd6, ^Yxd7), added later
+SMALL_DISK_STARS_MORE = [
+    ("green", dict(d=50, n_rocks=190, rock=0.7, cols=[(8, 60, 20), (25, 140, 50), (70, 210, 95), (150, 245, 160), (225, 255, 225)],
+                   glow_rgb=(60, 220, 100), reach=5, cells=6, grain=20, limb=0.5, mottle=0.4, smooth=0.4,
+                   rim=((170, 255, 185), (120, 190, 135)), body=((14, 28, 18), (60, 88, 66)))),
+    ("purple", dict(d=50, n_rocks=190, rock=0.7, cols=[(45, 10, 75), (110, 35, 170), (170, 80, 235), (215, 150, 255), (245, 220, 255)],
+                    glow_rgb=(165, 80, 255), reach=5, cells=6, grain=20, limb=0.5, mottle=0.4, smooth=0.4,
+                    rim=((225, 180, 255), (160, 125, 205)), body=((24, 14, 34), (78, 62, 96)))),
+]
+
 # More supergiants behind debris disks, in the colours the red one and the
 # blue giant leave out: orange, yellow and white (^Ysg2..^Ysg4). With the
 # red one and the blue giant they make the five 3-hex ones (^Ytsg).
@@ -1015,6 +1025,14 @@ def build_objects(rng, out, save, apply_mask, starfield, mask):
     tile = apply_mask(starfield(yrng), mask)
     tile.alpha_composite(img.crop((28, 28, 100, 100)))
     save(apply_mask(tile, mask), out, "images/terrain/sc/disk-star-yellow-tile.png", False)
+    # green and purple ones (^Yxd6, ^Yxd7), with their own seed
+    grng2 = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 13)
+    for name, style in SMALL_DISK_STARS_MORE:
+        img = red_supergiant(grng2, canvas=128, **style)
+        save(img, out, f"images/terrain/sc/disk-star-{name}.png", False)
+        tile = apply_mask(starfield(grng2), mask)
+        tile.alpha_composite(img.crop((28, 28, 100, 100)))
+        save(apply_mask(tile, mask), out, f"images/terrain/sc/disk-star-{name}-tile.png", False)
     mrng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 4)
     for i, style in enumerate(BIG_BLACK_HOLES_MORE):
         save(big_black_hole(mrng, **style), out,
