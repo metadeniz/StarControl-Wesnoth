@@ -681,7 +681,7 @@ end
 -- fires after the engine has zeroed them.
 local ambush = nil
 
-local BADLANDS = { Yi = true, Yis = true, Yif = true }
+local BADLANDS = { Yi = true, Yis = true, Yif = true, Yu = true, Yus = true, Yuf = true }
 local FULL_AMBUSH_IN_BADLANDS = {
 	SC_Arilou_Skiff = true,
 	SC_ZoqFotPik_Stinger = true,

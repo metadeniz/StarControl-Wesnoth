@@ -889,6 +889,9 @@ GAS_TERRAIN = {"nebula": "Yn", "rednebula": "Yr", "dust": "Yd"}
 # make_barriers.py): dark nebula, radiation zone, plasma storm, gravity eddy.
 BARRIER_GASES = {"darknebula": "Yqd", "radiation": "Yqr", "plasmastorm": "Yqp", "eddy": "Yqe"}
 GAS_TERRAIN.update(BARRIER_GASES)
+# Every badlands terrain, in either look (see build_badlands): gas thins out
+# and spills onto them as onto open space.
+ALL_BADLANDS = "Yi,Yi^*,Yis*^*,Yif*^*,Yu*^*"
 # hex offsets of each neighbour, for even and odd columns (odd ones sit lower)
 NEIGHBOUR_OFFSETS = {
     0: {"n": (0, -1), "ne": (1, -1), "se": (1, 0), "s": (0, 1), "sw": (-1, 0), "nw": (-1, -1)},
@@ -947,28 +950,32 @@ def build_gas_nebula(rng, out, name, colours, painter=None, terrain=None, decor=
     images) and wisps of it spill onto the neighbour, again cut from the
     cloud at the neighbour's place.
     """
-    pc, pr = GAS_PERIOD
-    w, h = pc * 54, pr * 72
-    if painter is not None:
-        return _cut_gas(rng, out, name, lambda col, row: painter(gas_hex_slice(col, row), col, row), terrain, decor)
+    if painter is None:
+        painter = cloud_painter(*nebula_cloud(rng, colours))
+    return _cut_gas(rng, out, name, lambda col, row: painter(gas_hex_slice(col, row), col, row), terrain, decor)
+
+
+def nebula_cloud(rng, colours):
+    """The whole cloud of a wispy nebula, GAS_PERIOD hexes across and
+    wrapping round at its edges: its colour and its opacity (0..1) per pixel."""
+    w, h = GAS_PERIOD[0] * 54, GAS_PERIOD[1] * 72
     col_a, col_b, col_hi = (np.array(c, np.float32) for c in colours)
-    field = (periodic_fractal_noise(rng, w, h, 5, 33), periodic_fractal_noise(rng, w, h, 4, 66),
-             periodic_fractal_noise(rng, w, h, 4, 26.5))
-    mask = hex_mask_cache
+    n1, n2, f2 = (periodic_fractal_noise(rng, w, h, 5, 33), periodic_fractal_noise(rng, w, h, 4, 66),
+                  periodic_fractal_noise(rng, w, h, 4, 26.5))
+    streak = (1 - np.abs(2 * n1 - 1)) ** 3       # soft wisps
+    fine = (1 - np.abs(2 * f2 - 1)) ** 22         # thin filaments
+    mix = 0.5 + 0.5 * (n2 - 0.5)
+    rgb = col_a[None, None] * (1 - mix[..., None]) + col_b[None, None] * mix[..., None]
+    rgb = rgb * (0.75 + 0.5 * (n1 - 0.5) + 0.35 * streak)[..., None]
+    rgb = rgb * (1 - 0.55 * fine[..., None]) + col_hi[None, None] * 0.55 * fine[..., None]
+    alpha = np.clip(0.3 + 0.12 * (n1 - 0.5) + 0.3 * streak + 0.22 * fine, 0, 0.85) * GAS_DENSITY
+    return rgb, alpha
 
-    def gas(col, row):
-        sl = gas_hex_slice(col, row)
-        n1, n2, f2 = (f[sl] for f in field)
-        streak = (1 - np.abs(2 * n1 - 1)) ** 3       # soft wisps
-        fine = (1 - np.abs(2 * f2 - 1)) ** 22         # thin filaments
-        mix = 0.5 + 0.5 * (n2 - 0.5)
-        rgb = col_a[None, None] * (1 - mix[..., None]) + col_b[None, None] * mix[..., None]
-        rgb = rgb * (0.75 + 0.5 * (n1 - 0.5) + 0.35 * streak)[..., None]
-        rgb = rgb * (1 - 0.55 * fine[..., None]) + col_hi[None, None] * 0.55 * fine[..., None]
-        alpha = np.clip(0.3 + 0.12 * (n1 - 0.5) + 0.3 * streak + 0.22 * fine, 0, 0.85) * GAS_DENSITY * 255
-        return Image.fromarray(np.dstack([rgb, alpha]).clip(0, 255).astype(np.uint8), "RGBA")
 
-    return _cut_gas(rng, out, name, gas, terrain)
+def cloud_painter(rgb, alpha):
+    """A painter for build_gas_nebula that cuts each hex out of a whole cloud."""
+    img = np.dstack([rgb, alpha * 255]).clip(0, 255).astype(np.uint8)
+    return lambda sl, col, row: Image.fromarray(img[sl], "RGBA")
 
 
 def _cut_gas(rng, out, name, gas, terrain=None, decor=None):
@@ -985,7 +992,7 @@ def _cut_gas(rng, out, name, gas, terrain=None, decor=None):
         code = GAS_TERRAIN[name]
         types = f"{code}*^*"
         others = ",".join(f"{t}*^*" for t in GAS_TERRAIN.values() if t != code)
-        others = f"Ys*^*,Yif*^*,Yis*^*,Yk,Yc,Yi,Yi^*,{others}"
+        others = f"Ys*^*,Yk,Yc,{ALL_BADLANDS},{others}"
         layer = {"nebula": -310, "rednebula": -305, "dust": -320, "darknebula": -300,
                  "radiation": -302, "plasmastorm": -304, "eddy": -306}[name]
     rules = []
@@ -1169,14 +1176,22 @@ def build_gas(seed, out):
         f.write("\n".join(rules) + "\n\n#undef SC_GAS_BASE\n#undef SC_GAS_CALM\n#undef SC_GAS_SPILL\n")
 
 
-# ---- badlands: a blue nebula, with plasma shallows ----
+# ---- badlands: a flowing blue current, or ripples ----
 #
-# All badlands are one blue nebula, drawn like the other gas clouds (see
-# build_gas_nebula): a seamless cloud that thins out at its edges and spills
-# wisps onto its neighbours. In the badlands proper (Yi) a deeper blue tints
-# it, and in the thin badlands (Yif) a veil of dark space dims it. The tint
-# and the veil are drawn as banks (below) that run on from hex to hex, so a
-# stretch reads as one.
+# The badlands (badlands, light and thin) come in two looks that play
+# exactly the same, so different maps can have different-looking badlands:
+#
+#   Yi  Yis  Yif   the usual look: one blue cloud flowing like water (see
+#                 current_cloud), drawn like the other gas clouds (see
+#                 build_gas_nebula): seamless, thinning out at its edges and
+#                 spilling wisps onto its neighbours. In the badlands proper
+#                 a deeper blue tints it, and in the thin badlands a veil of
+#                 dark space dims it.
+#   Yu  Yus  Yuf   ripples: open space crossed by long, pale swell lines and
+#                 a faint blue haze, more of both the deeper it gets.
+#
+# The tint, the veil and the ripples are drawn as banks (below) that run on
+# from hex to hex, so a stretch reads as one.
 #
 # Every hex near badlands draws its piece of a smooth field
 #   f(p) = sum_k w(|p - c_k|) s_k / sum_k w(|p - c_k|)
@@ -1191,26 +1206,39 @@ def build_gas(seed, out):
 # The banks wobble two ways without breaking the joins: a fixed wiggle along
 # each kind of hex edge (the same on both sides of every edge), and random
 # meanders inside the hex that fade out before its border.
-# Neither bank has a bank line: the thin badlands' veil and the badlands'
-# tint just fade in across the border.
+# No bank has a bank line: the veil, the tint and the ripples just fade in
+# across the border.
 
 BANK_DIRS = ["n", "ne", "se", "s", "sw", "nw"]
 BANK_OFFSETS = {"n": (0, -72), "ne": (54, -36), "se": (54, 36), "s": (0, 72), "sw": (-54, 36), "nw": (-54, -36)}
 BANK_REACH = 68.0
 BANK_PAD = 4          # extra pixels round the hex so gradients are exact at its edge
 BANK_VARIATIONS = 2
+def _with_overlays(*codes):
+    """A terrain list of these codes, with or without any overlay. (Not
+    Yi*: that would match the light and thin badlands too.)"""
+    return ",".join(f"{c},{c}^*" for c in codes)
+
+
 # name -> (terrains inside, line, glow, haze colour, line, glow, haze opacity,
-#          inner flow lines, layer, seed, plasma inside (lightning, wisps) or None)
+#          inner flow lines, layer, seed, ripples inside (lines, soft bands) or None)
 BANKS = {
-    "thin": ("Yif,Yif^*", (150, 205, 245), (70, 140, 220), (9, 10, 17),
+    "thin": (_with_overlays("Yif"), (150, 205, 245), (70, 140, 220), (9, 10, 17),
              0.0, 0.0, 0.45, [], -300, 21, None),
-    "deep": ("Yi,Yi^*", (170, 210, 255), (110, 160, 255), (25, 45, 165),
+    "deep": (_with_overlays("Yi"), (170, 210, 255), (110, 160, 255), (25, 45, 165),
              0.0, 0.0, 0.24, [], -299, 31, None),
+    # ripples: each level down adds more swell lines and a little more blue
+    "ripples_thin": (_with_overlays("Yu", "Yus", "Yuf"), (150, 205, 245), (0, 0, 0), (20, 60, 100),
+                     0.0, 0.0, 0.08, [], -303, 21, (0.40, 0.0)),
+    "ripples_light": (_with_overlays("Yu", "Yus"), (150, 205, 245), (0, 0, 0), (20, 60, 120),
+                      0.0, 0.0, 0.10, [], -302, 41, (0.40, 0.0)),
+    "ripples_deep": (_with_overlays("Yu"), (150, 205, 245), (0, 0, 0), (15, 45, 125),
+                     0.0, 0.0, 0.14, [], -301, 31, (0.40, 0.0)),
 }
-# The badlands' nebula: deep blue, violet, pale blue wisps
+# The badlands' cloud: deep blue, violet, pale blue glints
 BADLANDS_NEBULA = ((40, 90, 210), (70, 60, 190), (140, 200, 255))
-NEBULA_BADLANDS = "Yi,Yi^*,Yis,Yis^*,Yif,Yif^*"
-NOT_NEBULA_BADLANDS = "Ys*^*,Yk,Yc,Yn*^*,Yr*^*,Yd*^*,Yqd*^*,Yqr*^*,Yqp*^*,Yqe*^*"
+CLOUD_BADLANDS = _with_overlays("Yi", "Yis", "Yif")
+NOT_CLOUD_BADLANDS = "Ys*^*,Yk,Yc,Yu*^*,Yn*^*,Yr*^*,Yd*^*,Yqd*^*,Yqr*^*,Yqp*^*,Yqe*^*"
 
 
 def _smoothstep(x):
@@ -1276,9 +1304,9 @@ class _BankGeometry:
         return f / self.ksum
 
 
-def bank_layer(f, style, plasma=None):
+def bank_layer(f, style, ripples=None):
     """RGBA image of the bank, from the field f (positive inside), with the
-    plasma alpha (if any) fading in across it."""
+    ripples' alpha (if any) fading in across it."""
     line_c, glow_c, haze_c, line_a, glow_a, haze_a, flows = style
     gy, gx = np.gradient(f)
     d = f / np.maximum(np.sqrt(gx * gx + gy * gy), 1e-4)    # ~ pixels from the bank
@@ -1296,8 +1324,8 @@ def bank_layer(f, style, plasma=None):
         a = out_a
 
     over(haze_c, haze_a * _smoothstep(d / 6.0))
-    if plasma is not None:
-        over(PLASMA_COLOUR, plasma * _smoothstep((d + 2) / 9.0))
+    if ripples is not None:
+        over(RIPPLE_COLOUR, ripples * _smoothstep((d + 2) / 9.0))
     # glow reaches well inside the bank and only a little outside it
     over(glow_c, glow_a * np.exp(-np.abs(d) / np.where(d > 0, 7.0, 2.0)))
     for offset, alpha in flows:
@@ -1320,16 +1348,21 @@ def bank_code(centre, neighbours):
     return ("in" if centre else "out") + "-" + "".join("1" if v else "0" for v in neighbours)
 
 
-PLASMA_COLOUR = (175, 215, 255)
-# Sharpness of the plasma: higher powers draw thinner lightning (ridge) and
-# narrower wisps (streak), so less of the starfield is covered.
-PLASMA_RIDGE, PLASMA_STREAK = 16, 5
+RIPPLE_COLOUR = (150, 220, 240)
+# Sharpness of the ripples: higher powers draw thinner swell lines (ridge)
+# and narrower soft bands (streak), so less of the starfield is covered.
+RIPPLE_RIDGE, RIPPLE_STREAK = 10, 5
+# How strongly the swell lines keep to running sideways: waves whose crests
+# lean away from the horizontal are weighed down, and each tile's own noise
+# is drawn out sideways this many times.
+RIPPLE_FLATTEN, RIPPLE_STRETCH = 2.5, 3
 
 
-def lattice_noise(rng, max_k=4):
+def lattice_noise(rng, max_k=4, flatten=0.0):
     """72x72 noise that repeats exactly from one hex to the next: a sum of
     waves whose wavelengths fit the hex lattice (steps of 54,36 and 0,72),
-    so it runs on across any hex border without a seam. Returns z-scores."""
+    so it runs on across any hex border without a seam. With flatten > 0,
+    waves with crests far from horizontal are weaker. Returns z-scores."""
     yy, xx = np.mgrid[0:HEX, 0:HEX].astype(np.float32) + 0.5
     out = np.zeros((HEX, HEX), np.float32)
     for m in range(-max_k, max_k + 1):
@@ -1338,21 +1371,29 @@ def lattice_noise(rng, max_k=4):
             k = math.hypot(kx, ky)
             if k == 0 or (m, n) < (0, 0):
                 continue
-            out += rng.normal() / k ** 1.3 * np.cos(kx * xx + ky * yy + rng.uniform(0, 2 * np.pi))
+            weight = math.exp(-flatten * (kx / k) ** 2)
+            out += weight * rng.normal() / k ** 1.3 * np.cos(kx * xx + ky * yy + rng.uniform(0, 2 * np.pi))
     return (out - out.mean()) / out.std()
 
 
 _LATTICE = {}
 
 
-def plasma_alpha(rng, field, strength, wisps):
-    """Alpha of the white plasma inside badlands: soft wisps plus sharp
-    lightning. Each tile's own noise takes over from a shared noise that
-    repeats from hex to hex, so the plasma flows across hex borders with no
-    seam, and every tile's noise is scaled alike so all look equally stormy."""
+def stretched(noise, times):
+    """Square noise drawn out sideways: its left 1/times, resized to the full width."""
+    n = noise.shape[0]
+    return np.asarray(Image.fromarray(noise[:, :n // times]).resize((n, n), Image.BICUBIC), np.float32)
+
+
+def ripple_alpha(rng, field, strength, wisps):
+    """Alpha of the ripples: sharp swell lines plus soft bands. Each tile's
+    own noise takes over from a shared noise that repeats from hex to hex,
+    so the lines run on across hex borders with no seam, and every tile's
+    noise is scaled alike so all look equally busy."""
     if not _LATTICE:
         lrng = np.random.default_rng(77)
-        _LATTICE["a"], _LATTICE["b"] = lattice_noise(lrng), lattice_noise(lrng)
+        _LATTICE["a"] = lattice_noise(lrng, flatten=RIPPLE_FLATTEN)
+        _LATTICE["b"] = lattice_noise(lrng, flatten=RIPPLE_FLATTEN)
     size = field[0].shape[0]
     x0, y0 = rng.integers(0, size - HEX, 2)
     w = _smoothstep(BORDER_DIST / 20.0)
@@ -1363,9 +1404,104 @@ def plasma_alpha(rng, field, strength, wisps):
         z = (w * own + (1 - w) * _LATTICE[key]) / np.sqrt(w * w + (1 - w) ** 2)
         blended.append(np.clip(0.5 + 0.17 * z, 0, 1))
     a, b = blended
-    ridge = (1 - np.abs(2 * a - 1)) ** PLASMA_RIDGE
-    streak = (1 - np.abs(2 * b - 1)) ** PLASMA_STREAK
+    ridge = (1 - np.abs(2 * a - 1)) ** RIPPLE_RIDGE
+    streak = (1 - np.abs(2 * b - 1)) ** RIPPLE_STREAK
     return np.clip(0.75 * ridge * strength + streak * wisps * 1.25, 0, 1)
+
+
+# The flowing current: the badlands' cloud as moving water. A wrapping
+# current (a steady drift plus eddies) smears the cloud's noise into long
+# strands that run with it.
+CURRENT_DRIFT = (1.0, 0.35)    # the way the water runs (x, y), before the eddies
+CURRENT_SWIRL = 0.6            # how strong the eddies are next to the drift
+CURRENT_STRAND = 4             # size of the speckle that is smeared into strands
+CURRENT_SMEAR = 36             # how far each strand is smeared, each way (pixels)
+
+
+def _wrap_sample(f, x, y):
+    """f (wrapping round at its edges) at fractional pixel positions x, y."""
+    h, w = f.shape[:2]
+    x0, y0 = np.floor(x).astype(int), np.floor(y).astype(int)
+    fx, fy = x - x0, y - y0
+    if f.ndim == 3:
+        fx, fy = fx[..., None], fy[..., None]
+    x0, y0 = x0 % w, y0 % h
+    x1, y1 = (x0 + 1) % w, (y0 + 1) % h
+    return (f[y0, x0] * (1 - fx) * (1 - fy) + f[y0, x1] * fx * (1 - fy)
+            + f[y1, x0] * (1 - fx) * fy + f[y1, x1] * fx * fy)
+
+
+def current_vectors(rng, w, h):
+    """The direction the water runs at each pixel (unit vectors): the drift
+    plus the eddies of the curl of a smooth noise, which wraps round too."""
+    psi = periodic_fractal_noise(rng, w, h, 3, 110).astype(np.float64)
+    vx = (np.roll(psi, -1, 0) - np.roll(psi, 1, 0)) / 2
+    vy = -(np.roll(psi, -1, 1) - np.roll(psi, 1, 1)) / 2
+    s = np.sqrt(vx * vx + vy * vy).mean()
+    vx, vy = CURRENT_SWIRL * vx / s + CURRENT_DRIFT[0], CURRENT_SWIRL * vy / s + CURRENT_DRIFT[1]
+    n = np.maximum(np.sqrt(vx * vx + vy * vy), 1e-6)
+    return np.dstack([vx / n, vy / n]).astype(np.float32)
+
+
+def _follow(vec, steps, step):
+    """Walk from every pixel along the current, yielding where each walk is."""
+    h, w = vec.shape[:2]
+    y, x = np.mgrid[0:h, 0:w].astype(np.float32)
+    for i in range(steps):
+        v = _wrap_sample(vec, x, y)
+        x, y = x + step * v[..., 0], y + step * v[..., 1]
+        yield i, x, y
+
+
+def smear_along(noise, vec, length):
+    """noise smeared along the current, both ways, into strands (z-scores)."""
+    acc, wsum = noise.astype(np.float32), np.ones_like(noise, np.float32)
+    for sign in (1, -1):
+        for i, x, y in _follow(vec, length, sign):
+            wgt = 0.5 * (1 + math.cos(math.pi * (i + 1) / (length + 1)))
+            acc += wgt * _wrap_sample(noise, x, y)
+            wsum += wgt
+    out = acc / wsum
+    return (out - out.mean()) / out.std()
+
+
+def drift_along(noise, vec, dist, steps=12):
+    """noise blurred a distance downstream, so its blobs stretch with the current."""
+    acc = np.zeros_like(noise)
+    for _, x, y in _follow(vec, steps, dist / steps):
+        acc += _wrap_sample(noise, x, y)
+    return acc / steps
+
+
+def _zscore(f):
+    return (f - f.mean()) / f.std()
+
+
+def current_cloud(rng, like, colours):
+    """The badlands' cloud as flowing water: soft bands of blue drawn out
+    along the current, fine strands running with it and pale glints on the
+    strongest of them. It keeps the opacities of the cloud `like` (rgb,
+    alpha), only moved about, and its mean brightness, so it covers just as
+    much of space, just as densely, and is just as bright as that one."""
+    w, h = GAS_PERIOD[0] * 54, GAS_PERIOD[1] * 72
+    vec = current_vectors(rng, w, h)
+    body = _zscore(drift_along(periodic_fractal_noise(rng, w, h, 4, 40), vec, 40))
+    tint = _zscore(drift_along(periodic_fractal_noise(rng, w, h, 3, 70), vec, 40))
+    strands = smear_along(periodic_fractal_noise(rng, w, h, 2, CURRENT_STRAND), vec, CURRENT_SMEAR)
+    glint = np.clip((strands - 0.6) / 1.4, 0, 1) ** 1.5
+    col_a, col_b, col_hi = (np.array(c, np.float32) for c in colours)
+    mix = np.clip(0.5 + 0.15 * tint, 0, 1)[..., None]
+    rgb = col_a * (1 - mix) + col_b * mix
+    rgb = rgb * (0.85 + 0.12 * body + 0.08 * strands)[..., None]
+    rgb = rgb * (1 - 0.55 * glint[..., None]) + col_hi * 0.55 * glint[..., None]
+    # the same opacities as `like`, put in the order of this cloud's own
+    order = np.argsort(0.55 * body + 0.35 * strands + 0.66 * glint, axis=None)
+    alpha = np.empty(order.size, np.float32)
+    alpha[order] = np.sort(like[1], axis=None)
+    alpha = alpha.reshape(h, w)
+    lum = np.array([0.299, 0.587, 0.114], np.float32)
+    rgb = rgb * float(((like[0] @ lum) * like[1]).mean() / ((rgb @ lum) * alpha).mean())
+    return rgb, alpha
 
 
 def build_badlands(rng, out):
@@ -1374,26 +1510,31 @@ def build_badlands(rng, out):
     rules = []
     tiles = {}
     field = (fractal_noise(rng, 512, 5, 10), fractal_noise(rng, 512, 4, 12))
+    ripple_field = tuple(stretched(f, RIPPLE_STRETCH) for f in field)
     for name, (inside, *style) in BANKS.items():
-        style, layer, seed, plasma = tuple(style[:7]), style[7], style[8], style[9]
+        style, layer, seed, rip = tuple(style[:7]), style[7], style[8], style[9]
         brng = np.random.default_rng(seed)
         wobble = geo.edge_wobble(brng, 0.25)
         meanders = [geo.meander(brng, 0.35) for _ in range(BANK_VARIATIONS)]
-        plasmas = [plasma_alpha(brng, field, *plasma) if plasma else None for _ in range(BANK_VARIATIONS)]
+        ripples = [ripple_alpha(brng, ripple_field, *rip) if rip else None for _ in range(BANK_VARIATIONS)]
         outside = "!," + inside
         for centre, neighbours in bank_patterns():
             code = bank_code(centre, neighbours)
             f = geo.field(centre, neighbours) + wobble
-            for v, (m, pl) in enumerate(zip(meanders, plasmas)):
-                save(bank_layer(f + m, style, pl), out, f"{sc}/badlands/{name}-{code}-{v + 1}.png", False)
+            for v, (m, r) in enumerate(zip(meanders, ripples)):
+                save(bank_layer(f + m, style, r), out, f"{sc}/badlands/{name}-{code}-{v + 1}.png", False)
             types = [inside if centre else outside] + [inside if n else outside for n in neighbours]
             rules.append(f"{{SC_BANK sc_bank_{name} {layer} sc/badlands/{name}-{code} "
                          + " ".join(f"({t})" for t in types) + "}")
-        tiles[name] = bank_layer(geo.field(True, (False,) * 6) + wobble, style, plasmas[0])
+        tiles[name] = bank_layer(geo.field(True, (False,) * 6) + wobble, style, ripples[0])
 
-    # The blue nebula (its own seed, so the banks above don't change with it).
-    nebula = build_gas_nebula(np.random.default_rng(555), out, "badlands", BADLANDS_NEBULA,
-                              terrain=(NEBULA_BADLANDS, NOT_NEBULA_BADLANDS, -309))
+    # The blue cloud, flowing like water (its own seeds, so the banks above
+    # don't change with it). It is just as dense and as bright as the wispy
+    # blue nebula the badlands used to be.
+    like = nebula_cloud(np.random.default_rng(555), BADLANDS_NEBULA)
+    current = cloud_painter(*current_cloud(np.random.default_rng(556), like, BADLANDS_NEBULA))
+    cloud = build_gas_nebula(np.random.default_rng(557), out, "badlands", None, current,
+                             terrain=(CLOUD_BADLANDS, NOT_CLOUD_BADLANDS, -309))
 
     # Symbol images for the editor and help: one lone hex of each kind.
     tile = lambda rel: Image.open(os.path.join(out, f"{sc}/{rel}.png")).convert("RGBA")
@@ -1404,6 +1545,11 @@ def build_badlands(rng, out):
     img = tile("badlands-tile")
     img.alpha_composite(tiles["deep"])
     save(apply_mask(img, hex_mask_cache), out, f"{sc}/ionstorm-tile.png", False)
+    img = tile("space")
+    for name, level in (("ripples_thin", "ripples-thin"), ("ripples_light", "ripples-light"),
+                        ("ripples_deep", "ripples")):
+        img.alpha_composite(tiles[name])
+        save(apply_mask(img, hex_mask_cache), out, f"{sc}/{level}-tile.png", False)
 
     build_planet_halos(rng, out)
 
@@ -1414,12 +1560,12 @@ def build_badlands(rng, out):
         f.write("# its n, ne, se, s, sw and nw neighbours.\n\n")
         f.write(BANK_MACRO)
         f.write("\n".join(rules) + "\n\n#undef SC_BANK\n\n")
-        f.write("# The blue nebula of all badlands: its edge thins out to whatever is\n")
-        f.write("# next to it, then each hex shows its piece of the cloud and spills\n")
-        f.write("# wisps of it onto its neighbours (as in gas-tiles.cfg).\n")
-        f.write(f"{{TRANSITION_COMPLETE_LF ({NOT_NEBULA_BADLANDS}) ({NEBULA_BADLANDS}) -341 badlands_edge sc/badlands-edge}}\n\n")
+        f.write("# The blue cloud of the badlands (not the rippled ones): its edge thins\n")
+        f.write("# out to whatever is next to it, then each hex shows its piece of the\n")
+        f.write("# cloud and spills wisps of it onto its neighbours (as in gas-tiles.cfg).\n")
+        f.write(f"{{TRANSITION_COMPLETE_LF ({NOT_CLOUD_BADLANDS}) ({CLOUD_BADLANDS}) -341 badlands_edge sc/badlands-edge}}\n\n")
         f.write(GAS_MACROS.format(pc=GAS_PERIOD[0], pr=GAS_PERIOD[1]))
-        f.write("\n".join(nebula) + "\n\n#undef SC_GAS_BASE\n#undef SC_GAS_SPILL\n")
+        f.write("\n".join(cloud) + "\n\n#undef SC_GAS_BASE\n#undef SC_GAS_SPILL\n")
 
 
 def build_planet_halos(rng, out, count=3):
