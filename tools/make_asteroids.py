@@ -235,6 +235,105 @@ def wall_rocks(rng):
     return placed
 
 
+def swirl_rocks(rng, spin, arms, twist):
+    """Debris disk: rocks of every size swept round the hex's centre along
+    a few spiral arms, spaced apart rather than packed, thinning out
+    towards the hex edge."""
+    c = HEX / 2
+    phase = rng.uniform(0, 2 * math.pi)
+    placed = []
+
+    def put(r, tries=80, rmin=11, rmax=34, gap=1.25):
+        for _ in range(tries):
+            d = rmin + (rmax - rmin) * rng.uniform(0, 1) ** 0.8
+            j = int(rng.integers(arms))
+            a = phase + 2 * math.pi * j / arms + spin * twist * math.log(d / rmin) + rng.normal(0, 0.28)
+            x, y = c + d * math.cos(a), c + d * math.sin(a)
+            if not inside_hex(x, y, r + 0.5):   # whole rocks: the overlay is cut at the hex edge
+                continue
+            if all((x - px) ** 2 + (y - py) ** 2 > (gap * (r + pr) + 1.5) ** 2 for px, py, pr in placed):
+                placed.append((x, y, r))
+                return
+
+    for r in sorted(rng.choice([6.0, 7.0, 8.0, 9.0], size=int(rng.integers(4, 6))), reverse=True):
+        put(float(r), rmin=14, rmax=31, gap=1.15)
+    for r in rng.choice([3.0, 3.5, 4.0, 4.5, 5.0], size=int(rng.integers(13, 17))):
+        put(float(r), gap=1.2)
+    for r in rng.choice([1.2, 1.6, 2.0, 2.5], size=int(rng.integers(50, 65)), p=[0.3, 0.3, 0.25, 0.15]):
+        put(float(r), rmin=9, rmax=37, gap=1.4)
+    return placed
+
+
+def dust_haze(rng, d, W):
+    """A cloud of brown dust behind a debris disk, in the dust clouds'
+    colours, thinning out just past the hex so neighbouring disks' clouds
+    run together."""
+    n1, n2, f2 = (np.asarray(Image.fromarray((value_noise(rng, W // S, o, b) * 255).astype(np.uint8))
+                             .resize((W, W), Image.BICUBIC), np.float32) / 255
+                  for o, b in ((5, 3), (4, 4), (4, 6)))
+    streak = (1 - np.abs(2 * n1 - 1)) ** 3
+    fine = (1 - np.abs(2 * f2 - 1)) ** 16
+    col_a, col_b, col_hi = (np.array(c, np.float32) for c in ((150, 115, 75), (115, 90, 65), (200, 165, 115)))
+    mix = (0.5 + 0.5 * (n2 - 0.5))[..., None]
+    rgb = col_a * (1 - mix) + col_b * mix
+    rgb = rgb * (0.75 + 0.5 * (n1 - 0.5) + 0.35 * streak)[..., None]
+    rgb = rgb * (1 - 0.5 * fine[..., None]) + col_hi * 0.5 * fine[..., None]
+    edge = np.clip((50 - d - 10 * (n2 - 0.5)) / 24, 0, 1)
+    alpha = np.clip(0.3 + 0.12 * (n1 - 0.5) + 0.3 * streak + 0.2 * fine, 0, 0.85) * 0.45 * edge * edge * (3 - 2 * edge)
+    return Image.fromarray(np.dstack([rgb, alpha * 255]).clip(0, 255).astype(np.uint8), "RGBA")
+
+
+def debris_disk(rng, pad, spin, haze_rng=None):
+    """One debris disk hex: an empty dark middle, faint dust streaming
+    round it in a spiral, and loose rocks of every size swept
+    along the same spiral, each trailing a little dust."""
+    size = HEX + 2 * pad
+    c = size / 2
+    arms, twist = int(rng.integers(2, 4)), rng.uniform(1.6, 2.2)
+    placed = swirl_rocks(rng, spin, arms, twist)
+    W = size * S
+    yy, xx = np.mgrid[0:W, 0:W].astype(np.float32) / S - c
+    d = np.hypot(xx, yy); th = np.arctan2(yy, xx)
+    # dust: soft spiral lanes, brighter near the centre, gone by the hex edge
+    lanes = 0.5 + 0.5 * np.cos(arms * (th - spin * twist * np.log(np.maximum(d, 1) / 11)) - arms * 0.0)
+    grain = np.asarray(Image.fromarray((value_noise(rng, size, 5, 5) * 255).astype(np.uint8))
+                       .resize((W, W), Image.BICUBIC), np.float32) / 255
+    inner = np.clip((d - 4) / 9, 0, 1)
+    fade = np.clip((29 - d) / 9, 0, 1) * inner * inner * (3 - 2 * inner)   # gone before the hex edge and in the middle
+    dust = lanes ** 3 * (0.45 + 0.55 * grain) * fade * 0.42
+    dust_rgb = np.dstack([np.full_like(d, 120), np.full_like(d, 104), np.full_like(d, 92)])
+    canvas = Image.fromarray(np.dstack([dust_rgb, dust * 255]).clip(0, 255).astype(np.uint8), "RGBA")
+    if haze_rng is not None:
+        canvas = dust_haze(haze_rng, d, W)
+        canvas.alpha_composite(Image.fromarray(np.dstack([dust_rgb, dust * 255]).clip(0, 255).astype(np.uint8), "RGBA"))
+    # each rock trails a short streak of dust behind it along its orbit
+    trails = Image.new("L", (W, W), 0)
+    dt = ImageDraw.Draw(trails)
+    for x, y, r in placed:
+        px, py = x + pad - c, y + pad - c
+        rad, a0 = math.hypot(px, py), math.atan2(py, px)
+        span = min(0.9, (r * 2.5 + 4) / max(rad, 1))
+        pts = [((c + rad * math.cos(a0 - spin * span * k / 8)) * S, (c + rad * math.sin(a0 - spin * span * k / 8)) * S)
+               for k in range(9)]
+        for k in range(8):
+            dt.line(pts[k:k + 2], fill=int(150 * (1 - k / 8)), width=max(1, int(r * 1.3 * S * (1 - k / 10))))
+    trails = trails.filter(ImageFilter.GaussianBlur(1.5 * S))
+    t = np.asarray(trails, np.float32) / 255 * 0.55
+    trail_img = Image.fromarray(np.dstack([dust_rgb * 1.1, t * 255]).clip(0, 255).astype(np.uint8), "RGBA")
+    canvas = canvas.resize((W, W), Image.LANCZOS) if canvas.size != (W, W) else canvas
+    canvas.alpha_composite(trail_img)
+    # the empty middle: a round, soft-edged void where the dust thins out
+    # into darkness, with no rim, so it fades into the rest of the disk
+    void_r = rng.uniform(4.5, 5.5) + 2.5
+    rng.uniform(0, 6.3); rng.uniform(0, 6.3)   # keeps the random stream as it was
+    void = 0.6 * np.exp(-(d / void_r) ** 2)
+    canvas.alpha_composite(Image.fromarray(np.dstack([np.full_like(d, 3), np.full_like(d, 3), np.full_like(d, 8),
+                                                      void * 255]).clip(0, 255).astype(np.uint8), "RGBA"))
+    canvas = canvas.convert("RGBa").resize((size, size), Image.LANCZOS).convert("RGBA")
+    canvas.alpha_composite(compose(rng, placed, pad, darken=0.9, kinds=WALL_KINDS, shadow=0.6))
+    return canvas
+
+
 def spill_rocks(rng, edge, sizes, reach):
     """Loose rocks in a band along one edge of the neighbouring hex, thinning
     out with distance from the edge."""
@@ -251,47 +350,6 @@ def spill_rocks(rng, edge, sizes, reach):
                 placed.append((x, y, r))
                 break
     return placed
-
-
-def edge_lens(edge, depth):
-    """A lens hugging one hex edge: `depth` px deep at the edge's middle,
-    narrowing to nothing at its two corners. The hex on the other side
-    draws the mirror image, so together they make one lens across the
-    edge that never reaches a third hex."""
-    yy, xx = np.mgrid[0:HEX, 0:HEX].astype(np.float32) + 0.5
-    (x1, y1), (x2, y2) = HEX_VERTS[EDGES[edge][0]], HEX_VERTS[EDGES[edge][1]]
-    dx, dy = x2 - x1, y2 - y1
-    t = ((xx - x1) * dx + (yy - y1) * dy) / (dx * dx + dy * dy)
-    d = np.abs((xx - x1) * dy - (yy - y1) * dx) / math.hypot(dx, dy)
-    width = depth * np.clip(np.sin(np.pi * np.clip(t, 0, 1)), 0, 1)
-    return np.clip((width - d) / 3, 0, 1), d
-
-
-def wall_join(rng, combo, hex_mask, rocks):
-    """Where two wall hexes meet, each draws rubble and rocks along the
-    shared edge right up to it, so the two halves close up into one
-    unbroken wall."""
-    band = np.zeros((HEX, HEX), np.float32)
-    near = np.full((HEX, HEX), 99.0, np.float32)
-    for e in combo.split("-"):
-        lens, d = edge_lens(e, 14)
-        band = np.maximum(band, lens)
-        near = np.minimum(near, d)
-    tex = value_noise(rng, HEX, 5, 6)
-    # ragged inner side; untouched right at the edge, where the two
-    # halves must match
-    rag = np.clip(0.4 + 1.0 * value_noise(rng, HEX, 3, 4), 0, 1)
-    band *= rag + (1 - rag) * np.clip(1 - near / 5, 0, 1)
-    grain = rng.random((HEX, HEX)).astype(np.float32)
-    base = 24 + 22 * tex + 8 * (grain > 0.85) - 6 * (grain < 0.15)
-    rgb = np.dstack([base * 1.0, base * 0.95, base * 0.9])
-    alpha = band * hex_mask * 255
-    canvas = Image.fromarray(np.dstack([rgb, alpha]).clip(0, 255).astype(np.uint8), "RGBA")
-    placed = []
-    for e in combo.split("-"):
-        placed += rocks[e]
-    canvas.alpha_composite(compose(rng, placed, 0, darken=0.82, kinds=WALL_KINDS, shadow=0.6))
-    return canvas
 
 
 def build(rng, out, save, combos, hex_mask):
@@ -315,10 +373,21 @@ def build(rng, out, save, combos, hex_mask):
             put(tile_icon(canvas, pad), "asteroids-dense-tile")
     wpad = 9
     for v in range(8):
-        canvas = compose(rng, wall_rocks(rng), wpad, darken=0.82, kinds=WALL_KINDS, shadow=0.6, fill=True)
+        # the old packed walls: still drawn so the art after them stays
+        # the same, but replaced by the debris disks below
+        compose(rng, wall_rocks(rng), wpad, darken=0.82, kinds=WALL_KINDS, shadow=0.6, fill=True)
+    # Debris disks: loose rocks swirling round an empty middle, with
+    # their own seed; half spin one way, half the other.
+    # Each sits in a cloud of dust (its own seed too), drawn past the hex
+    # so the clouds of neighbouring disks run together.
+    drng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 1)
+    hrng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 2)
+    dpad = 18
+    for v in range(8):
+        canvas = debris_disk(drng, dpad, 1 if v % 2 == 0 else -1, hrng)
         put(canvas, "asteroid-wall" if v == 0 else f"asteroid-wall{v + 1}")
         if v == 0:
-            put(tile_icon(canvas, wpad), "asteroid-wall-tile")
+            put(tile_icon(canvas, dpad), "asteroid-wall-tile")
 
     # Spill: per edge, a fixed set of loose rocks; each combo image is the
     # union of its edges' sets, so neighbouring rule matches agree.
@@ -329,9 +398,8 @@ def build(rng, out, save, combos, hex_mask):
                                                                            p=[0.25, 0.25, 0.2, 0.18, 0.12])], 15)
         wall_edge[e] = spill_rocks(rng, e, [float(r) for r in rng.choice([1.5, 2.5, 3.5, 5.0], size=6)], 11)
         join_edge[e] = spill_rocks(rng, e, [float(r) for r in rng.choice([3.0, 4.0, 5.0, 6.0], size=6)], 9)
-    for e in EDGES:
-        jrng = np.random.default_rng(zlib.crc32(f"wall-join-{e}".encode()))
-        put(wall_join(jrng, e, hex_mask, join_edge), f"asteroid-wall-join-{e}")
+    # (join_edge is still drawn so the spills after it stay the same; the
+    # rubble joins between wall hexes went with the packed walls)
     for combo in combos:
         for stem, sets, dk, kinds in (("asteroids-spill", field_edge, 1.0, ROCK_KINDS),
                                       ("asteroid-wall-spill", wall_edge, 0.82, WALL_KINDS)):
