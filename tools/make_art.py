@@ -1112,8 +1112,8 @@ def build_gas(seed, out):
 #
 # All badlands are one blue nebula, drawn like the other gas clouds (see
 # build_gas_nebula): a seamless cloud that thins out at its edges and spills
-# wisps onto its neighbours. The badlands proper (Yi) glow brighter inside
-# it, and in the thin badlands (Yif) a veil of dark space dims it. The glow
+# wisps onto its neighbours. In the badlands proper (Yi) a deeper blue tints
+# it, and in the thin badlands (Yif) a veil of dark space dims it. The tint
 # and the veil are drawn as banks (below) that run on from hex to hex, so a
 # stretch reads as one.
 #
@@ -1131,7 +1131,7 @@ def build_gas(seed, out):
 # each kind of hex edge (the same on both sides of every edge), and random
 # meanders inside the hex that fade out before its border.
 # Neither bank has a bank line: the thin badlands' veil and the badlands'
-# glow just fade in across the border.
+# tint just fade in across the border.
 
 BANK_DIRS = ["n", "ne", "se", "s", "sw", "nw"]
 BANK_OFFSETS = {"n": (0, -72), "ne": (54, -36), "se": (54, 36), "s": (0, 72), "sw": (-54, 36), "nw": (-54, -36)}
@@ -1143,8 +1143,8 @@ BANK_VARIATIONS = 2
 BANKS = {
     "thin": ("Yif,Yif^*", (150, 205, 245), (70, 140, 220), (9, 10, 17),
              0.0, 0.0, 0.45, [], -300, 21, None),
-    "deep": ("Yi,Yi^*", (170, 210, 255), (110, 160, 255), (60, 110, 220),
-             0.0, 0.32, 0.19, [], -299, 31, None),
+    "deep": ("Yi,Yi^*", (170, 210, 255), (110, 160, 255), (25, 45, 165),
+             0.0, 0.0, 0.24, [], -299, 31, None),
 }
 # The badlands' nebula: deep blue, violet, pale blue wisps
 BADLANDS_NEBULA = ((40, 90, 210), (70, 60, 190), (140, 200, 255))
