@@ -53,6 +53,8 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | 2p — Weldyn Channel (Deep Space) | 1 vs 1 |
 | 2p — Fallenstar Lake (Deep Space) | 1 vs 1 |
 | 2p — Caves of the Basilisk (Deep Space) | 1 vs 1; black holes stand where the statues were |
+| 2p — Silverhead Crossing (Deep Space) | 1 vs 1 |
+| 2p — Ruphus Isle (Deep Space) | 1 vs 1 |
 
 ## Music
 
@@ -292,7 +294,8 @@ heat-proof Chenjesu (2 / 50%) are at home in red nebulae.
   badlands, ford → thin badlands, castles → docking rings (sunken and
   swamp ruins → docking rings out in the badlands), villages → planets,
   impassable → star (touching impassable hexes → debris disk). Isar's Cross, The Freelands, Weldyn Channel, Fallenstar
-  Lake and Caves of the Basilisk were made this way. Extra `X,Y=CODE`
+  Lake, Caves of the Basilisk, Silverhead Crossing and Ruphus Isle were made
+  this way (a fake map edge, `^_fme`, is kept). Extra `X,Y=CODE`
   arguments place terrain afterwards; the Caves' statues became black
   holes: `27,14=Ys^Yxb 40,8=Ys^Yxb 39,8=Ys^Yxb 2,11=Ys^Yxb 8,18=Ys^Yxb
   8,13=Ys^Yxb 22,12=Ys^Yxb 37,17=Ys^Yxb 5,8=Ys^Yxb 25,14=Ys^Yxb
