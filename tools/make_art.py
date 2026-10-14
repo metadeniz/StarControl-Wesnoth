@@ -879,7 +879,7 @@ GAS_DENSITY = 0.7   # overall opacity of nebulae and dust (1 = original); lower 
 GAS_NEBULAE = {
     "nebula": ((60, 210, 120), (150, 230, 80), (90, 170, 255)),       # green, blue wisps
     "rednebula": ((225, 55, 40), (150, 25, 70), (255, 160, 50)),      # red, orange wisps
-    "dust": ((150, 115, 75), (115, 90, 65), (200, 165, 115)),          # brown dust, pale streaks
+    "dust": None,                                                       # painted by dust_cloud
 }
 
 
@@ -934,7 +934,7 @@ def gas_hex_slice(col, row):
     return np.ix_((np.arange(HEX) + y0) % h, (np.arange(HEX) + x0) % w)
 
 
-def build_gas_nebula(rng, out, name, colours, painter=None, terrain=None):
+def build_gas_nebula(rng, out, name, colours, painter=None, terrain=None, decor=None):
     """Thin, wispy nebula: mostly transparent haze with brighter streaks and
     fine highlight filaments, so the dark of space shows through.
 
@@ -950,7 +950,7 @@ def build_gas_nebula(rng, out, name, colours, painter=None, terrain=None):
     pc, pr = GAS_PERIOD
     w, h = pc * 54, pr * 72
     if painter is not None:
-        return _cut_gas(rng, out, name, lambda col, row: painter(gas_hex_slice(col, row), col, row), terrain)
+        return _cut_gas(rng, out, name, lambda col, row: painter(gas_hex_slice(col, row), col, row), terrain, decor)
     col_a, col_b, col_hi = (np.array(c, np.float32) for c in colours)
     field = (periodic_fractal_noise(rng, w, h, 5, 33), periodic_fractal_noise(rng, w, h, 4, 66),
              periodic_fractal_noise(rng, w, h, 4, 26.5))
@@ -971,10 +971,12 @@ def build_gas_nebula(rng, out, name, colours, painter=None, terrain=None):
     return _cut_gas(rng, out, name, gas, terrain)
 
 
-def _cut_gas(rng, out, name, gas, terrain=None):
+def _cut_gas(rng, out, name, gas, terrain=None, decor=None):
     """Cut a gas cloud into hex tiles, spills and edges, and return its rules.
     terrain, if given, is (terrains of the gas, terrains it spills onto,
-    spill layer) for a gas that is not one of GAS_TERRAIN."""
+    spill layer) for a gas that is not one of GAS_TERRAIN. decor(col, row),
+    if given, is drawn over the hex's own tile only (not the wisps it
+    spills onto its neighbours)."""
     pc, pr = GAS_PERIOD
     mask = hex_mask_cache
     if terrain:
@@ -991,6 +993,8 @@ def _cut_gas(rng, out, name, gas, terrain=None):
         for row in range(pr):
             img = starfield(rng, 0.9)
             img.alpha_composite(gas(col, row))
+            if decor is not None:
+                img.alpha_composite(decor(col, row))
             stem = f"sc/gas/{name}-{col}-{row}"
             save(apply_mask(img, mask), out, f"images/terrain/{stem}.png", False)
             if (col, row) == (0, 0):
@@ -1070,10 +1074,67 @@ GAS_MACROS = """#define SC_GAS_BASE TERRAIN X Y IMAGE
 """
 
 
+def dust_cloud(rng):
+    """Dust clouds: a soft, grainy brown haze with no streaks or filaments,
+    so they read as drifting dust rather than glowing gas, and now and then
+    a pebble or two. Returns a painter for build_gas_nebula and the pebbles
+    as a decor (drawn on each hex's own tile, never in its spills)."""
+    w, h = GAS_PERIOD[0] * 54, GAS_PERIOD[1] * 72
+    billow, tone = periodic_fractal_noise(rng, w, h, 5, 40), periodic_fractal_noise(rng, w, h, 3, 90)
+    grain = rng.random((h, w)).astype(np.float32)
+    dark, light = np.array((100, 76, 52), np.float32), np.array((172, 142, 104), np.float32)
+
+    def painter(sl, col, row):
+        b, t, g = billow[sl], tone[sl], grain[sl]
+        rgb = dark * (1 - t[..., None]) + light * t[..., None]
+        rgb = rgb * (0.85 + 0.35 * (b - 0.5) + 0.16 * (g - 0.5))[..., None]
+        alpha = np.clip(0.5 + 0.6 * (b - 0.5) + 0.1 * (g - 0.5), 0, 0.85) * GAS_DENSITY
+        return Image.fromarray(np.dstack([rgb, alpha * 255]).clip(0, 255).astype(np.uint8), "RGBA")
+
+    # about one hex in three has a pebble, now and then two
+    yy, xx = np.mgrid[0:HEX, 0:HEX].astype(np.float32) + 0.5
+    pebbles = {}
+    for col in range(GAS_PERIOD[0]):
+        for row in range(GAS_PERIOD[1]):
+            n = int(rng.random() < 0.35) * (1 + int(rng.random() < 0.3))
+            spots = []
+            for _ in range(n):
+                ang, dist = rng.uniform(0, 2 * np.pi), rng.uniform(0, 20)
+                spots.append((HEX / 2 + dist * math.cos(ang), HEX / 2 + dist * math.sin(ang),
+                              rng.uniform(2.4, 3.8), rng.uniform(0.6, 0.95), rng.uniform(0, np.pi),
+                              rng.uniform(80, 125)))
+            pebbles[col, row] = spots
+
+    def decor(col, row):
+        rgba = np.zeros((HEX, HEX, 4), np.float32)
+        for px, py, r, squash, rot, grey in pebbles[col, row]:
+            dx, dy = xx - px, yy - py
+            u = (dx * math.cos(rot) + dy * math.sin(rot)) / r
+            v = (-dx * math.sin(rot) + dy * math.cos(rot)) / (r * squash)
+            d = np.sqrt(u * u + v * v)
+            a = np.clip((1 - d) * r + 0.5, 0, 1)
+            # lit from the upper left, with a dark rim
+            nx, ny = dx / r, dy / r
+            shade = np.clip(0.75 - 0.45 * (nx + ny) / 1.4, 0.35, 1.2) * (1 - 0.35 * np.clip(d, 0, 1) ** 4)
+            col_ = np.array((grey, grey * 0.9, grey * 0.78), np.float32)
+            rgb = col_[None, None] * shade[..., None]
+            over = a > rgba[..., 3] / 255
+            rgba[..., :3] = np.where(over[..., None], rgb, rgba[..., :3])
+            rgba[..., 3] = np.maximum(rgba[..., 3], a * 255)
+        return Image.fromarray(rgba.clip(0, 255).astype(np.uint8), "RGBA")
+
+    return painter, decor
+
+
 def build_gas(seed, out):
     rules = []
     for i, (name, colours) in enumerate(GAS_NEBULAE.items()):
-        rules += build_gas_nebula(np.random.default_rng(seed + 10 + i), out, name, colours)
+        rng = np.random.default_rng(seed + 10 + i)
+        if name == "dust":
+            painter, decor = dust_cloud(rng)
+            rules += build_gas_nebula(rng, out, name, None, painter, decor=decor)
+        else:
+            rules += build_gas_nebula(rng, out, name, colours)
     # added later, with their own seeds, so the nebulae above stay the same
     w, h = GAS_PERIOD[0] * 54, GAS_PERIOD[1] * 72
     painters = gas_painters(np.random.default_rng(seed + 30), w, h, periodic_fractal_noise)
