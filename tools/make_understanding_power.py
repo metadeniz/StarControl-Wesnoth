@@ -40,6 +40,13 @@ T.update({"D": "Yqd", "S": "Yqd^Yx", "R": "Yqr", "U": "Yqr^Yxp",
           "P": "Yqp", "T": "Yqp^Yxs1", "E": "Yqe", "X": "Yqe^Yxb2",
           "M": "Ys^Ysg", "J": "Ys^Ysb"})
 WESNOTH.update({ch: "Md^Xm" for ch in "DSRUPTEXMJ"})
+# Hexes opened up since, in the north half like BARRIERS (the south half
+# follows): bits of the west cliffs, the spiral, the long ridge's east end
+# and the stream banks.
+CLEARED = [(1, 7), (1, 8), (4, 9), (5, 9),
+           (18, 13), (20, 13), (19, 12), (18, 12),
+           (15, 6), (16, 6), (17, 6),
+           (23, 1), (24, 2), (26, 0), (26, 1), (27, 4)]
 BARRIERS = {
     # the west cliffs by the north keep: a pulsar in a radiation zone
     "R": [(1, 7), (2, 7), (3, 7), (3, 9), (4, 9), (5, 9)],
@@ -53,8 +60,8 @@ BARRIERS = {
     "D": [(28, 7), (29, 7), (32, 7), (34, 6)],
     "S": [(33, 6)],
     # the spiral in the middle: gravity eddies, a black hole in one arm
-    "E": [(19, 11), (18, 13), (20, 13), (21, 11), (22, 12), (22, 13)],
-    "X": [(19, 12)],
+    "E": [(19, 11), (21, 11), (22, 13)],
+    "X": [(22, 12)],
     # the long ridge: the star fills the four hexes round its bend, one of
     # them (9, 7) open space before, so the star has room
     "M": [(9, 7), (10, 7), (11, 7), (10, 8)],
@@ -154,6 +161,8 @@ def build():
         for x, y in hexes:
             assert grid[y][x] == "w" or (ch, x, y) == ("M", 9, 7), (ch, x, y)
             grid[y][x] = ch
+    for x, y in CLEARED:
+        grid[y][x] = "."
     for y in range(H // 2, H):                       # turn the north half
         for x in range(W):
             grid[y][x] = grid[H - 1 - y][W - 1 - x]
