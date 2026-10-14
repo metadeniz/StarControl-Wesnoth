@@ -418,8 +418,12 @@ end
 -- chance is 80%, and it halves with every rebirth (40%, 20%, ...).
 -- Replacing the dying unit inside its "die" event tells Wesnoth not to
 -- remove it. The SC2 reincarnation "hallelujah" plays instead of the
--- killer's victory ditty. Returns true if the ship was reborn.
+-- killer's victory ditty, once the explosion has died away: the death
+-- animation is 630 ms but sc/ship-dies.wav runs about 1650 ms, so the
+-- reborn ship and its hallelujah wait out the rest of the bang.
+-- Returns true if the ship was reborn.
 local REBIRTH_CHANCE = 80
+local REBIRTH_DELAY = 1050   -- ms between the "die" event and the rebirth
 function sc.pkunk_rebirth()
 	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
 	if not u or not u:matches { ability = "sc_reincarnation" } then return end
@@ -433,6 +437,7 @@ function sc.pkunk_rebirth()
 	cfg.attacks_left = 0
 	local x, y = u.x, u.y
 	u:erase()
+	wesnoth.interface.delay(REBIRTH_DELAY)
 	local reborn = wesnoth.units.create(cfg)
 	reborn.status.poisoned = false   -- reborn clean
 	reborn.status.slowed = false
