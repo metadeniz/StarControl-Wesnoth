@@ -174,32 +174,30 @@ def gas_painters(rng, w, h, noise):
     _lightning(rng, w, h, w * h // 3600, (255, 205, 255))
     bolt, glow = _bolts(np.random.default_rng(rng.bit_generator.seed_seq.entropy + 1), w, h, 12, **STORM_BOLTS)
 
-    def storm(sl, col, row):
+    def cloud(sl):
+        """The storm's cloud itself: violet billows, lit in big soft
+        patches, the same in every storm hex so they all run together."""
         a, b = p1[sl], p2[sl]
-        rgb = _mix((32, 6, 42), (125, 35, 125), a)
+        rgb = _mix((60, 14, 82), (170, 60, 190), a)
+        body = np.clip((b - 0.3) * 1.6, 0, 1)
+        rgb = _mix(rgb, (210, 100, 245), body * 0.55)
+        return rgb, 0.82 + 0.12 * (b - 0.5) + body * 0.1
+
+    def lightning(sl, bolt, glow):
+        rgb, alpha = cloud(sl)
         g = np.clip(glow[sl] * 1.6, 0, 1)
         rgb = _mix(rgb, (215, 95, 255), g * 0.7)
         rgb = _mix(rgb, (255, 235, 255), bolt[sl])
-        return _rgba(rgb, np.clip(0.75 + 0.2 * (b - 0.5) + g * 0.3, 0, 0.97))
+        return _rgba(rgb, np.clip(alpha + g * 0.3, 0, 0.97))
+
+    def storm(sl, col, row):
+        return lightning(sl, bolt, glow)
     painters["plasmastorm"] = storm
 
-    # The hex holding a star or pulsar: the same cloud with no lightning,
-    # lit up round the star in the storm's own violet, with a few faint
-    # arcs of plasma swirling round it, so the star plainly sits inside
-    # the storm
-    ty, tx = np.mgrid[0:72, 0:72].astype(np.float32)
-    dist = np.hypot(tx - 35.5, ty - 35.5)
-    ang = np.arctan2(ty - 35.5, tx - 35.5)
-    lit = np.clip(1 - dist / 33, 0, 1) ** 0.9
-    arcs = np.clip(np.cos(3 * ang + dist / 5) * 0.5 + 0.5, 0, 1) ** 6 * np.clip((dist - 12) / 6, 0, 1) * np.clip((33 - dist) / 6, 0, 1)
-
+    # The hex holding a star or pulsar: the same cloud with no lightning
     def calm_storm(sl, col, row):
-        a, b = p1[sl], p2[sl]
-        rgb = _mix((32, 6, 42), (125, 35, 125), a)
-        g = np.clip(lit + arcs * 0.7, 0, 1)
-        rgb = _mix(rgb, (215, 95, 255), g * 0.9)
-        rgb = _mix(rgb, (255, 220, 255), arcs * 0.5)
-        return _rgba(rgb, np.clip(0.75 + 0.2 * (b - 0.5) + g * 0.3, 0, 0.97))
+        rgb, alpha = cloud(sl)
+        return _rgba(rgb, np.clip(alpha, 0, 0.97))
     painters["plasmastorm-calm"] = calm_storm
 
     # The storm hexes next to a star: a bolt in every one (its own seed),
@@ -208,12 +206,7 @@ def gas_painters(rng, w, h, noise):
                           w, h, (w // 54) * (h // 72), **STORM_BOLTS)
 
     def near_storm(sl, col, row):
-        a, b = p1[sl], p2[sl]
-        rgb = _mix((32, 6, 42), (125, 35, 125), a)
-        g = np.clip(nglow[sl] * 1.6, 0, 1)
-        rgb = _mix(rgb, (215, 95, 255), g * 0.7)
-        rgb = _mix(rgb, (255, 235, 255), nbolt[sl])
-        return _rgba(rgb, np.clip(0.75 + 0.2 * (b - 0.5) + g * 0.3, 0, 0.97))
+        return lightning(sl, nbolt, nglow)
     painters["plasmastorm-near"] = near_storm
 
     # Gravity eddy: a whirl in every hex, neighbours turning opposite ways,
@@ -988,12 +981,23 @@ def veiled(rng, giant, dark, light, sun=(-0.55, -0.55, 0.63)):
     return out
 
 
+def _violet(img):
+    """img recoloured in the plasma storm's violet: its dim parts violet,
+    its brightest still white-hot."""
+    px = np.asarray(img, np.float32)
+    lum = px[..., :3].max(axis=2) / 255
+    rgb = _mix((175, 70, 255), (250, 225, 255), np.clip(lum, 0, 1) ** 5) * np.clip(lum * 1.3, 0, 1)[..., None]
+    return Image.fromarray(np.dstack([rgb, px[..., 3]]).clip(0, 255).astype(np.uint8), "RGBA")
+
+
 def build_objects(rng, out, save, apply_mask, starfield, mask):
     for name, make in [("black-hole", black_hole), ("pulsar", pulsar)]:
         img = make(rng)
         save(img, out, f"images/terrain/sc/{name}.png", False)
         tile = apply_mask(starfield(rng), mask); tile.alpha_composite(img)
         save(apply_mask(tile, mask), out, f"images/terrain/sc/{name}-tile.png", False)
+        if name == "pulsar":            # in a plasma storm it burns violet
+            save(_violet(img), out, "images/terrain/sc/pulsar-storm.png", False)
     for pal in GAS_GIANTS:
         # drawn (so the art after them stays the same) but not saved: the
         # gas giants became brown dwarfs, drawn below with their own seed

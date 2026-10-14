@@ -1777,7 +1777,9 @@ STORM_STARS = [((90, 150, 255), (220, 235, 255)),    # blue
                ((80, 235, 120), (215, 255, 220))]    # green
 # ...a purple one for gravity eddies and an orange one for dust clouds
 OTHER_STARS = {"star-eddy": ((185, 90, 255), (235, 210, 255)),
-               "star-dust": ((255, 140, 30), (255, 220, 160))}
+               "star-dust": ((255, 140, 30), (255, 220, 160)),
+               # a sun in a plasma storm: the storm's own violet
+               "star-plasma-storm": ((215, 70, 255), (240, 185, 255))}
 # The suns at the heart of plasma storms, each its own: corona and core
 # colours, the core's radius and how many rays the corona has (^Yxs1 to
 # ^Yxs6 always draw the same one; a plain ^Yx in a plasma storm picks one).
