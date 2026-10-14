@@ -42,11 +42,12 @@ T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
      "H": "Yqr^Ygc", "X": "Yqe^Yxb", "U": "Yqr^Yxp", "S": "Ys^Yx", "M": "Ys^Ysg",
      "o": "Ys^Yxd1", "y": "Yd^Yxd5",
      "O": "Yqe^Ybh", "T": "Yqp^Yx", "V": "Yqp^Yxp",
-     **{str(n): f"Yqe^Ybh{n}" for n in range(1, 7)}}
+     **{str(n): f"Yqe^Ybh{n}" for n in range(1, 7)},
+     "Y": "Ys^Ysu1", "Z": "Ys^Ysu4"}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "r": "Re", "B": "Wo", "f": "Wo^Bsb\\",
            "s": "Ss", "m": "Gg^Tf"}
-WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUSOTVMoy123456"})
+WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUSOTVMoy123456YZ"})
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 
 # The dark stars: each diamond of "G" (gas giant in dark nebula) becomes one
@@ -394,6 +395,12 @@ HAND_EDITS = [
     # ways)
     *[(h, ch) for xy, ch in [((9, 5), "p"), ((10, 5), "a")]
       for h in mirrored4(*xy)],
+    # the south-east black hole takes the look of the centre's south one,
+    # and the two centre black holes become supergiants (yellow north,
+    # white south) in open space
+    *[((x, y), "6") for x, y in [(24, 19), (25, 19), (25, 20), (26, 19)]],
+    *[((x, y), "Y") for x, y in [(20, 12), (21, 12), (22, 12), (21, 13)]],
+    *[((x, y), "Z") for x, y in [(20, 16), (21, 16), (22, 16), (21, 17)]],
     # 2,15 and 4,14 open, 1,16 an asteroid field (mirrored west to east)
     ((2, 15), "."), ((40, 15), "."), ((4, 14), "."), ((38, 14), "."),
     ((1, 16), "a"), ((41, 16), "a"),
