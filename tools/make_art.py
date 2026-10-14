@@ -891,7 +891,7 @@ BARRIER_GASES = {"darknebula": "Yqd", "radiation": "Yqr", "plasmastorm": "Yqp", 
 GAS_TERRAIN.update(BARRIER_GASES)
 # Every badlands terrain, in either look (see build_badlands): gas thins out
 # and spills onto them as onto open space.
-ALL_BADLANDS = "Yi,Yi^*,Yis*^*,Yif*^*,Yu*^*"
+ALL_BADLANDS = "Yi,Yi^*,Yis*^*,Yif*^*,Yu*^*,Yci"
 # hex offsets of each neighbour, for even and odd columns (odd ones sit lower)
 NEIGHBOUR_OFFSETS = {
     0: {"n": (0, -1), "ne": (1, -1), "se": (1, 0), "s": (0, 1), "sw": (-1, 0), "nw": (-1, -1)},
@@ -1237,7 +1237,8 @@ BANKS = {
 }
 # The badlands' cloud: deep blue, violet, pale blue glints
 BADLANDS_NEBULA = ((40, 90, 210), (70, 60, 190), (140, 200, 255))
-CLOUD_BADLANDS = _with_overlays("Yi", "Yis", "Yif")
+# (Yci, a docking ring out in the light badlands, sits in the cloud too.)
+CLOUD_BADLANDS = _with_overlays("Yi", "Yis", "Yif") + ",Yci"
 NOT_CLOUD_BADLANDS = "Ys*^*,Yk,Yc,Yu*^*,Yn*^*,Yr*^*,Yd*^*,Yqd*^*,Yqr*^*,Yqp*^*,Yqe*^*"
 
 
@@ -1545,6 +1546,15 @@ def build_badlands(rng, out):
     img = tile("badlands-tile")
     img.alpha_composite(tiles["deep"])
     save(apply_mask(img, hex_mask_cache), out, f"{sc}/ionstorm-tile.png", False)
+    # A docking ring out in the badlands: the dock's frame alone, drawn over
+    # the cloud on Yci hexes, and its symbol.
+    frame = Image.new("RGBA", (HEX, HEX), (0, 0, 0, 0))
+    img = tile("badlands-tile")
+    for layer in dock_frame():
+        frame.alpha_composite(layer)
+        img.alpha_composite(layer)
+    save(apply_mask(frame, hex_mask_cache), out, f"{sc}/dock-frame.png", False)
+    save(apply_mask(img, hex_mask_cache), out, f"{sc}/dock-badlands-tile.png", False)
     img = tile("space")
     for name, level in (("ripples_thin", "ripples-thin"), ("ripples_light", "ripples-light"),
                         ("ripples_deep", "ripples")):
@@ -1849,24 +1859,32 @@ def build_starbase(rng, mask, out):
 
     # Dock (castle): a lit hexagonal docking frame.
     for v in range(3):
-        dock = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-        dd = ImageDraw.Draw(dock)
-        r1 = 30 * big
-        pts = [(c + r1 * math.cos(math.radians(60 * k)), c + r1 * math.sin(math.radians(60 * k))) for k in range(6)]
-        dd.polygon(pts, outline=(70, 160, 210, 230), width=2 * big)
-        r2 = 22 * big
-        pts2 = [(c + r2 * math.cos(math.radians(60 * k)), c + r2 * math.sin(math.radians(60 * k))) for k in range(6)]
-        dd.polygon(pts2, outline=(50, 90, 130, 160), width=big)
-        for (x, y) in pts:
-            dd.ellipse([x - 2 * big, y - 2 * big, x + 2 * big, y + 2 * big], fill=(140, 230, 255, 255))
-        dock = dock.resize((HEX, HEX), Image.LANCZOS)
         tile = starfield(rng)
-        tile.alpha_composite(dock.filter(ImageFilter.GaussianBlur(1.5)))
-        tile.alpha_composite(dock)
+        for layer in dock_frame():
+            tile.alpha_composite(layer)
         name = "dock" if v == 0 else f"dock{v + 1}"
         save(apply_mask(tile, mask), out, f"images/terrain/sc/{name}.png", False)
         if v == 0:
             save(apply_mask(tile, mask), out, "images/terrain/sc/dock-tile.png", False)
+
+
+def dock_frame():
+    """The docking ring's lit hexagonal frame on a clear hex: its soft glow,
+    then the frame itself, to be drawn in that order."""
+    big = 4
+    S, c = HEX * big, HEX * big / 2
+    dock = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    dd = ImageDraw.Draw(dock)
+    r1 = 30 * big
+    pts = [(c + r1 * math.cos(math.radians(60 * k)), c + r1 * math.sin(math.radians(60 * k))) for k in range(6)]
+    dd.polygon(pts, outline=(70, 160, 210, 230), width=2 * big)
+    r2 = 22 * big
+    pts2 = [(c + r2 * math.cos(math.radians(60 * k)), c + r2 * math.sin(math.radians(60 * k))) for k in range(6)]
+    dd.polygon(pts2, outline=(50, 90, 130, 160), width=big)
+    for (x, y) in pts:
+        dd.ellipse([x - 2 * big, y - 2 * big, x + 2 * big, y + 2 * big], fill=(140, 230, 255, 255))
+    dock = dock.resize((HEX, HEX), Image.LANCZOS)
+    return dock.filter(ImageFilter.GaussianBlur(1.5)), dock
 
 
 def build_attack_icons(out):

@@ -17,8 +17,9 @@ Terrain is translated by role, so a converted map plays like the original:
     bridge                                 -> deep space (a lane) Ys
     village                                -> planet              ^Vyp
     village in water (not swamp)           -> sea planet          ^Vys
-    castle / keep (also ruins in water or  -> docking ring / base Yc / Yk
-      swamp: no penalty for anyone)
+    castle / keep                          -> docking ring / base Yc / Yk
+    castle in water or swamp (sunken or    -> docking ring out in  Yci
+      swamp ruin, aquatic castle)             the badlands (plays as Yc)
     impassable (walls, ^Xm...), chasm      -> star                Ys^Yx
         ...but where impassable hexes touch,  -> asteroid wall       Ys^Yw
         so a wall doesn't become a row of suns
@@ -51,7 +52,8 @@ def convert(code):
     if b == "K":
         return "Yk"
     if b == "C":
-        return "Yc"
+        # sunken (Chw) and swamp (Chs) ruins, aquatic castles (Cm, Cme)
+        return "Yci" if re.match(r"C(h[ws]|me?)$", base) else "Yc"
     if base.startswith("Uh"):                  # rockbound cave (rough, like hills)
         return "Ys^Vyp" if overlay.startswith("V") else "Ys^Ya"
     if base.startswith("Wwf"):                 # ford
