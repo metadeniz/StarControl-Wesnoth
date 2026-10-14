@@ -14,8 +14,8 @@ Ideas taken from the mod's other maps:
   badlands with two fords out.
 - Manufacturing Consent and Media Control: impassable clouds (dark nebula,
   radiation, plasma storm, gravity eddy) with a star, pulsar or black hole
-  at their heart, here one in front of each start, so the way to the
-  centre bends round it.
+  at their heart, here a small arc of three hexes in front of each
+  start, so the way to the centre bends round it.
 - Understanding Power (Small): the richest planets in asteroid fields,
   here only on the side of each planet facing the centre.
 - Weldyn Channel: a badland lake between each two neighbouring starts,
@@ -23,8 +23,8 @@ Ideas taken from the mod's other maps:
 - Isar's Cross: a ring of light badlands round the central nebula, for
   close fighting round the middle, where a starbase waits.
 
-Six supergiants, one of each colour, stand in nebulae between neighbours,
-each with a small starbase (two docking rings) beside it. Six more small
+Six supergiants, one of each colour and three hexes each, stand in nebulae
+between neighbours, each with a small starbase (two docking rings) beside it. Six more small
 starbases, also with two docking rings, wait just outside the central ring
 on the line from each start to the centre, beside the start's cloud. Like
 everything else they are turned six ways and mirrored, so every start
@@ -178,48 +178,6 @@ class Map:
                 if inside(u, v) and self.g[v][u] in over:
                     self.put((u, v), ch)
 
-    def diamond(self, near, code, under):
-        """A four-hex object on a diamond that the mirror through near maps
-        onto itself, copied to the other five sixths."""
-        best = None
-        for x0 in range(W):
-            for y0 in range(H):
-                for h1 in neighbours(x0, y0):
-                    two = {(x0, y0), h1}
-                    tips = [n for n in neighbours(x0, y0)
-                            if n in neighbours(*h1)]
-                    d = two | set(tips)
-                    if len(d) != 4 or not all(inside(*h) for h in d):
-                        continue
-                    # the mirror through near's own sixth
-                    if mirror_mid(d) != d:
-                        continue
-                    score = sum(dist(h, near) for h in d)
-                    if best is None or score < best[0]:
-                        best = (score, d)
-        d = best[1]
-        for h in d:
-            for x, y in images(*h):
-                self.g[y][x] = "Z"
-                # each copy its own look: code is a list, one per sixth,
-                # clockwise from the one between corners 0 and 1
-                self.big[x, y] = f"{T[under]}^{code[sixth_of(x, y)]}"
-        return d
-
-
-def mirror_mid(hexes):
-    """Mirror hexes through the line from the centre to the middle of the
-    north-east edge (between corners 0 and 1)."""
-    out = set()
-    for x, y in hexes:
-        q, r = to_cube(x, y)
-        q, r = q - C[0], r - C[1]
-        s = -q - r
-        q, r, s = -q, -s, -r                      # mirror through north
-        q, r, s = -r, -s, -q                      # then turn 60 degrees
-        out.add(to_offset(q + C[0], r + C[1]))
-    return out
-
 
 def build():
     m = Map()
@@ -253,9 +211,14 @@ def build():
     m.edge([g for h in lake for g in images(*h)], "b")
     m.put(at(8, 8), "q")
     # a supergiant in a nebula, nearer the centre, each its own colour:
-    # yellow, blue, red, white, green, orange (^Ysu1..6), clockwise
+    # yellow, blue, red, white, green, orange (^Ytu1..6), clockwise. It
+    # fills a triangle of three hexes that the mirror through the middle of
+    # the sixth maps onto itself, pointing in towards the centre.
     m.blob(at(5, 5), 1, "n")
-    m.diamond(at(5, 5), ["Ysu1", "Ysu2", "Ysu3", "Ysu4", "Ysu5", "Ysu6"], "n")
+    for h in [at(5, 5), at(4, 5), at(5, 4)]:
+        for x, y in images(*h):
+            m.g[y][x] = "Z"
+            m.big[x, y] = f"{T['n']}^Ytu{sixth_of(x, y) + 1}"
     # and a small starbase beside it, two docking rings (a mirror pair, as
     # one ring cannot sit on the mirror line)
     m.put(at(6, 6), "K")
@@ -265,8 +228,8 @@ def build():
     m.blob(at(9, 3), 1, "a", keep="bfn")
     m.put(at(9, 3), "p")
 
-    # ------------------------ an impassable cloud in front of each start
-    m.blob(at(7, 0), 1, "X")
+    # ---------------- an impassable cloud in front of each start: three
+    # hexes in an arc across the way to the centre, its heart in the middle
     m.put(at(6, 1), "X")
     m.put(at(7, 0), "O")
 
