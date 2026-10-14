@@ -2,20 +2,24 @@
 """Draw a hex grid with each hex's Wesnoth coordinates over a map render.
 
     wesnoth --screenshot maps/X.map shot.png
-    tools/grid_overlay.py maps/X.map shot.png shot-grid.png
+    tools/grid_overlay.py maps/X.map shot.png shot-grid.png [--no-labels]
 
 The labels are the coordinates Wesnoth shows in-game and in the editor
 (1-based, x across, y down), so a hex can be named as "16,13" when asking
-for a change. Needs Pillow.
+for a change. --no-labels draws the grid lines only. Needs Pillow.
 """
 
-import math
 import sys
 
 from PIL import Image, ImageDraw, ImageFont
 
 
-def overlay(map_path, shot_path, out_path):
+# Wesnoth hexes are not regular: 72px across and 72px tall, with 36px flat
+# tops, so they tile on a 54px x 72px pitch.
+HEX_VERTS = [(-18, -36), (18, -36), (36, 0), (18, 36), (-18, 36), (-36, 0)]
+
+
+def overlay(map_path, shot_path, out_path, labels=True):
     with open(map_path) as f:
         rows = [r for r in f.read().splitlines() if r.strip()]
     cols, nrows = len(rows[0].split(",")), len(rows)   # with the border
@@ -34,10 +38,9 @@ def overlay(map_path, shot_path, out_path):
         for Y in range(1, nrows - 1):
             cx = 54 * X + 36 - ox
             cy = 72 * Y + 36 + (36 if X % 2 == 0 else 0) - oy
-            pts = [(cx + 36 * math.cos(math.radians(a)),
-                    cy + 36 * math.sin(math.radians(a)))
-                   for a in range(0, 360, 60)]
-            d.polygon(pts, outline=(255, 255, 255, 110))
+            d.polygon([(cx + vx, cy + vy) for vx, vy in HEX_VERTS], outline=(255, 255, 255, 110))
+            if not labels:
+                continue
             label = f"{X},{Y}"
             w = d.textlength(label, font=font)
             d.text((cx - w / 2, cy + 12), label, font=font,
@@ -47,4 +50,4 @@ def overlay(map_path, shot_path, out_path):
 
 
 if __name__ == "__main__":
-    overlay(*sys.argv[1:4])
+    overlay(*sys.argv[1:4], labels="--no-labels" not in sys.argv[4:])
