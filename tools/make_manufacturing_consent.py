@@ -189,12 +189,17 @@ def neighbours(x, y):
 
 
 def dusty_disks(grid, stars="M"):
-    """Debris disk hexes beside a rocky supergiant sit on dust, so the star
+    """Debris disk hexes round a rocky supergiant sit on dust, so the star
     shows through a haze of dust behind its rocks."""
     H, W = len(grid), len(grid[0])
     near = [(x, y) for y in range(H) for x in range(W) if grid[y][x] == "w"
             and any(0 <= u < W and 0 <= v < H and grid[v][u] in stars for u, v in neighbours(x, y))]
     for x, y in near:
+        grid[y][x] = "q"
+    # and the disk hexes that close the ring between two of those
+    gaps = [(x, y) for y in range(H) for x in range(W) if grid[y][x] == "w"
+            and sum(0 <= u < W and 0 <= v < H and grid[v][u] == "q" for u, v in neighbours(x, y)) >= 2]
+    for x, y in gaps:
         grid[y][x] = "q"
     return grid
 
