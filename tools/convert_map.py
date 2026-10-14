@@ -24,6 +24,7 @@ Terrain is translated by role, so a converted map plays like the original:
         ...but where impassable hexes touch,  -> asteroid wall       Ys^Yw
         so a wall doesn't become a row of suns
     off-map                                -> unchanged
+    fake map edge (^_fme)                  -> kept, over the converted base
 
 Starting positions are kept.
 
@@ -42,6 +43,8 @@ import sys
 def convert(code):
     if code.startswith("_off"):
         return code
+    if code.endswith("^_fme"):                 # fake map edge: keep it over the new base
+        return convert(code[:-len("^_fme")]).partition("^")[0] + "^_fme"
     base, _, overlay = code.partition("^")
     b = base[:1]
 
