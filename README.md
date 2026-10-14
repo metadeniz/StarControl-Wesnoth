@@ -83,8 +83,9 @@ right-click menu, which goes through the three in turn. The remixes are:
   from Remix Pack 3's extras), Mycon ("Rebirth"), Spathi ("Safe Haven",
   "Fwiffo's Starrunner"), Umgah ("Genetic Modification"), VUX
   ("Ultra-gross", "Acid in the Eye"), Ilwrath ("All Evil"), Thraddash
-  ("Culture 19"), Androsynth (Ramen Rider's Androsynth encounter theme) and
-  Starbase ("Under a Red Sky"). The orchestral Ur-Quan cover has no remix
+  ("Culture 19"), Androsynth (Ramen Rider's Androsynth encounter theme),
+  Starbase ("Under a Red Sky"), and hyperspace ("Across the Galaxy", which
+  has no original track in the list). The orchestral Ur-Quan cover has no remix
   and stays.
 
 The New Alliance and the Agents of Chaos have one playlist each:
@@ -102,8 +103,8 @@ The New Alliance and the Agents of Chaos have one playlist each:
   Required", "The Eternal Doctrine", "Kohr-Ah" battle remix), Druuge
   ("Property of the Crimson Corporation"), Thraddash ("Culture 19"),
   Slylandro Probes ("We Come In Peace"), Orz ("Squeezing the Juice"), Mycon
-  ("Rebirth"), Ilwrath ("All Evil"), "The Battle of the Sa-Matra" and Starbase ("Under a Red
-  Sky").
+  ("Rebirth"), Ilwrath ("All Evil"), "The Battle of the Sa-Matra", hyperspace ("Across the
+  Galaxy") and Starbase ("Under a Red Sky").
 
 When you win, the old Alliance and the Hierarchy hear Star Control 1's
 victory theme for their side, the New Alliance hears Star Control II's

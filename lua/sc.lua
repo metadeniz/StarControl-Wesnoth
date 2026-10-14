@@ -226,6 +226,7 @@ local VERSIONS = {
 		{ "2. androsynth-duoled", remix = { "2. androsynth-ramen-rider" } },
 		{ "2. urquan-idan-schneider" },   -- an orchestral cover; no remix, so in every mode
 		{ "0. starbase", remix = { "0. remix-starbase" } },
+		{ remix = { "0. remix-hyperspace" } },   -- no original hyperspace track here
 	},
 }
 
@@ -246,7 +247,7 @@ local PLAYLISTS = {   -- faction -> mode -> tracks
 	SC_DeathMarch = { "4. kohrah-cleansing-required", "4. kohrah-eternal-doctrine", "4. kohrah-battle",
 		"4. druuge-crimson-corporation", "0. thraddash-culture-19", "4. slylandro-we-come-in-peace",
 		"4. orz-squeezing-the-juice", "0. mycon-rebirth", "0. ilwrath-all-evil", "4. samatra-battle",
-		"0. remix-starbase" },
+		"0. remix-hyperspace", "0. remix-starbase" },
 }
 for faction, list in pairs(PLAYLISTS) do
 	PLAYLISTS[faction] = { original = list }

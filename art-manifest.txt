@@ -736,6 +736,7 @@ music/sc/0. mycon-rebirth.ogg
 music/sc/0. remix-arilou.ogg
 music/sc/0. remix-commander.ogg
 music/sc/0. remix-ending.ogg
+music/sc/0. remix-hyperspace.ogg
 music/sc/0. remix-intro.ogg
 music/sc/0. remix-mystic-shadows.ogg
 music/sc/0. remix-quasispace.ogg
