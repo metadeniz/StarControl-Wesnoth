@@ -40,12 +40,13 @@ T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
      # barriers that replace most of the asteroid walls (see BARRIERS)
      "D": "Yqd", "R": "Yqr", "P": "Yqp", "E": "Yqe", "G": "Yqd^Ygg",
      "H": "Yqr^Ygc", "X": "Yqe^Yxb", "U": "Yqr^Yxp", "S": "Ys^Yx", "M": "Ys^Ysg", "q": "Yd^Yw",
+     "o": "Ys^Yxd1", "y": "Yd^Yxd5",
      "O": "Yqe^Ybh", "T": "Yqp^Yx", "V": "Yqp^Yxp",
      **{str(n): f"Yqe^Ybh{n}" for n in range(1, 7)}}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "r": "Re", "B": "Wo", "f": "Wo^Bsb\\",
            "s": "Ss", "m": "Gg^Tf"}
-WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUSOTVMq123456"})
+WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUSOTVMqoy123456"})
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 
 # The dark stars: each diamond of "G" (gas giant in dark nebula) becomes one
@@ -188,7 +189,7 @@ def neighbours(x, y):
             (x + 1, up), (x + 1, up + 1)]
 
 
-def dusty_disks(grid, stars="M"):
+def dusty_disks(grid, stars="Moy"):
     """Debris disk hexes round a rocky supergiant sit on dust, so the star
     shows through a haze of dust behind its rocks."""
     H, W = len(grid), len(grid[0])
@@ -357,6 +358,9 @@ def mirrored4(X, Y):
 
 
 HAND_EDITS = [
+    # one-hex stars behind debris disks: orange at 5,13, yellow at 4,16
+    # beside the red supergiant (copied west to east only)
+    ((5, 13), "o"), ((37, 13), "o"), ((4, 16), "y"), ((38, 16), "y"),
     # the badlands channel opens at 21,21 and 21,8
     *[((21, y), ".") for y in (21, 8)],
     # the planets at 24,24 and its copies move two hexes outwards

@@ -695,6 +695,10 @@ SMALL_DISK_STARS = [
                    rim=((255, 255, 255), (200, 202, 218)), body=((22, 22, 30), (80, 80, 92)))),
 ]
 
+SMALL_DISK_STAR_YELLOW = dict(d=50, n_rocks=190, rock=0.7, cols=[(80, 50, 6), (175, 120, 22), (235, 185, 55), (252, 225, 120), (255, 250, 210)],
+                              glow_rgb=(240, 190, 60), reach=5, cells=6, grain=20, limb=0.55, mottle=0.4, smooth=0.4,
+                              rim=((255, 228, 130), (210, 170, 110)), body=((30, 24, 14), (92, 78, 56)))
+
 # More supergiants behind debris disks, in the colours the red one and the
 # blue giant leave out: orange, yellow and white (^Ysg2..^Ysg4). With the
 # red one and the blue giant they make the five 3-hex ones (^Ytsg).
@@ -1004,6 +1008,13 @@ def build_objects(rng, out, save, apply_mask, starfield, mask):
         tile = apply_mask(starfield(krng), mask)
         tile.alpha_composite(img.crop((28, 28, 100, 100)))
         save(apply_mask(tile, mask), out, f"images/terrain/sc/disk-star-{name}-tile.png", False)
+    # a yellow one too (^Yxd5), with its own seed so the others stay the same
+    yrng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 12)
+    img = red_supergiant(yrng, canvas=128, **SMALL_DISK_STAR_YELLOW)
+    save(img, out, "images/terrain/sc/disk-star-yellow.png", False)
+    tile = apply_mask(starfield(yrng), mask)
+    tile.alpha_composite(img.crop((28, 28, 100, 100)))
+    save(apply_mask(tile, mask), out, "images/terrain/sc/disk-star-yellow-tile.png", False)
     mrng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 4)
     for i, style in enumerate(BIG_BLACK_HOLES_MORE):
         save(big_black_hole(mrng, **style), out,
