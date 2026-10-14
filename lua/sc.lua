@@ -474,8 +474,8 @@ function sc.place_artifacts()
 	local map = wesnoth.current.map
 	local planets = wesnoth.map.find {
 		terrain = "*^Vyp,*^Vys",
-		T["not"] { T.filter_adjacent_location { terrain = "Yk,Yc" } },
-		T["not"] { terrain = "Yk,Yc" },
+		T["not"] { T.filter_adjacent_location { terrain = "Yk,Yc,Yci" } },
+		T["not"] { terrain = "Yk,Yc,Yci" },
 	}
 	local is_planet = {}
 	for _, p in ipairs(planets) do is_planet[p[1] .. "," .. p[2]] = true end
