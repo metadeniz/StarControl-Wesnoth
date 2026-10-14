@@ -39,9 +39,10 @@ LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 T.update({"D": "Yqd", "S": "Yqd^Yx", "R": "Yqr", "U": "Yqr^Yxp",
           "P": "Yqp", "T": "Yqp^Yxs1", "E": "Yqe", "X": "Yqe^Yxb2",
           "M": "Ys^Ysg", "J": "Ys^Ysb",
-          "V": "Yn^Yxs4", "W": "Yn^Yx",
+          "V": "Yn^Yxs4", "W": "Yn^Yx", "m": "Yr",
           "A": "Ys^Yxd1", "Z": "Ys^Yxd2", "F": "Ys^Yxd3", "G": "Ys^Yxd4"})
 WESNOTH.update({ch: "Md^Xm" for ch in "DSRUPTEXMJAZFGVW"})
+WESNOTH["m"] = "Gg^Tf"                   # mushroom grove, like red nebula elsewhere
 SOUTH = {"M": "J", "A": "G", "Z": "F", "V": "W"}     # the south half's own stars
 # Hexes opened up since, in the north half like BARRIERS (the south half
 # follows): bits of the west cliffs, the spiral, the long ridge's east end
@@ -61,7 +62,8 @@ BARRIERS = {
           (26, 0), (26, 1), (27, 1), (27, 3), (27, 4)],
     "T": [(27, 2)],
     # the short ridges in the north-east: dark nebulae, a sun in one
-    "D": [(28, 7), (29, 7), (32, 7), (34, 6)],
+    "D": [(32, 7), (34, 6)],
+    "m": [(28, 7), (29, 7)],         # red nebula, passable, where the shorter one was
     "S": [(33, 6)],
     # the spiral in the middle: gravity eddies, a black hole in one arm
     "E": [(21, 11), (22, 13)],
