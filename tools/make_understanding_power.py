@@ -38,10 +38,11 @@ LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 # In the south half the same ridge circles a blue giant instead.
 T.update({"D": "Yqd", "S": "Yqd^Yx", "R": "Yqr", "U": "Yqr^Yxp",
           "P": "Yqp", "T": "Yqp^Yxs1", "E": "Yqe", "X": "Yqe^Yxb2",
-          "M": "Ys^Ysg", "J": "Ys^Ysb", "q": "Yd^Yw",
-          "V": "Yn^Yxs4", "W": "Yn^Yx",
+          "M": "Ys^Ysg", "J": "Ys^Ysb",
+          "V": "Yn^Yxs4", "W": "Yn^Yx", "m": "Yr",
           "A": "Ys^Yxd1", "Z": "Ys^Yxd2", "F": "Ys^Yxd3", "G": "Ys^Yxd4"})
-WESNOTH.update({ch: "Md^Xm" for ch in "DSRUPTEXMJAZFGVWq"})
+WESNOTH.update({ch: "Md^Xm" for ch in "DSRUPTEXMJAZFGVW"})
+WESNOTH["m"] = "Gg^Tf"                   # mushroom grove, like red nebula elsewhere
 SOUTH = {"M": "J", "A": "G", "Z": "F", "V": "W"}     # the south half's own stars
 # Hexes opened up since, in the north half like BARRIERS (the south half
 # follows): bits of the west cliffs, the spiral, the long ridge's east end
@@ -61,7 +62,8 @@ BARRIERS = {
           (26, 0), (26, 1), (27, 1), (27, 3), (27, 4)],
     "T": [(27, 2)],
     # the short ridges in the north-east: dark nebulae, a sun in one
-    "D": [(28, 7), (29, 7), (32, 7), (34, 6)],
+    "D": [(32, 7), (34, 6)],
+    "m": [(28, 7), (29, 7)],         # red nebula, passable, where the shorter one was
     "S": [(33, 6)],
     # the spiral in the middle: gravity eddies, a black hole in one arm
     "E": [(21, 11), (22, 13)],
@@ -125,12 +127,12 @@ FEATURES = {
           (14, 11)],                 # a small keep in the central woods
 
     "c": [(4, 3), (4, 4), (5, 2), (6, 3), (6, 4),
-          (14, 12)],                 # its one recruit hex
+          (14, 12), (13, 10)],       # its two recruit hexes
     # a second, smaller castle in the east lake (west lake in the south
     # half, about hex 2,19 in game coordinates), no starting side; the
     # shore beside it is open space so it is easy to reach
     "k": [(36, 9)],
-    "h": [(35, 8), (35, 9)],
+    "h": [(35, 8), (35, 9), (36, 8)],
 }
 
 
@@ -161,22 +163,6 @@ def shallows(grid):
     return grid
 
 
-def dusty_disks(grid, stars="MJ"):
-    """Debris disk hexes round a rocky supergiant sit on dust, so the star
-    shows through a haze of dust behind its rocks."""
-    H, W = len(grid), len(grid[0])
-    near = [(x, y) for y in range(H) for x in range(W) if grid[y][x] == "w"
-            and any(0 <= u < W and 0 <= v < H and grid[v][u] in stars for u, v in neighbours(x, y))]
-    for x, y in near:
-        grid[y][x] = "q"
-    # and the disk hexes that close the ring between two of those
-    gaps = [(x, y) for y in range(H) for x in range(W) if grid[y][x] == "w"
-            and sum(0 <= u < W and 0 <= v < H and grid[v][u] == "q" for u, v in neighbours(x, y)) >= 2]
-    for x, y in gaps:
-        grid[y][x] = "q"
-    return grid
-
-
 def build():
     grid = [["." for _ in range(W)] for _ in range(H)]
     for ch, hexes in FEATURES.items():
@@ -193,7 +179,7 @@ def build():
         for x in range(W):
             grid[y][x] = grid[H - 1 - y][W - 1 - x]
             grid[y][x] = SOUTH.get(grid[y][x], grid[y][x])   # its own stars
-    return dusty_disks(shallows(grid))
+    return shallows(grid)
 
 
 def write(grid, path, table=T, base_only=("Yk", "Ys^Vyp"), start=(5, 3)):
