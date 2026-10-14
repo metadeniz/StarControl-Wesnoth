@@ -75,8 +75,7 @@ once before any repeats:
   Ultron"), Commander ("Corridor Nine"), Arilou ("Welcome to
   Falayalaralfali"), Melnorme ("Turning Purple"), Syreen ("Close Encounters of the Seventh Kind"),
   quasispace ("Mystic Shadows", "Through the Angles of Space"), the opening ("Into the Void"), the ending ("Awaking
-  Dreams"), Starbase ("Under a Red Sky") and Outfit ("Outfit the
-  Vindicator").
+  Dreams") and Starbase ("Under a Red Sky").
 - **Agents of Chaos:** modern versions only, the Precursors' remixes: Kohr-Ah ("Cleansing
   Required", "The Eternal Doctrine", "Kohr-Ah" battle remix), Druuge
   ("Property of the Crimson Corporation"), Thraddash ("Culture 19"),
