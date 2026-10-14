@@ -69,6 +69,60 @@ def _lightning(rng, w, h, n, colour):
     return img
 
 
+def _bolts(rng, w, h, n, S=3):
+    """Fewer, bolder bolts for the plasma storm: n bolts, each in a hex of
+    its own and fading out well inside it, so no bolt is ever cut off at a
+    hex edge. A bolt is a thick jagged channel, zigzagging about one
+    heading and thinning towards its ends, with a fork or two. Drawn S
+    times larger and shrunk so the edges are soft. Returns the core and a
+    wider glow, each as alpha in 0..1, over the w x h field that wraps."""
+    core = Image.new("L", (w * S, h * S))
+    halo = Image.new("L", (w * S, h * S))
+    dc, dh = ImageDraw.Draw(core), ImageDraw.Draw(halo)
+
+    def channel(x, y, a, steps, width, step):
+        pts = [(x, y)]
+        for _ in range(steps):
+            t = a + rng.uniform(-0.75, 0.75)              # sharp zigzags about the heading
+            x += step * math.cos(t); y += step * math.sin(t)
+            pts.append((x, y))
+        for i in range(len(pts) - 1):
+            k = i / max(len(pts) - 2, 1)
+            wd = width * (1 - 0.6 * k)                    # thins towards the tip
+            for ox in (-w, 0, w):                         # the field wraps round
+                for oy in (-h, 0, h):
+                    seg = [((px + ox) * S, (py + oy) * S) for px, py in pts[i:i + 2]]
+                    dc.line(seg, fill=255, width=max(1, round(wd * S)), joint="curve")
+                    dh.line(seg, fill=255, width=round((wd + 9) * S), joint="curve")
+                    for (qx, qy), r in ((seg[0], wd * S / 2), (seg[1], wd * S / 2 * 0.85)):
+                        dc.ellipse([qx - r, qy - r, qx + r, qy + r], fill=255)   # round joints
+        return pts
+
+    cols, rows = w // 54, h // 72
+    hexes = [(c, r) for c in range(cols) for r in range(rows)]
+    for i in rng.choice(len(hexes), n, replace=False):
+        c, r = hexes[i]
+        cx, cy = 54 * c + 36, 72 * r + 36 + (36 if c % 2 else 0)
+        a = rng.uniform(0, 2 * math.pi)
+        steps, step = int(rng.integers(4, 6)), 11.5
+        x0, y0 = cx - math.cos(a) * steps * step / 2, cy - math.sin(a) * steps * step / 2
+        pts = channel(x0, y0, a, steps, rng.uniform(4.0, 5.0), step)
+        for _ in range(int(rng.integers(1, 3))):          # a fork or two
+            px, py = pts[int(rng.integers(1, len(pts) - 1))]
+            channel(px, py, a + rng.choice([-1, 1]) * rng.uniform(0.5, 0.9),
+                    int(rng.integers(1, 3)), 2.5, 9)
+    # fade out towards the edge of each hex (wrapping round the field)
+    pts = _hex_centres(w, h)
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    best = np.full((h, w), 1e9, np.float32)
+    for px, py, _ in pts:
+        best = np.minimum(best, (xx - px) ** 2 + (yy - py) ** 2)
+    fade = np.clip((33 - np.sqrt(best)) / 8, 0, 1)
+    core = np.asarray(core.resize((w, h), Image.LANCZOS), np.float32) / 255 * fade
+    halo = np.asarray(halo.resize((w, h), Image.LANCZOS).filter(ImageFilter.GaussianBlur(4)), np.float32) / 255 * fade
+    return core, halo
+
+
 def gas_painters(rng, w, h, noise):
     """For each blob, a painter(sl, col, row) that returns hex (col, row) of
     its cloud as a 72x72 RGBA layer; sl indexes the hex in a w x h field.
@@ -101,16 +155,18 @@ def gas_painters(rng, w, h, noise):
 
     # Plasma storm: purple-black cloud full of lightning.
     p1, p2 = noise(rng, w, h, 5, 40), noise(rng, w, h, 4, 60)
-    bolts = _lightning(rng, w, h, w * h // 3600, (255, 205, 255))
-    glow = np.asarray(bolts.filter(ImageFilter.GaussianBlur(4)), np.float32)[..., 3] / 255
-    bolt = np.asarray(bolts, np.float32)[..., 3] / 255
+    # (the old thin bolts are still drawn, so the clouds after them stay
+    # the same, but no longer used: the bolts now are fewer and bolder,
+    # with their own seed)
+    _lightning(rng, w, h, w * h // 3600, (255, 205, 255))
+    bolt, glow = _bolts(np.random.default_rng(rng.bit_generator.seed_seq.entropy + 1), w, h, 6)
 
     def storm(sl, col, row):
         a, b = p1[sl], p2[sl]
         rgb = _mix((32, 6, 42), (125, 35, 125), a)
-        g = np.clip(glow[sl] * 3, 0, 1)
-        rgb = _mix(rgb, (230, 90, 255), g * 0.8)
-        rgb = _mix(rgb, (255, 225, 255), bolt[sl])
+        g = np.clip(glow[sl] * 1.6, 0, 1)
+        rgb = _mix(rgb, (215, 95, 255), g * 0.7)
+        rgb = _mix(rgb, (255, 235, 255), bolt[sl])
         return _rgba(rgb, np.clip(0.75 + 0.2 * (b - 0.5) + g * 0.3, 0, 0.97))
     painters["plasmastorm"] = storm
 
@@ -333,8 +389,9 @@ BROWN_DWARFS = [
     [(40, 22, 8), (195, 140, 50), (240, 200, 105), (255, 235, 170), (225, 100, 40), (3, 5), 0.0, "mottled"],  # mottled brown and ochre
     [(18, 10, 8), (70, 45, 30), (200, 95, 35), (255, 180, 100), (190, 90, 50), (3, 5), 0.25],      # dark, nearly cold
 ]
-# the looks kept for the maps, in order: the magenta and the dark, nearly cold ones
-BROWN_DWARFS_KEPT = [5, 7]
+# the look kept for the maps: the dark, nearly cold one (the magenta one,
+# 5, was dropped later)
+BROWN_DWARFS_KEPT = [7]
 
 
 def _stretched(rng, s, octaves, base, sx=4):
@@ -638,6 +695,18 @@ SMALL_DISK_STARS = [
                    rim=((255, 255, 255), (200, 202, 218)), body=((22, 22, 30), (80, 80, 92)))),
 ]
 
+# More supergiants behind debris disks, in the colours the red one and the
+# blue giant leave out: orange, yellow and white (^Ysg2..^Ysg4). With the
+# red one and the blue giant they make the five 3-hex ones (^Ytsg).
+ROCKY_SUPERGIANTS = [
+    ("orange", dict(cols=[(60, 16, 4), (150, 52, 10), (215, 105, 25), (245, 165, 60), (255, 220, 145)],
+                    glow_rgb=(225, 105, 30), rim=((255, 175, 85), (200, 120, 90)))),
+    ("yellow", dict(cols=[(75, 45, 5), (170, 115, 20), (230, 180, 50), (250, 222, 115), (255, 250, 205)],
+                    glow_rgb=(235, 185, 60), rim=((255, 225, 125), (200, 120, 90)))),
+    ("white", dict(cols=[(85, 90, 110), (155, 160, 182), (205, 210, 228), (238, 241, 250), (255, 255, 255)],
+                   glow_rgb=(200, 212, 245), rim=((232, 238, 255), (200, 202, 218)), body=((22, 22, 30), (80, 80, 92)))),
+]
+
 
 def red_supergiant(rng, n_rocks=420, d=GIANT_D, canvas=BIG, rock=1.0, cols=((45, 4, 4), (120, 16, 10), (190, 40, 18), (235, 90, 35), (255, 165, 90)),
                    glow_rgb=(200, 35, 20), reach=7, cells=4, grain=14, limb=0.8, boost=1.15, mottle=0.6, smooth=0.2,
@@ -898,8 +967,8 @@ def build_objects(rng, out, save, apply_mask, starfield, mask):
     for name, (code, dark, light) in GIANT_VEILS.items():
         for i, img in enumerate(dwarfs):
             veil = veiled(vrng, img, dark, light)
-            if code.startswith("Yq") or i not in BROWN_DWARFS_KEPT:
-                continue        # no brown dwarfs in impassable clouds
+            if code in ("Yn", "Yd") or code.startswith("Yq") or i not in BROWN_DWARFS_KEPT:
+                continue        # no brown dwarfs in nebulae, dust or impassable clouds
             n = BROWN_DWARFS_KEPT.index(i)
             save(veil, out, f"images/terrain/sc/brown-dwarf-{name}{'' if n == 0 else n + 1}.png", False)
     # The four-hex black holes and globular clusters, also with their own seed.
@@ -957,3 +1026,68 @@ def build_objects(rng, out, save, apply_mask, starfield, mask):
             tile = apply_mask(starfield(urng), mask)
             tile.alpha_composite(img.resize((HEX - 4, HEX - 4), Image.LANCZOS), (2, 2))
             save(apply_mask(tile, mask), out, "images/terrain/sc/supergiant-tile.png", False)
+    # The three-hex objects, with their own seed.
+    build_small_objects(np.random.default_rng(rng.bit_generator.seed_seq.entropy + 11), out, save, apply_mask, starfield, mask)
+
+
+# ---------------------------------------------------------------- three-hex objects
+# Smaller kin of the four-hex centrepieces, each filling a triangle of
+# three hexes round the corner they share, and one-hex brown dwarfs. Drawn
+# as the big ones, with their own seed so they are not the same globes,
+# then shrunk to fit. Also the rocky supergiants in their other colours.
+SMALL = 0.82            # 3 hexes against 4: a supergiant 120 px across
+ONE = 0.5               # a brown dwarf in one hex, 67 px across
+
+
+def _shrunk(img, k):
+    w = round(img.width * k)
+    return img.resize((w, w), Image.LANCZOS)
+
+
+def build_small_objects(rng, out, save, apply_mask, starfield, mask):
+    def put(img, name, k=SMALL):
+        save(_shrunk(img, k), out, f"images/terrain/sc/{name}.png", False)
+
+    def tile(img, name, t=None):
+        t = t or apply_mask(starfield(rng), mask)
+        t.alpha_composite(img.resize((HEX - 12, HEX - 12), Image.LANCZOS), (6, 6))
+        save(apply_mask(t, mask), out, f"images/terrain/sc/{name}-tile.png", False)
+
+    # the magenta look is still drawn (with its tile's stars), so the art
+    # after it stays the same, but only the dark one is kept
+    brown_dwarf(rng, BROWN_DWARFS[5])
+    stars = apply_mask(starfield(rng), mask)
+    img = brown_dwarf(rng, BROWN_DWARFS[7])
+    put(img, "brown-dwarf-one", ONE)
+    tile(img, "brown-dwarf-one", stars)
+    for i, style in enumerate(SUPERGIANTS):
+        img = supergiant(rng, style)
+        put(img, f"supergiant-small{i + 1}")
+        if i == 0:
+            tile(img, "supergiant-small")
+    for i, style in enumerate(BIG_BLACK_HOLES + BIG_BLACK_HOLES_MORE):
+        img = big_black_hole(rng, **style)
+        put(img, f"black-hole-small{'' if i == 0 else i + 1}")
+        if i == 0:
+            tile(img, "black-hole-small")
+    for i, style in enumerate(GLOBULAR_CLUSTERS):
+        img = globular_cluster(rng, **style)
+        put(img, f"globular-cluster-small{'' if i == 0 else i + 1}")
+        if i == 0:
+            tile(img, "globular-cluster-small")
+    rocky = [("red", DISK_STARS["red"])] + ROCKY_SUPERGIANTS + [("blue", DISK_STARS["blue"])]
+    for i, (name, style) in enumerate(rocky):
+        img = red_supergiant(rng, **style)
+        put(img, f"rocky-supergiant-small{'' if i == 0 else i + 1}")
+        if i == 0:
+            tile(img, "rocky-supergiant-small")
+        elif name in dict(ROCKY_SUPERGIANTS):     # the big ones in the new colours
+            save(img, out, f"images/terrain/sc/rocky-supergiant{i + 1}.png", False)
+            t = apply_mask(starfield(rng), mask)
+            t.alpha_composite(img.resize((HEX - 4, HEX - 4), Image.LANCZOS), (2, 2))
+            save(apply_mask(t, mask), out, f"images/terrain/sc/rocky-supergiant{i + 1}-tile.png", False)
+    for i, (kind, style) in enumerate(DARK_STARS):
+        img = (dark_star_eclipse if kind == "eclipse" else dark_star_halo)(rng, **style)
+        put(img, f"dark-star-small{'' if i == 0 else i + 1}")
+        if i == 0:
+            tile(img, "dark-star-small")
