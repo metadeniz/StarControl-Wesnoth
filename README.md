@@ -257,6 +257,9 @@ heat-proof Chenjesu (2 / 50%) are at home in red nebulae.
 - `tools/make_art.py --uqm <UQM-MegaMod-Content checkout> --out . [--remix <unzipped UQM Remix Packs>]`
   regenerates all images and sounds. `art-manifest.txt`
   lists every UQM-derived file (what a published version must replace).
+  Green and red nebulae are drawn as gauzy veils; `tools/make_art.py --only gas
+  --nebula-style soft --out .` redraws them in the alternate soft-glow look
+  (`--nebula-style veils` switches back).
 - `tools/make_reach_shade.py` regenerates `reach/images/terrain/darken.png`,
   the solid dark shade over hexes a selected ship cannot reach this turn
   (it replaces core Wesnoth's striped shade, in Star Control games only).
