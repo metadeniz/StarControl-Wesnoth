@@ -54,6 +54,9 @@ def _blur(f, r):
     return sum(wt * np.roll(out, s, 0) for s, wt in zip(k, g))
 
 
+GLOW_FLOOR = {"rednebula": 0.45}
+
+
 def nebula_field(rng, w, h, noise, name, style, density):
     """The whole cloud of nebula `name` ("nebula" or "rednebula") as an
     h x w x 4 uint8 RGBA array. `noise(rng, w, h, octaves, cell, cell_x)`
@@ -73,6 +76,10 @@ def nebula_field(rng, w, h, noise, name, style, density):
         body = _smoothstep(0.2, 0.85, warp(noise(rng, w, h, 4, 80), 60))
         tone = noise(rng, w, h, 3, 120)
         glow = np.clip(0.5 * body + 0.6 * streak * (0.4 + 0.6 * body), 0, 1)
+        # the red nebula's thin patches all but vanished, so a lone red
+        # nebula hex could show next to nothing: give it a floor
+        floor = GLOW_FLOOR.get(name, 0)
+        glow = floor + (1 - floor) * glow
         rgb = _ramp(PALETTES[name], np.clip(0.1 + 0.85 * glow + 0.2 * (tone - 0.5), 0, 1))
         rgb = rgb * (0.55 + 0.6 * glow)[..., None]
         alpha = np.clip(0.12 + 0.75 * glow, 0, 0.93)

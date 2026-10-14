@@ -69,7 +69,11 @@ def _lightning(rng, w, h, n, colour):
     return img
 
 
-def _bolts(rng, w, h, n, S=3):
+# smaller, more numerous, more branched bolts (D asked for more of them)
+STORM_BOLTS = dict(per=(2, 4), size=0.7, forks=(2, 4))
+
+
+def _bolts(rng, w, h, n, S=3, per=(1, 2), size=1.0, forks=(1, 3)):
     """Fewer, bolder bolts for the plasma storm: n bolts, each in a hex of
     its own and fading out well inside it, so no bolt is ever cut off at a
     hex edge. A bolt is a thick jagged channel, zigzagging about one
@@ -102,15 +106,24 @@ def _bolts(rng, w, h, n, S=3):
     hexes = [(c, r) for c in range(cols) for r in range(rows)]
     for i in rng.choice(len(hexes), n, replace=False):
         c, r = hexes[i]
-        cx, cy = 54 * c + 36, 72 * r + 36 + (36 if c % 2 else 0)
-        a = rng.uniform(0, 2 * math.pi)
-        steps, step = int(rng.integers(4, 6)), 11.5
-        x0, y0 = cx - math.cos(a) * steps * step / 2, cy - math.sin(a) * steps * step / 2
-        pts = channel(x0, y0, a, steps, rng.uniform(4.0, 5.0), step)
-        for _ in range(int(rng.integers(1, 3))):          # a fork or two
-            px, py = pts[int(rng.integers(1, len(pts) - 1))]
-            channel(px, py, a + rng.choice([-1, 1]) * rng.uniform(0.5, 0.9),
-                    int(rng.integers(1, 3)), 2.5, 9)
+        k = int(rng.integers(per[0], per[1]))
+        for j in range(k):                                # per[0]..per[1]-1 bolts in the hex
+            cx, cy = 54 * c + 36, 72 * r + 36 + (36 if c % 2 else 0)
+            if k > 1:                                     # spread round the middle
+                t = 2 * math.pi * j / k + rng.uniform(-0.5, 0.5)
+                cx += 13 * math.cos(t); cy += 13 * math.sin(t)
+            # each bolt runs roughly round the middle, not across it,
+            # so bolts in one hex don't tangle
+            a = (t + math.pi / 2 + rng.uniform(-0.5, 0.5)) if k > 1 else rng.uniform(0, 2 * math.pi)
+            steps, step = int(rng.integers(4, 6)), 11.5 * size
+            x0, y0 = cx - math.cos(a) * steps * step / 2, cy - math.sin(a) * steps * step / 2
+            pts = channel(x0, y0, a, steps, rng.uniform(4.0, 5.0) * size, step)
+            for _ in range(int(rng.integers(*forks))):    # forks, some forking again
+                px, py = pts[int(rng.integers(1, len(pts) - 1))]
+                fa = a + rng.choice([-1, 1]) * rng.uniform(0.5, 0.9)
+                fp = channel(px, py, fa, int(rng.integers(1, 3)), 2.5 * size, 9 * size)
+                if size < 1 and len(fp) > 1 and rng.random() < 0.5:
+                    channel(*fp[-1], fa + rng.choice([-1, 1]) * rng.uniform(0.4, 0.8), 1, 1.8 * size, 7 * size)
     # fade out towards the edge of each hex (wrapping round the field)
     pts = _hex_centres(w, h)
     yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
@@ -159,21 +172,42 @@ def gas_painters(rng, w, h, noise):
     # the same, but no longer used: the bolts now are fewer and bolder,
     # with their own seed)
     _lightning(rng, w, h, w * h // 3600, (255, 205, 255))
-    bolt, glow = _bolts(np.random.default_rng(rng.bit_generator.seed_seq.entropy + 1), w, h, 6)
+    bolt, glow = _bolts(np.random.default_rng(rng.bit_generator.seed_seq.entropy + 1), w, h, 12, **STORM_BOLTS)
 
-    def storm(sl, col, row):
+    def cloud(sl):
+        """The storm's cloud itself: violet billows, lit in big soft
+        patches, the same in every storm hex so they all run together."""
         a, b = p1[sl], p2[sl]
-        rgb = _mix((32, 6, 42), (125, 35, 125), a)
+        rgb = _mix((60, 14, 82), (170, 60, 190), a)
+        body = np.clip((b - 0.3) * 1.6, 0, 1)
+        rgb = _mix(rgb, (210, 100, 245), body * 0.55)
+        return rgb, 0.82 + 0.12 * (b - 0.5) + body * 0.1
+
+    def lightning(sl, bolt, glow):
+        rgb, alpha = cloud(sl)
         g = np.clip(glow[sl] * 1.6, 0, 1)
         rgb = _mix(rgb, (215, 95, 255), g * 0.7)
         rgb = _mix(rgb, (255, 235, 255), bolt[sl])
-        return _rgba(rgb, np.clip(0.75 + 0.2 * (b - 0.5) + g * 0.3, 0, 0.97))
+        return _rgba(rgb, np.clip(alpha + g * 0.3, 0, 0.97))
+
+    def storm(sl, col, row):
+        return lightning(sl, bolt, glow)
     painters["plasmastorm"] = storm
 
-    def calm_storm(sl, col, row):       # the same cloud with no lightning, round a star or pulsar
-        a, b = p1[sl], p2[sl]
-        return _rgba(_mix((32, 6, 42), (125, 35, 125), a), np.clip(0.75 + 0.2 * (b - 0.5), 0, 0.97))
+    # The hex holding a star or pulsar: the same cloud with no lightning
+    def calm_storm(sl, col, row):
+        rgb, alpha = cloud(sl)
+        return _rgba(rgb, np.clip(alpha, 0, 0.97))
     painters["plasmastorm-calm"] = calm_storm
+
+    # The storm hexes next to a star: a bolt in every one (its own seed),
+    # each fading out inside its own hex, so the star's hex stays calm
+    nbolt, nglow = _bolts(np.random.default_rng(rng.bit_generator.seed_seq.entropy + 2),
+                          w, h, (w // 54) * (h // 72), **STORM_BOLTS)
+
+    def near_storm(sl, col, row):
+        return lightning(sl, nbolt, nglow)
+    painters["plasmastorm-near"] = near_storm
 
     # Gravity eddy: a whirl in every hex, neighbours turning opposite ways,
     # pulling the light of the stars into violet arcs round a dark core.
@@ -699,6 +733,16 @@ SMALL_DISK_STAR_YELLOW = dict(d=50, n_rocks=190, rock=0.7, cols=[(80, 50, 6), (1
                               glow_rgb=(240, 190, 60), reach=5, cells=6, grain=20, limb=0.55, mottle=0.4, smooth=0.4,
                               rim=((255, 228, 130), (210, 170, 110)), body=((30, 24, 14), (92, 78, 56)))
 
+# and a green one and a purple one (^Yxd6, ^Yxd7), added later
+SMALL_DISK_STARS_MORE = [
+    ("green", dict(d=50, n_rocks=190, rock=0.7, cols=[(8, 60, 20), (25, 140, 50), (70, 210, 95), (150, 245, 160), (225, 255, 225)],
+                   glow_rgb=(60, 220, 100), reach=5, cells=6, grain=20, limb=0.5, mottle=0.4, smooth=0.4,
+                   rim=((170, 255, 185), (120, 190, 135)), body=((14, 28, 18), (60, 88, 66)))),
+    ("purple", dict(d=50, n_rocks=190, rock=0.7, cols=[(45, 10, 75), (110, 35, 170), (170, 80, 235), (215, 150, 255), (245, 220, 255)],
+                    glow_rgb=(165, 80, 255), reach=5, cells=6, grain=20, limb=0.5, mottle=0.4, smooth=0.4,
+                    rim=((225, 180, 255), (160, 125, 205)), body=((24, 14, 34), (78, 62, 96)))),
+]
+
 # More supergiants behind debris disks, in the colours the red one and the
 # blue giant leave out: orange, yellow and white (^Ysg2..^Ysg4). With the
 # red one and the blue giant they make the five 3-hex ones (^Ytsg).
@@ -937,12 +981,23 @@ def veiled(rng, giant, dark, light, sun=(-0.55, -0.55, 0.63)):
     return out
 
 
+def _violet(img):
+    """img recoloured in the plasma storm's violet: its dim parts violet,
+    its brightest still white-hot."""
+    px = np.asarray(img, np.float32)
+    lum = px[..., :3].max(axis=2) / 255
+    rgb = _mix((175, 70, 255), (250, 225, 255), np.clip(lum, 0, 1) ** 5) * np.clip(lum * 1.3, 0, 1)[..., None]
+    return Image.fromarray(np.dstack([rgb, px[..., 3]]).clip(0, 255).astype(np.uint8), "RGBA")
+
+
 def build_objects(rng, out, save, apply_mask, starfield, mask):
     for name, make in [("black-hole", black_hole), ("pulsar", pulsar)]:
         img = make(rng)
         save(img, out, f"images/terrain/sc/{name}.png", False)
         tile = apply_mask(starfield(rng), mask); tile.alpha_composite(img)
         save(apply_mask(tile, mask), out, f"images/terrain/sc/{name}-tile.png", False)
+        if name == "pulsar":            # in a plasma storm it burns violet
+            save(_violet(img), out, "images/terrain/sc/pulsar-storm.png", False)
     for pal in GAS_GIANTS:
         # drawn (so the art after them stays the same) but not saved: the
         # gas giants became brown dwarfs, drawn below with their own seed
@@ -1015,6 +1070,14 @@ def build_objects(rng, out, save, apply_mask, starfield, mask):
     tile = apply_mask(starfield(yrng), mask)
     tile.alpha_composite(img.crop((28, 28, 100, 100)))
     save(apply_mask(tile, mask), out, "images/terrain/sc/disk-star-yellow-tile.png", False)
+    # green and purple ones (^Yxd6, ^Yxd7), with their own seed
+    grng2 = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 13)
+    for name, style in SMALL_DISK_STARS_MORE:
+        img = red_supergiant(grng2, canvas=128, **style)
+        save(img, out, f"images/terrain/sc/disk-star-{name}.png", False)
+        tile = apply_mask(starfield(grng2), mask)
+        tile.alpha_composite(img.crop((28, 28, 100, 100)))
+        save(apply_mask(tile, mask), out, f"images/terrain/sc/disk-star-{name}-tile.png", False)
     mrng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 4)
     for i, style in enumerate(BIG_BLACK_HOLES_MORE):
         save(big_black_hole(mrng, **style), out,

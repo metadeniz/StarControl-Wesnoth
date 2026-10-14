@@ -1153,10 +1153,12 @@ def build_gas(seed, out, nebula_style=NEBULA_STYLE):
     for i, name in enumerate(BARRIER_GASES):
         rules += build_gas_nebula(np.random.default_rng(seed + 31 + i), out, name, None, painters[name])
     # Plasma storm hexes holding a star (a sun, a pulsar, or a big star over
-    # several hexes), and the storm hexes next to them, show the storm
-    # without its lightning, so no bolt comes near the star. Their own seed;
-    # these rules come first so they win.
+    # several hexes) show the storm without its lightning; the storm hexes
+    # next to them each get a bolt of their own, which fades out inside its
+    # hex, so no bolt crosses into the star. Their own seeds; these rules
+    # come first so they win.
     crng = np.random.default_rng(seed + 40)
+    nrng = np.random.default_rng(seed + 41)
     calm, near = [], []
     stars = "Yqp^Yx*,Yqp^Ygg*,Yqp^Ysu*,Yqp^Ytsu"
     pc, pr = GAS_PERIOD
@@ -1167,9 +1169,13 @@ def build_gas(seed, out, nebula_style=NEBULA_STYLE):
             stem = f"sc/gas/plasmastorm-calm-{col}-{row}"
             save(apply_mask(img, hex_mask_cache), out, f"images/terrain/{stem}.png", False)
             calm.append(f"{{SC_GAS_BASE ({stars}) {col} {row} {stem}.png}}")
+            img = starfield(nrng, 0.9)
+            img.alpha_composite(painters["plasmastorm-near"](gas_hex_slice(col, row), col, row))
+            nstem = f"sc/gas/plasmastorm-near-{col}-{row}"
+            save(apply_mask(img, hex_mask_cache), out, f"images/terrain/{nstem}.png", False)
             for dx, dy in NEIGHBOUR_OFFSETS[col % 2].values():
                 near.append(f"{{SC_GAS_CALM (Yqp*^*) ({stars}) {col + pc} {row + pr} "
-                            f"{col + pc + dx} {row + pr + dy} {stem}.png}}")
+                            f"{col + pc + dx} {row + pr + dy} {nstem}.png}}")
     rules = calm + near + rules
     with open(os.path.join(out, "terrain/gas-tiles.cfg"), "w") as f:
         f.write("#textdomain wesnoth-Star_Control_TC\n")
@@ -1771,7 +1777,9 @@ STORM_STARS = [((90, 150, 255), (220, 235, 255)),    # blue
                ((80, 235, 120), (215, 255, 220))]    # green
 # ...a purple one for gravity eddies and an orange one for dust clouds
 OTHER_STARS = {"star-eddy": ((185, 90, 255), (235, 210, 255)),
-               "star-dust": ((255, 140, 30), (255, 220, 160))}
+               "star-dust": ((255, 140, 30), (255, 220, 160)),
+               # a sun in a plasma storm: the storm's own violet
+               "star-plasma-storm": ((215, 70, 255), (240, 185, 255))}
 # The suns at the heart of plasma storms, each its own: corona and core
 # colours, the core's radius and how many rays the corona has (^Yxs1 to
 # ^Yxs6 always draw the same one; a plain ^Yx in a plasma storm picks one).

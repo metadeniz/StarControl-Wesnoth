@@ -42,11 +42,13 @@ T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
      "H": "Yqr^Ygc", "X": "Yqe^Yxb", "U": "Yqr^Yxp", "S": "Ys^Yx", "M": "Ys^Ysg",
      "o": "Ys^Yxd1", "y": "Yd^Yxd5",
      "O": "Yqe^Ybh", "T": "Yqp^Yx", "V": "Yqp^Yxp",
-     **{str(n): f"Yqe^Ybh{n}" for n in range(1, 7)}}
+     **{str(n): f"Yqe^Ybh{n}" for n in range(1, 7)},
+     "Y": "Ys^Ytu5", "Z": "Ys^Ytu2",
+     "q": "Ys^Yxd5", "u": "Ys^Yxd4", "v": "Ys^Yxd2", "g": "Yd^Yxd6", "b": "Ys^Ysb"}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "r": "Re", "B": "Wo", "f": "Wo^Bsb\\",
            "s": "Ss", "m": "Gg^Tf"}
-WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUSOTVMoy123456"})
+WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUSOTVMoy123456YZqgbuv"})
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 
 # The dark stars: each diamond of "G" (gas giant in dark nebula) becomes one
@@ -394,9 +396,33 @@ HAND_EDITS = [
     # ways)
     *[(h, ch) for xy, ch in [((9, 5), "p"), ((10, 5), "a")]
       for h in mirrored4(*xy)],
+    # the south-east black hole takes the look of the centre's south one,
+    # and the two centre black holes become 3-hex supergiants (green
+    # north, blue south) in open space, turned half a circle from each other
+    *[((x, y), "6") for x, y in [(24, 19), (25, 19), (25, 20), (26, 19)]],
+    *[((x, y), ".") for x, y in [(20, 12), (21, 12), (22, 12), (21, 13),
+                                 (20, 16), (21, 16), (22, 16), (21, 17)]],
+    *[((x, y), "Y") for x, y in [(20, 12), (21, 12), (21, 13)]],
+    *[((x, y), "Z") for x, y in [(21, 16), (21, 17), (22, 16)]],
     # 2,15 and 4,14 open, 1,16 an asteroid field (mirrored west to east)
     ((2, 15), "."), ((40, 15), "."), ((4, 14), "."), ((38, 14), "."),
     ((1, 16), "a"), ((41, 16), "a"),
+    # the east side's stars get colours of their own: a yellow star at
+    # 37,13, and at 37,16 a blue giant with a green star beside it
+    ((37, 13), "q"), ((38, 16), "g"),
+    *[((x, y), "b") for x in (36, 37) for y in (16, 17)],
+    # green nebula at 28,19 and 28,9, red nebula at 24,13 (mirrored west
+    # to east)
+    *[((x, y), "n") for x in (28, 14) for y in (19, 9)],
+    ((24, 13), "m"), ((18, 13), "m"),
+    # more red nebula at 24,15, 25,16, 18,15 and 17,16
+    *[((x, y), "m") for x, y in [(24, 15), (25, 16), (18, 15), (17, 16)]],
+    # the planet at 3,15 moves to 4,14, 3,14 and 4,13 open, and the debris
+    # disk at 3,13 becomes a star in its disk: white in the west, red in
+    # the east (mirrored west to east)
+    ((3, 15), "."), ((39, 15), "."), ((4, 14), "p"), ((38, 14), "p"),
+    ((3, 14), "."), ((39, 14), "."), ((4, 13), "."), ((38, 13), "."),
+    ((3, 13), "u"), ((39, 13), "v"),
 ]
 
 
