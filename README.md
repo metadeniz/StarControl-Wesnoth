@@ -62,7 +62,7 @@ once before any repeats:
 - **Alliance:** Star Control II's Commander (Earthlings), Yehat, Syreen,
   Arilou and Shofixti themes, Chenjesu and Mmrnmhrm themes by Titus, the
   quasispace theme (original and 3DO versions), Star Control II's opening
-  and victory themes, Starbase and Outfit.
+  theme and Starbase.
 - **Hierarchy:** the Ur-Quan, Mycon, Spathi, Umgah, VUX, Ilwrath and
   Thraddash themes, an Androsynth theme by TheMisterCat (DUOLED), the
   Precursors' "Now and Forever" (Ur-Quan) remix,
