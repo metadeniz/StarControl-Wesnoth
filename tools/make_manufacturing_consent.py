@@ -39,13 +39,13 @@ T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
      "s": "Yis", "m": "Yr",
      # barriers that replace most of the asteroid walls (see BARRIERS)
      "D": "Yqd", "R": "Yqr", "P": "Yqp", "E": "Yqe", "G": "Yqd^Ygg",
-     "H": "Yqr^Ygc", "X": "Yqe^Yxb", "U": "Yqr^Yxp", "S": "Ys^Yx", "M": "Ys^Ysg",
+     "H": "Yqr^Ygc", "X": "Yqe^Yxb", "U": "Yqr^Yxp", "S": "Ys^Yx", "M": "Ys^Ysg", "q": "Yd^Yw",
      "O": "Yqe^Ybh", "T": "Yqp^Yx", "V": "Yqp^Yxp",
      **{str(n): f"Yqe^Ybh{n}" for n in range(1, 7)}}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "r": "Re", "B": "Wo", "f": "Wo^Bsb\\",
            "s": "Ss", "m": "Gg^Tf"}
-WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUSOTVM123456"})
+WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUSOTVMq123456"})
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 
 # The dark stars: each diamond of "G" (gas giant in dark nebula) becomes one
@@ -186,6 +186,17 @@ def neighbours(x, y):
     up = y - 1 if x % 2 == 0 else y        # odd columns sit half a hex lower
     return [(x, y - 1), (x, y + 1), (x - 1, up), (x - 1, up + 1),
             (x + 1, up), (x + 1, up + 1)]
+
+
+def dusty_disks(grid, stars="M"):
+    """Debris disk hexes beside a rocky supergiant sit on dust, so the star
+    shows through a haze of dust behind its rocks."""
+    H, W = len(grid), len(grid[0])
+    near = [(x, y) for y in range(H) for x in range(W) if grid[y][x] == "w"
+            and any(0 <= u < W and 0 <= v < H and grid[v][u] in stars for u, v in neighbours(x, y))]
+    for x, y in near:
+        grid[y][x] = "q"
+    return grid
 
 
 def build():
@@ -476,7 +487,7 @@ def write(grid, keeps, path, table=T, base_only=("Yk", "Ys^Vyp")):
 
 if __name__ == "__main__":
     grid, keeps = pad_top(*build())
-    grid = number_dark_stars(hand_edits(asteroid_skirts(centrepieces(barriers(grid)))))
+    grid = dusty_disks(number_dark_stars(hand_edits(asteroid_skirts(centrepieces(barriers(grid))))))
     write(grid, keeps,
           os.path.join(sys.argv[1], "maps/4p_Manufacturing_Consent.map"))
     write(grid, keeps, os.path.join(

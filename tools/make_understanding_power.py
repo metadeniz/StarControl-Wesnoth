@@ -38,10 +38,10 @@ LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 # In the south half the same ridge circles a blue giant instead.
 T.update({"D": "Yqd", "S": "Yqd^Yx", "R": "Yqr", "U": "Yqr^Yxp",
           "P": "Yqp", "T": "Yqp^Yxs1", "E": "Yqe", "X": "Yqe^Yxb2",
-          "M": "Ys^Ysg", "J": "Ys^Ysb",
+          "M": "Ys^Ysg", "J": "Ys^Ysb", "q": "Yd^Yw",
           "V": "Yn^Yxs4", "W": "Yn^Yx",
           "A": "Ys^Yxd1", "Z": "Ys^Yxd2", "F": "Ys^Yxd3", "G": "Ys^Yxd4"})
-WESNOTH.update({ch: "Md^Xm" for ch in "DSRUPTEXMJAZFGVW"})
+WESNOTH.update({ch: "Md^Xm" for ch in "DSRUPTEXMJAZFGVWq"})
 SOUTH = {"M": "J", "A": "G", "Z": "F", "V": "W"}     # the south half's own stars
 # Hexes opened up since, in the north half like BARRIERS (the south half
 # follows): bits of the west cliffs, the spiral, the long ridge's east end
@@ -161,6 +161,17 @@ def shallows(grid):
     return grid
 
 
+def dusty_disks(grid, stars="MJ"):
+    """Debris disk hexes beside a rocky supergiant sit on dust, so the star
+    shows through a haze of dust behind its rocks."""
+    H, W = len(grid), len(grid[0])
+    near = [(x, y) for y in range(H) for x in range(W) if grid[y][x] == "w"
+            and any(0 <= u < W and 0 <= v < H and grid[v][u] in stars for u, v in neighbours(x, y))]
+    for x, y in near:
+        grid[y][x] = "q"
+    return grid
+
+
 def build():
     grid = [["." for _ in range(W)] for _ in range(H)]
     for ch, hexes in FEATURES.items():
@@ -177,7 +188,7 @@ def build():
         for x in range(W):
             grid[y][x] = grid[H - 1 - y][W - 1 - x]
             grid[y][x] = SOUTH.get(grid[y][x], grid[y][x])   # its own stars
-    return shallows(grid)
+    return dusty_disks(shallows(grid))
 
 
 def write(grid, path, table=T, base_only=("Yk", "Ys^Vyp"), start=(5, 3)):
