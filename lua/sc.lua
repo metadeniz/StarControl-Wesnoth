@@ -197,22 +197,74 @@ end
 -- game state, so playing it only on the local client is safe in multiplayer.
 -- Track files are prefixed with their faction: 0. shared, 1. Alliance,
 -- 2. Hierarchy, 3. New Alliance, 4. Death March.
-local PLAYLISTS = {
-	SC_Alliance = { "1. commander", "1. chenjesu-titus", "1. mmrnmhrm-titus", "1. yehat", "1. syreen", "1. arilou", "1. shofixti", "1. quasispace", "1. quasispace-3do",
-		"1. intro", "1. ending", "0. starbase" },
+--
+-- The Alliance and the Hierarchy have three music modes: the original
+-- tracks, the original tracks with the Precursors' remixes in place of the
+-- ones they remix, or both. Each entry is one or more original tracks and,
+-- under remix, what replaces them.
+local VERSIONS = {
+	SC_Alliance = {
+		{ "1. commander", remix = { "0. remix-commander" } },
+		{ "1. chenjesu-titus" }, { "1. mmrnmhrm-titus" },
+		{ "1. yehat", remix = { "1. remix-yehat" } },
+		{ "1. syreen", remix = { "0. remix-syreen" } },
+		{ "1. arilou", remix = { "0. remix-arilou" } },
+		{ "1. shofixti", remix = { "1. remix-shofixti" } },
+		{ "1. quasispace", "1. quasispace-3do", remix = { "0. remix-quasispace", "0. remix-mystic-shadows" } },
+		{ "1. intro", remix = { "0. remix-intro" } },
+		{ "1. ending", remix = { "0. remix-ending" } },
+		{ "0. starbase", remix = { "0. remix-starbase" } },
+	},
+	SC_Hierarchy = {
+		{ "2. urquan", remix = { "2. urquan-now-and-forever", "2. urquan-erol-otus" } },
+		{ "2. mycon", remix = { "0. mycon-rebirth" } },
+		{ "2. spathi", remix = { "2. remix-spathi", "2. remix-spathi-fwiffo" } },
+		{ "2. umgah", remix = { "2. remix-umgah" } },
+		{ "2. vux", remix = { "2. remix-vux", "2. remix-vux-acid" } },
+		{ "2. ilwrath", remix = { "0. ilwrath-all-evil" } },
+		{ "2. thraddash", remix = { "0. thraddash-culture-19" } },
+		{ "2. androsynth-duoled" },
+		{ "0. starbase", remix = { "0. remix-starbase" } },
+	},
+}
+
+local MUSIC_MODES = { "original", "remixes", "both" }
+local MUSIC_MODE_NAMES = {
+	original = _ "original tracks",
+	remixes = _ "the Precursors' remixes",
+	both = _ "original tracks and the Precursors' remixes",
+}
+
+local PLAYLISTS = {   -- faction -> mode -> tracks
 	-- the New Alliance hears the Precursors' remixes (and a cover and a
 	-- re-imagined Melnorme theme)
 	SC_NewAlliance = { "3. remix-chmmr", "3. remix-zoqfotpik", "3. remix-pkunk", "3. remix-supox", "3. remix-utwig",
-		"3. remix-utwig-ultron", "3. remix-commander", "3. remix-arilou", "3. remix-melnorme", "3. melnorme-lipavsky", "3. remix-syreen", "3. syreen-ramen-rider",
-		"3. remix-mystic-shadows", "3. remix-quasispace", "3. remix-intro", "3. remix-ending", "0. remix-starbase" },
+		"3. remix-utwig-ultron", "0. remix-commander", "0. remix-arilou", "3. remix-melnorme", "3. melnorme-lipavsky", "0. remix-syreen", "3. syreen-ramen-rider",
+		"0. remix-mystic-shadows", "0. remix-quasispace", "0. remix-intro", "0. remix-ending", "0. remix-starbase" },
 	-- the Agents of Chaos hear modern versions: the Precursors' remixes
 	SC_DeathMarch = { "4. kohrah-cleansing-required", "4. kohrah-eternal-doctrine", "4. kohrah-battle",
-		"4. druuge-crimson-corporation", "4. thraddash-culture-19", "4. slylandro-we-come-in-peace",
-		"4. orz-squeezing-the-juice", "4. mycon-rebirth", "4. ilwrath-all-evil", "4. samatra-battle",
+		"4. druuge-crimson-corporation", "0. thraddash-culture-19", "4. slylandro-we-come-in-peace",
+		"4. orz-squeezing-the-juice", "0. mycon-rebirth", "0. ilwrath-all-evil", "4. samatra-battle",
 		"0. remix-starbase" },
-	SC_Hierarchy = { "2. urquan", "2. urquan-now-and-forever", "2. urquan-erol-otus", "2. mycon", "2. spathi", "2. umgah", "2. vux", "2. ilwrath", "2. thraddash",
-		"2. androsynth-duoled", "0. starbase" },
 }
+for faction, list in pairs(PLAYLISTS) do
+	PLAYLISTS[faction] = { original = list }
+end
+for faction, entries in pairs(VERSIONS) do
+	local modes = { original = {}, remixes = {}, both = {} }
+	for _, entry in ipairs(entries) do
+		for _, track in ipairs(entry) do
+			table.insert(modes.original, track)
+			table.insert(modes.both, track)
+			if not entry.remix then table.insert(modes.remixes, track) end
+		end
+		for _, track in ipairs(entry.remix or {}) do
+			table.insert(modes.remixes, track)
+			table.insert(modes.both, track)
+		end
+	end
+	PLAYLISTS[faction] = modes
+end
 
 -- Theme played when you win. It is a sound effect, not music, so it follows
 -- the sound volume like the victory ditties; the music stops for it (the
@@ -254,25 +306,85 @@ local function shuffled(list)
 	return deck
 end
 
+local function play(list)
+	for i, track in ipairs(list) do
+		wesnoth.wml_actions.music {
+			name = "sc/" .. track .. ".ogg",
+			append = i > 1,
+			immediate = i == 1,
+			shuffle = true,
+		}
+	end
+end
+
+local function local_playlists()
+	local side = local_human_side()
+	return side and PLAYLISTS[side.__cfg.faction]
+end
+
+local music_mode = nil   -- this client's, see current_music_mode
+
+-- The host picks the music mode everyone starts with (the era's "Music"
+-- option, the sc_music variable).
 function sc.set_music()
+	local start_mode = wml.variables["sc_music"]
+	if not MUSIC_MODE_NAMES[start_mode] then start_mode = "original" end
 	local factions = {}
 	for faction in pairs(PLAYLISTS) do table.insert(factions, faction) end
 	table.sort(factions)
 	local decks = {}
-	for _, faction in ipairs(factions) do decks[faction] = shuffled(PLAYLISTS[faction]) end
-
-	local side = local_human_side()
-	local list = side and decks[side.__cfg.faction]
-	if list then
-		for i, track in ipairs(list) do
-			wesnoth.wml_actions.music {
-				name = "sc/" .. track .. ".ogg",
-				append = i > 1,
-				immediate = i == 1,
-				shuffle = true,
-			}
+	for _, faction in ipairs(factions) do
+		decks[faction] = {}
+		for _, mode in ipairs(MUSIC_MODES) do
+			if PLAYLISTS[faction][mode] then decks[faction][mode] = shuffled(PLAYLISTS[faction][mode]) end
 		end
 	end
+
+	local side = local_human_side()
+	local deck = side and decks[side.__cfg.faction]
+	if deck then
+		music_mode = deck[start_mode] and start_mode or "original"
+		play(deck[music_mode])
+	end
+end
+
+function sc.has_music_modes()
+	local playlists = local_playlists()
+	return playlists ~= nil and playlists.remixes ~= nil
+end
+
+-- The music mode now playing: the one last picked here, or, after a saved
+-- game is loaded (which keeps the playlist but not music_mode), read from
+-- the playlist itself.
+local function current_music_mode(playlists)
+	if music_mode then return music_mode end
+	local playing = {}
+	for i = 1, #wesnoth.audio.music_list do
+		playing[wesnoth.audio.music_list[i].name] = true
+	end
+	local function has_all(list)
+		for _, track in ipairs(list) do
+			if not playing["sc/" .. track .. ".ogg"] then return false end
+		end
+		return true
+	end
+	if has_all(playlists.both) then return "both" end
+	if has_all(playlists.remixes) then return "remixes" end
+	return "original"
+end
+
+-- The "Switch music" menu item: the next music mode, for this player only.
+-- It runs unsynced, so the random opening track is this client's own.
+function sc.next_music_mode()
+	local playlists = local_playlists()
+	if not (playlists and playlists.remixes) then return end
+	local mode = current_music_mode(playlists)
+	for i, m in ipairs(MUSIC_MODES) do
+		if m == mode then mode = MUSIC_MODES[i % #MUSIC_MODES + 1] break end
+	end
+	music_mode = mode
+	play(shuffled(playlists[mode]))
+	wesnoth.interface.add_chat_message(_ "Music", MUSIC_MODE_NAMES[mode])
 end
 
 ---------------------------------------------------------------- victory ditties

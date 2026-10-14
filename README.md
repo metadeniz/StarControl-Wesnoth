@@ -64,9 +64,30 @@ once before any repeats:
   quasispace theme (original and 3DO versions), Star Control II's opening
   and ending themes, and Starbase.
 - **Hierarchy:** the Ur-Quan, Mycon, Spathi, Umgah, VUX, Ilwrath and
-  Thraddash themes, an Androsynth theme by TheMisterCat (DUOLED), the
-  Precursors' "Now and Forever" (Ur-Quan) remix, Erol Otus's Ur-Quan theme
-  (from the Precursors' Remix Pack 3 extras), and Starbase.
+  Thraddash themes, an Androsynth theme by TheMisterCat (DUOLED), and
+  Starbase.
+
+The Alliance and the Hierarchy have three music modes: those original
+tracks, the Precursors' remixes in place of the tracks they remix, or both.
+The host picks the mode everyone starts with (the era's "Music" option),
+and each player can switch their own with "Switch music" in the
+right-click menu, which goes through the three in turn. The remixes are:
+
+- **Alliance:** Commander ("Corridor Nine"), Yehat ("Years Late Mix"),
+  Syreen ("Close Encounters of the Seventh Kind"), Arilou ("Welcome to
+  Falayalaralfali"), Shofixti ("Bonsai!"), quasispace ("Through the Angles
+  of Space", "Mystic Shadows", for both quasispace versions), the opening
+  ("Into the Void"), the ending ("Awaking Dreams") and Starbase ("Under a
+  Red Sky"). The Titus themes have no remix and stay.
+- **Hierarchy:** Ur-Quan ("Now and Forever", and Erol Otus's Ur-Quan theme
+  from Remix Pack 3's extras), Mycon ("Rebirth"), Spathi ("Safe Haven",
+  "Fwiffo's Starrunner"), Umgah ("Genetic Modification"), VUX
+  ("Ultra-gross", "Acid in the Eye"), Ilwrath ("All Evil"), Thraddash
+  ("Culture 19") and Starbase ("Under a Red Sky"). The Androsynth theme has
+  no remix and stays.
+
+The New Alliance and the Agents of Chaos have one playlist each:
+
 - **New Alliance:** Ramen Rider's cover of the Syreen theme, the Melnorme
   theme re-imagined by DJ Yan Yan Lipavsky, and the
   Precursors' remixes: Chmmr ("Photosynthesis"),

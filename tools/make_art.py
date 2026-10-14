@@ -530,13 +530,21 @@ REMIXES = {
     "4. slylandro-we-come-in-peace": "remix/2/03_-_Slylandro_Probes_-_We_Come_In_Peace.ogg",
     "4. samatra-battle": "remix/1/05_-_Melee_-_The_Battle_of_the_Sa-Matra.ogg",
     "4. orz-squeezing-the-juice": "remix/4/10_-_Orz_-_Squeezing_the_Juice.ogg",
-    "4. mycon-rebirth": "remix/3/05_-_Mycon_-_Rebirth.ogg",
-    "4. ilwrath-all-evil": "remix/3/02_-_Ilwrath_-_All_Evil.ogg",
+    "0. mycon-rebirth": "remix/3/05_-_Mycon_-_Rebirth.ogg",
+    "0. ilwrath-all-evil": "remix/3/02_-_Ilwrath_-_All_Evil.ogg",
     "4. druuge-crimson-corporation": "remix/2/07_-_Druuge_-_Property_of_the_Crimson_Corporation.ogg",
-    "4. thraddash-culture-19": "remix/3/06_-_Thraddash_-_Culture_19.ogg",
+    "0. thraddash-culture-19": "remix/3/06_-_Thraddash_-_Culture_19.ogg",
     # Hierarchy
     "2. urquan-now-and-forever": "remix/3/01_-_Ur-Quan_-_Now_and_Forever.ogg",
     "2. urquan-erol-otus": "extras3/aliens/urquan-Ur-Quan_by_Erol_Otus.ogg",
+    "2. remix-spathi": "remix/2/08_-_Spathi_-_Safe_Haven.ogg",
+    "2. remix-spathi-fwiffo": "remix/4/13_-_Spathi_-_Fwiffos_Starrunner.ogg",
+    "2. remix-umgah": "remix/3/04_-_Umgah_-_Genetic_Modification.ogg",
+    "2. remix-vux": "remix/3/03_-_VUX_-_Ultra-gross.ogg",
+    "2. remix-vux-acid": "extras3/aliens/vux-acid_in_the_eye.ogg",
+    # Alliance (Remixes and Both music modes)
+    "1. remix-yehat": "remix/4/06_-_Yehat_-_Years_Late_Mix.ogg",
+    "1. remix-shofixti": "remix/4/04_-_Shofixti_-_Bonsai!.ogg",
     # New Alliance: every track a remix
     "3. remix-chmmr": "remix/4/03_-_Chmmr_-_Photosynthesis.ogg",
     "3. remix-zoqfotpik": "remix/4/09_-_Zoq-Fot-Pik_-_Frungy_Party.ogg",
@@ -544,15 +552,15 @@ REMIXES = {
     "3. remix-supox": "remix/4/12_-_Supox_-_Shake_Yer_Rootz.ogg",
     "3. remix-utwig": "remix/4/08_-_Utwig_-_Mask_of_Ultimate_Embarrassment_and_Shame.ogg",
     "3. remix-utwig-ultron": "remix/4/11_-_Utwig_-_The_Ultron.ogg",
-    "3. remix-commander": "remix/1/02_-_Starbase_Commander_-_Corridor_Nine.ogg",
-    "3. remix-arilou": "remix/2/02_-_Arilou_-_Welcome_to_Falayalaralfali.ogg",
+    "0. remix-commander": "remix/1/02_-_Starbase_Commander_-_Corridor_Nine.ogg",
+    "0. remix-arilou": "remix/2/02_-_Arilou_-_Welcome_to_Falayalaralfali.ogg",
     "3. remix-melnorme": "remix/2/10_-_Melnorme_-_Turning_Purple.ogg",
-    "3. remix-syreen": "remix/4/05_-_Syreen_-_Close_Encounters_of_the_Seventh_Kind.ogg",
-    "3. remix-mystic-shadows": "extras2/extraspack/Bonus/arispace_bonus.ogg",   # quasispace
-    "3. remix-quasispace": "remix/2/01_-_Quasispace_-_Through_the_Angles_of_Space.ogg",
+    "0. remix-syreen": "remix/4/05_-_Syreen_-_Close_Encounters_of_the_Seventh_Kind.ogg",
+    "0. remix-mystic-shadows": "extras2/extraspack/Bonus/arispace_bonus.ogg",   # quasispace
+    "0. remix-quasispace": "remix/2/01_-_Quasispace_-_Through_the_Angles_of_Space.ogg",
 
-    "3. remix-intro": "remix/4/02_-_Intro_-_Into_the_Void.ogg",
-    "3. remix-ending": "remix/4/16_-_Outro_-_Awaking_Dreams.ogg",
+    "0. remix-intro": "remix/4/02_-_Intro_-_Into_the_Void.ogg",
+    "0. remix-ending": "remix/4/16_-_Outro_-_Awaking_Dreams.ogg",
     "0. remix-starbase": "remix/1/01_-_Starbase_-_Under_a_Red_Sky.ogg",
     "3. remix-outfit": "remix/1/06_-_Outfit_-_Outfit_the_Vindicator.ogg",
 }
