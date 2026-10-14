@@ -1037,11 +1037,12 @@ def build_gas(seed, out):
 
 # ---- badlands: a blue nebula, with plasma shallows ----
 #
-# The deep badlands (Yi) are a blue nebula, drawn like the other gas clouds
-# (see build_gas_nebula): one seamless cloud that thins out at its edges and
-# spills wisps onto its neighbours. The light badlands (Yis) are open space
-# under a dark blue haze laced with thin lightning, drawn as a bank (below)
-# that runs on from hex to hex, so a stretch of them reads as one shallow.
+# Badlands (Yi) and light badlands (Yis) are one blue nebula, drawn like the
+# other gas clouds (see build_gas_nebula): a seamless cloud that thins out at
+# its edges and spills wisps onto its neighbours. The badlands proper glow
+# brighter inside it. Thin badlands (Yif) are open space under a dark blue
+# haze laced with thin lightning. The glow and the haze are drawn as banks
+# (below) that run on from hex to hex, so a stretch reads as one.
 #
 # Every hex near badlands draws its piece of a smooth field
 #   f(p) = sum_k w(|p - c_k|) s_k / sum_k w(|p - c_k|)
@@ -1056,8 +1057,8 @@ def build_gas(seed, out):
 # The banks wobble two ways without breaking the joins: a fixed wiggle along
 # each kind of hex edge (the same on both sides of every edge), and random
 # meanders inside the hex that fade out before its border.
-# One bank, round the light badlands, with no bank line: its haze and
-# plasma just fade in across the border.
+# Neither bank has a bank line: the thin badlands' haze and plasma, and the
+# badlands' glow, just fade in across the border.
 
 BANK_DIRS = ["n", "ne", "se", "s", "sw", "nw"]
 BANK_OFFSETS = {"n": (0, -72), "ne": (54, -36), "se": (54, 36), "s": (0, 72), "sw": (-54, 36), "nw": (-54, -36)}
@@ -1066,17 +1067,19 @@ BANK_PAD = 4          # extra pixels round the hex so gradients are exact at its
 BANK_VARIATIONS = 2
 # name -> (terrains inside, line, glow, haze colour, line, glow, haze opacity,
 #          inner flow lines, layer, seed, plasma inside (lightning, wisps) or None)
-# Kept quiet on purpose: a dark blue haze tells the shallows apart from open
-# space, and the plasma is only thin lightning, so the stars still show
-# through and the badlands don't outshine everything else on the map.
+# Kept quiet on purpose: a dark blue haze tells the thin badlands apart from
+# open space, and the plasma is only thin lightning, so the stars still show
+# through.
 BANKS = {
-    "shallow": ("Yis,Yis^*,Yis^Vyp,Yis^Vys", (150, 205, 245), (70, 140, 220), (35, 75, 160),
-                0.0, 0.0, 0.11, [], -300, 21, (0.40, 0.08)),
+    "thin": ("Yif,Yif^*", (150, 205, 245), (70, 140, 220), (35, 75, 160),
+             0.0, 0.0, 0.11, [], -300, 21, (0.40, 0.08)),
+    "deep": ("Yi,Yi^*", (170, 210, 255), (110, 160, 255), (60, 110, 220),
+             0.0, 0.32, 0.19, [], -299, 31, None),
 }
-# The deep badlands' nebula: deep blue, violet, pale blue wisps
+# The badlands' nebula: deep blue, violet, pale blue wisps
 BADLANDS_NEBULA = ((40, 90, 210), (70, 60, 190), (140, 200, 255))
-DEEP_BADLANDS = "Yi,Yi^*"
-NOT_DEEP_BADLANDS = "Ys*^*,Yif*^*,Yis*^*,Yk,Yc,Yn*^*,Yr*^*,Yd*^*,Yqd*^*,Yqr*^*,Yqp*^*,Yqe*^*"
+NEBULA_BADLANDS = "Yi,Yi^*,Yis,Yis^*"
+NOT_NEBULA_BADLANDS = "Ys*^*,Yif*^*,Yk,Yc,Yn*^*,Yr*^*,Yd*^*,Yqd*^*,Yqr*^*,Yqp*^*,Yqe*^*"
 
 
 def _smoothstep(x):
@@ -1187,7 +1190,6 @@ def bank_code(centre, neighbours):
 
 
 PLASMA_COLOUR = (175, 215, 255)
-THIN_PLASMA = (0.16, 0.03)   # the trace of plasma in thin badlands (fords)
 # Sharpness of the plasma: higher powers draw thinner lightning (ridge) and
 # narrower wisps (streak), so less of the starfield is covered.
 PLASMA_RIDGE, PLASMA_STREAK = 16, 5
@@ -1235,16 +1237,6 @@ def plasma_alpha(rng, field, strength, wisps):
     return np.clip(0.75 * ridge * strength + streak * wisps * 1.25, 0, 1)
 
 
-def crackle(rng, field, strength, wisps=0.0, fade=False):
-    """White plasma as an image (see plasma_alpha). With fade, it thins out
-    towards the hex border, for tiles with no bank layer to blend them."""
-    alpha = plasma_alpha(rng, field, strength, wisps)
-    if fade:
-        alpha = alpha * _smoothstep((BORDER_DIST - 2) / 18.0)
-    rgb = np.broadcast_to(np.array(PLASMA_COLOUR, np.float32), (HEX, HEX, 3))
-    return Image.fromarray(np.dstack([rgb, alpha * 255]).clip(0, 255).astype(np.uint8), "RGBA")
-
-
 def build_badlands(rng, out):
     sc = "images/terrain/sc"
     geo = _BankGeometry()
@@ -1268,25 +1260,19 @@ def build_badlands(rng, out):
                          + " ".join(f"({t})" for t in types) + "}")
         tiles[name] = bank_layer(geo.field(True, (False,) * 6) + wobble, style, plasmas[0])
 
-    # Symbol image for the editor and help: one lone hex of light badlands.
+    # The blue nebula (its own seed, so the banks above don't change with it).
+    nebula = build_gas_nebula(np.random.default_rng(555), out, "badlands", BADLANDS_NEBULA,
+                              terrain=(NEBULA_BADLANDS, NOT_NEBULA_BADLANDS, -309))
+
+    # Symbol images for the editor and help: one lone hex of each kind.
+    tile = lambda rel: Image.open(os.path.join(out, f"{sc}/{rel}.png")).convert("RGBA")
     img = starfield(rng)
-    img.alpha_composite(tiles["shallow"])
-    save(apply_mask(img, hex_mask_cache), out, f"{sc}/ionstorm-light-tile.png", False)
-
-    # Thin badlands (fords) get only a trace of plasma, no bank.
-    for v in range(6):
-        img = starfield(rng)
-        img.alpha_composite(crackle(rng, field, *THIN_PLASMA, fade=True))
-        name = "ionstorm-thin" if v == 0 else f"ionstorm-thin{v + 1}"
-        save(apply_mask(img, hex_mask_cache), out, f"{sc}/{name}.png", False)
-        if v == 0:
-            save(apply_mask(img, hex_mask_cache), out, f"{sc}/ionstorm-thin-tile.png", False)
-
-    # Deep badlands: the blue nebula (its own seed, so the shallows above
-    # don't change with it).
-    deep = build_gas_nebula(np.random.default_rng(555), out, "badlands", BADLANDS_NEBULA,
-                            terrain=(DEEP_BADLANDS, NOT_DEEP_BADLANDS, -309))
-    shutil.copyfile(os.path.join(out, f"{sc}/badlands-tile.png"), os.path.join(out, f"{sc}/ionstorm-tile.png"))
+    img.alpha_composite(tiles["thin"])
+    save(apply_mask(img, hex_mask_cache), out, f"{sc}/ionstorm-thin-tile.png", False)
+    save(tile("badlands-tile"), out, f"{sc}/ionstorm-light-tile.png", False)
+    img = tile("badlands-tile")
+    img.alpha_composite(tiles["deep"])
+    save(apply_mask(img, hex_mask_cache), out, f"{sc}/ionstorm-tile.png", False)
 
     build_planet_halos(rng, out)
 
@@ -1297,12 +1283,12 @@ def build_badlands(rng, out):
         f.write("# its n, ne, se, s, sw and nw neighbours.\n\n")
         f.write(BANK_MACRO)
         f.write("\n".join(rules) + "\n\n#undef SC_BANK\n\n")
-        f.write("# The deep badlands' blue nebula: its edge thins out to whatever is next\n")
-        f.write("# to it, then each hex shows its piece of the cloud and spills wisps of it\n")
-        f.write("# onto its neighbours (as in gas-tiles.cfg).\n")
-        f.write(f"{{TRANSITION_COMPLETE_LF ({NOT_DEEP_BADLANDS}) ({DEEP_BADLANDS}) -341 badlands_edge sc/badlands-edge}}\n\n")
+        f.write("# The blue nebula of the badlands and light badlands: its edge thins out\n")
+        f.write("# to whatever is next to it, then each hex shows its piece of the cloud\n")
+        f.write("# and spills wisps of it onto its neighbours (as in gas-tiles.cfg).\n")
+        f.write(f"{{TRANSITION_COMPLETE_LF ({NOT_NEBULA_BADLANDS}) ({NEBULA_BADLANDS}) -341 badlands_edge sc/badlands-edge}}\n\n")
         f.write(GAS_MACROS.format(pc=GAS_PERIOD[0], pr=GAS_PERIOD[1]))
-        f.write("\n".join(deep) + "\n\n#undef SC_GAS_BASE\n#undef SC_GAS_SPILL\n")
+        f.write("\n".join(nebula) + "\n\n#undef SC_GAS_BASE\n#undef SC_GAS_SPILL\n")
 
 
 def build_planet_halos(rng, out, count=3):
