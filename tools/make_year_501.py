@@ -17,7 +17,8 @@ Ideas taken from the mod's other maps:
   gravity eddy) with a star, pulsar, black hole or dark star at their heart
   breaking the field into lanes.
 - Understanding Power (Small): a long badland lake on the flank of the
-  south-west start, and the richest planets in asteroid fields.
+  south-west start, and the richest planets in asteroid fields, here only
+  on the side of each planet facing the centre.
 - Weldyn Channel: a channel of badlands between the homes and the centre,
   crossed at a few calm (thin badlands) passages.
 - Isar's Cross: a ring of light badlands round the central nebula, for
@@ -27,6 +28,7 @@ Usage: make_year_501.py <add-on dir> [-v]
 """
 
 import heapq
+import math
 import os
 import sys
 
@@ -118,7 +120,7 @@ class Map:
             self.put(x, y, ch)
 
     def big_object(self, hexes, code, under):
-        """A four-hex object (brown dwarf, dark star, ...) on a diamond: three
+        """A four-hex object (supergiant, dark star, ...) on a diamond: three
         across and two down, or two by two slanting either way. code may be
         two codes, the west one and its mirror image (to show two looks)."""
         west, east = (code, code) if isinstance(code, str) else code
@@ -175,7 +177,7 @@ def build():
     # ---------------------------------------------------- the north-west
     # start, Media Control style: a river of light badlands round the
     # corner, two fords out
-    keep(m, 4, 3, 5, skip=[(4, 2)])
+    keep(m, 4, 3, 6)
     m.hexes(path([(0, 7), (7, 7), (9, 4), (9, 0)]), "b")
     m.hexes([(3, 7), (9, 2)], "f")                   # the two fords
     m.hexes([(1, 1), (7, 1)], "p")                   # home planets
@@ -191,7 +193,7 @@ def build():
 
     # ------------------------------------ the south-west start, by a long
     # badland lake reaching to the south edge (Understanding Power)
-    keep(m, 4, 25, 5, skip=[(4, 26)])
+    keep(m, 4, 25, 6)
     lake(m, [(8, 23), (9, 24), (9, 25), (10, 26), (10, 27), (11, 28)])
     m.hexes([(9, 27)], "f")                          # a calm passage
     m.hexes([(10, 24)], "q")                         # a sea planet in it
@@ -223,9 +225,10 @@ def build():
     m.hexes([(13, 1), (14, 1), (14, 2), (15, 2), (13, 2), (15, 3)], "S")
     m.put(14, 2, "s")
     m.hexes([(12, 2), (16, 1)], "p")
-    # a brown dwarf in a nebula, a planet in asteroids beside it
+    # a supergiant in a nebula, blue in the west and yellow in the east,
+    # a planet in asteroids beside it
     m.blob(15, 8, 1, "n")
-    m.big_object(diamond_slant(15, 8), ("Ygg1", "Ygg2"), "n")
+    m.big_object(diamond_slant(15, 8), ("Ysu2", "Ysu1"), "n")
     m.hexes([(13, 7)], "a")
     m.hexes([(13, 8)], "p")
     # south: a dark star in its dark nebula
@@ -273,12 +276,49 @@ def build():
     m.hexes([(20, 28)], "p")
     m.blob(20, 28, 1, "a", keep="pR")
     # small starbases with one docking ring, three a side: in front of the
-    # middle start, by the brown dwarf and by the dark star
+    # middle start, by the supergiant and by the dark star
     for (x, y), ring in [((7, 14), (8, 14)), ((17, 10), (18, 10)),
                          ((17, 21), (18, 21))]:
         m.put(x, y, "K")
         m.put(*ring, "c")
+    half_fields(m)
     return m
+
+
+def pixel(x, y):
+    return 1.5 * x, math.sqrt(3) * (y + 0.5 * (x & 1))
+
+
+def half_fields(m):
+    """Thin each asteroid field round a planet to the half facing the
+    centre: of the asteroid hexes round the planet, the half (rounded up)
+    nearest the line from it to the centre stay and the rest become open
+    space. The mirror keeps angles, so the east stays the west's image."""
+    keep, clear = set(), set()
+    cx, cy = pixel(MID, 14)
+    for x in range(W):
+        for y in range(H):
+            if m.get(x, y) not in "poq":
+                continue
+            field = [(u, v) for u, v in neighbours(x, y)
+                     if 0 <= u < W and 0 <= v < H and m.get(u, v) in "aAm"]
+            if len(field) < 4:              # not ringed, leave it be
+                continue
+            px, py = pixel(x, y)
+            to_c = math.atan2(cy - py, cx - px)
+
+            def off(h):
+                hx, hy = pixel(*h)
+                a = math.atan2(hy - py, hx - px) - to_c
+                return abs(math.atan2(math.sin(a), math.cos(a)))
+            field.sort(key=off)
+            n = (len(field) + 1) // 2
+            if n < len(field):
+                assert off(field[n]) - off(field[n - 1]) > 1e-6, (x, y)
+            keep |= set(field[:n])
+            clear |= set(field[n:])
+    for x, y in clear - keep:
+        m.g[y][x] = "."
 
 
 STARTS = [(4, 3), (1, 14), (4, 25)]        # west: sides 1, 3, 5

@@ -16,19 +16,20 @@ Ideas taken from the mod's other maps:
   radiation, plasma storm, gravity eddy) with a star, pulsar or black hole
   at their heart, here one in front of each start, so the way to the
   centre bends round it.
-- Understanding Power (Small): the richest planets in asteroid fields.
+- Understanding Power (Small): the richest planets in asteroid fields,
+  here only on the side of each planet facing the centre.
 - Weldyn Channel: a badland lake between each two neighbouring starts,
   crossed at a calm passage by a sea planet both want.
 - Isar's Cross: a ring of light badlands round the central nebula, for
   close fighting round the middle, where a starbase waits.
 
 Six supergiants, one of each colour, stand in nebulae between neighbours,
-each with a small starbase (two docking rings) beside it. Three more small
-starbases, one docking ring each, wait outside every other ford into the
-central ring: one between each pair of neighbours 1 & 2, 3 & 4 and 5 & 6,
-so those three keep the map's three-way turn and its mirror images, but
-not the full six-way symmetry. Outside the hexagon is the void (off the
-map).
+each with a small starbase (two docking rings) beside it. Six more small
+starbases, also with two docking rings, wait just outside the central ring
+on the line from each start to the centre, beside the start's cloud. Like
+everything else they are turned six ways and mirrored, so every start
+still has the same hex counts to everything. Outside the hexagon is the
+void (off the map).
 
 Usage: make_hegemony_or_survival.py <add-on dir> [-v]
 """
@@ -235,8 +236,7 @@ def build():
     keep = at(15, 0)
     m.put(keep, "K")
     for h in neighbours(*keep):
-        if h != at(16, 0):
-            m.put(h, "c")
+        m.put(h, "c")
     # home planets, one in an asteroid field by the corner
     m.blob(at(16, 2), 1, "a", keep="Kc")
     m.put(at(16, 2), "p")
@@ -283,17 +283,48 @@ def build():
     m.put((CX, CY), "K")
     for h in neighbours(CX, CY):
         m.put(h, "c")
-    # three small starbases with one docking ring, outside every other ford
-    # into the ring: turned three ways only, not mirrored
-    for k in INNER_SIDES:
-        x, y = at(3, 3, k)
-        m.g[y][x] = "K"
-        x, y = at(3, 2, k)
-        m.g[y][x] = "c"
+    # a small starbase in front of each start, just outside the ring and
+    # beside the start's cloud, with two docking rings (a mirror pair)
+    m.put(at(5, 0), "K")
+    m.put(at(4, 1), "c")
+    half_fields(m)
     return m
 
 
-INNER_SIDES = (0, 2, 4)        # the sixths with an inner small starbase
+def pixel(x, y):
+    return 1.5 * x, math.sqrt(3) * (y + 0.5 * (x & 1))
+
+
+def half_fields(m):
+    """Thin each asteroid field round a planet to the half facing the
+    centre: of the asteroid hexes round the planet, the half (rounded up)
+    nearest the line from it to the centre stay and the rest become open
+    space. Turns and mirrors keep angles, so every corner stays alike."""
+    keep, clear = set(), set()
+    cx, cy = pixel(CX, CY)
+    for x in range(W):
+        for y in range(H):
+            if not inside(x, y) or m.get(x, y) not in "poq":
+                continue
+            field = [h for h in neighbours(x, y)
+                     if inside(*h) and m.get(*h) in "aAm"]
+            if len(field) < 4:              # not ringed, leave it be
+                continue
+            px, py = pixel(x, y)
+            to_c = math.atan2(cy - py, cx - px)
+
+            def off(h):
+                hx, hy = pixel(*h)
+                a = math.atan2(hy - py, hx - px) - to_c
+                return abs(math.atan2(math.sin(a), math.cos(a)))
+            field.sort(key=off)
+            n = (len(field) + 1) // 2
+            if n < len(field):
+                assert off(field[n]) - off(field[n - 1]) > 1e-6, (x, y)
+            keep |= set(field[:n])
+            clear |= set(field[n:])
+    for x, y in clear - keep:
+        m.g[y][x] = "."
 
 
 def keeps():
