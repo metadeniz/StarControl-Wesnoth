@@ -751,6 +751,7 @@ music/sc/2. mycon.ogg
 music/sc/2. spathi.ogg
 music/sc/2. thraddash.ogg
 music/sc/2. umgah.ogg
+music/sc/2. urquan-erol-otus.ogg
 music/sc/2. urquan-now-and-forever.ogg
 music/sc/2. urquan.ogg
 music/sc/2. vux.ogg

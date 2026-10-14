@@ -210,7 +210,7 @@ local PLAYLISTS = {
 		"4. druuge-crimson-corporation", "4. thraddash-culture-19", "4. slylandro-we-come-in-peace",
 		"4. orz-squeezing-the-juice", "4. mycon-rebirth", "4. ilwrath-all-evil", "4. samatra-battle",
 		"0. remix-starbase" },
-	SC_Hierarchy = { "2. urquan", "2. urquan-now-and-forever", "2. mycon", "2. spathi", "2. umgah", "2. vux", "2. ilwrath", "2. thraddash",
+	SC_Hierarchy = { "2. urquan", "2. urquan-now-and-forever", "2. urquan-erol-otus", "2. mycon", "2. spathi", "2. umgah", "2. vux", "2. ilwrath", "2. thraddash",
 		"2. androsynth-duoled", "0. starbase" },
 }
 

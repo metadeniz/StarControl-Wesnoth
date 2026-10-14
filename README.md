@@ -65,8 +65,8 @@ once before any repeats:
   and ending themes, and Starbase.
 - **Hierarchy:** the Ur-Quan, Mycon, Spathi, Umgah, VUX, Ilwrath and
   Thraddash themes, an Androsynth theme by TheMisterCat (DUOLED), the
-  Precursors' "Now and Forever" (Ur-Quan) remix,
-  and Starbase.
+  Precursors' "Now and Forever" (Ur-Quan) remix, Erol Otus's Ur-Quan theme
+  (from the Precursors' Remix Pack 3 extras), and Starbase.
 - **New Alliance:** Ramen Rider's cover of the Syreen theme, the Melnorme
   theme re-imagined by DJ Yan Yan Lipavsky, and the
   Precursors' remixes: Chmmr ("Photosynthesis"),

@@ -536,6 +536,7 @@ REMIXES = {
     "4. thraddash-culture-19": "remix/3/06_-_Thraddash_-_Culture_19.ogg",
     # Hierarchy
     "2. urquan-now-and-forever": "remix/3/01_-_Ur-Quan_-_Now_and_Forever.ogg",
+    "2. urquan-erol-otus": "extras3/aliens/urquan-Ur-Quan_by_Erol_Otus.ogg",
     # New Alliance: every track a remix
     "3. remix-chmmr": "remix/4/03_-_Chmmr_-_Photosynthesis.ogg",
     "3. remix-zoqfotpik": "remix/4/09_-_Zoq-Fot-Pik_-_Frungy_Party.ogg",
