@@ -17,7 +17,8 @@ Ideas taken from the mod's other maps:
   gravity eddy) with a star, pulsar, black hole or dark star at their heart
   breaking the field into lanes.
 - Understanding Power (Small): a long badland lake on the flank of the
-  south-west start, and the richest planets in asteroid fields.
+  south-west start, and the richest planets in asteroid fields, here only
+  on the side of each planet facing the centre.
 - Weldyn Channel: a channel of badlands between the homes and the centre,
   crossed at a few calm (thin badlands) passages.
 - Isar's Cross: a ring of light badlands round the central nebula, for
@@ -27,6 +28,7 @@ Usage: make_year_501.py <add-on dir> [-v]
 """
 
 import heapq
+import math
 import os
 import sys
 
@@ -278,7 +280,44 @@ def build():
                          ((17, 21), (18, 21))]:
         m.put(x, y, "K")
         m.put(*ring, "c")
+    half_fields(m)
     return m
+
+
+def pixel(x, y):
+    return 1.5 * x, math.sqrt(3) * (y + 0.5 * (x & 1))
+
+
+def half_fields(m):
+    """Thin each asteroid field round a planet to the half facing the
+    centre: of the asteroid hexes round the planet, the half (rounded up)
+    nearest the line from it to the centre stay and the rest become open
+    space. The mirror keeps angles, so the east stays the west's image."""
+    keep, clear = set(), set()
+    cx, cy = pixel(MID, 14)
+    for x in range(W):
+        for y in range(H):
+            if m.get(x, y) not in "poq":
+                continue
+            field = [(u, v) for u, v in neighbours(x, y)
+                     if 0 <= u < W and 0 <= v < H and m.get(u, v) in "aAm"]
+            if len(field) < 4:              # not ringed, leave it be
+                continue
+            px, py = pixel(x, y)
+            to_c = math.atan2(cy - py, cx - px)
+
+            def off(h):
+                hx, hy = pixel(*h)
+                a = math.atan2(hy - py, hx - px) - to_c
+                return abs(math.atan2(math.sin(a), math.cos(a)))
+            field.sort(key=off)
+            n = (len(field) + 1) // 2
+            if n < len(field):
+                assert off(field[n]) - off(field[n - 1]) > 1e-6, (x, y)
+            keep |= set(field[:n])
+            clear |= set(field[n:])
+    for x, y in clear - keep:
+        m.g[y][x] = "."
 
 
 STARTS = [(4, 3), (1, 14), (4, 25)]        # west: sides 1, 3, 5

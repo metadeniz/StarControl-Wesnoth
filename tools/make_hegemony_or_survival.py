@@ -16,7 +16,8 @@ Ideas taken from the mod's other maps:
   radiation, plasma storm, gravity eddy) with a star, pulsar or black hole
   at their heart, here one in front of each start, so the way to the
   centre bends round it.
-- Understanding Power (Small): the richest planets in asteroid fields.
+- Understanding Power (Small): the richest planets in asteroid fields,
+  here only on the side of each planet facing the centre.
 - Weldyn Channel: a badland lake between each two neighbouring starts,
   crossed at a calm passage by a sea planet both want.
 - Isar's Cross: a ring of light badlands round the central nebula, for
@@ -287,7 +288,44 @@ def build():
     # beside the start's cloud, with two docking rings (a mirror pair)
     m.put(at(5, 0), "K")
     m.put(at(4, 1), "c")
+    half_fields(m)
     return m
+
+
+def pixel(x, y):
+    return 1.5 * x, math.sqrt(3) * (y + 0.5 * (x & 1))
+
+
+def half_fields(m):
+    """Thin each asteroid field round a planet to the half facing the
+    centre: of the asteroid hexes round the planet, the half (rounded up)
+    nearest the line from it to the centre stay and the rest become open
+    space. Turns and mirrors keep angles, so every corner stays alike."""
+    keep, clear = set(), set()
+    cx, cy = pixel(CX, CY)
+    for x in range(W):
+        for y in range(H):
+            if not inside(x, y) or m.get(x, y) not in "poq":
+                continue
+            field = [h for h in neighbours(x, y)
+                     if inside(*h) and m.get(*h) in "aAm"]
+            if len(field) < 4:              # not ringed, leave it be
+                continue
+            px, py = pixel(x, y)
+            to_c = math.atan2(cy - py, cx - px)
+
+            def off(h):
+                hx, hy = pixel(*h)
+                a = math.atan2(hy - py, hx - px) - to_c
+                return abs(math.atan2(math.sin(a), math.cos(a)))
+            field.sort(key=off)
+            n = (len(field) + 1) // 2
+            if n < len(field):
+                assert off(field[n]) - off(field[n - 1]) > 1e-6, (x, y)
+            keep |= set(field[:n])
+            clear |= set(field[n:])
+    for x, y in clear - keep:
+        m.g[y][x] = "."
 
 
 def keeps():
