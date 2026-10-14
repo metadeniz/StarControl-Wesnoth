@@ -736,6 +736,7 @@ music/sc/0. mycon-rebirth.ogg
 music/sc/0. remix-arilou.ogg
 music/sc/0. remix-commander.ogg
 music/sc/0. remix-ending.ogg
+music/sc/0. remix-hyperspace.ogg
 music/sc/0. remix-intro.ogg
 music/sc/0. remix-mystic-shadows.ogg
 music/sc/0. remix-quasispace.ogg
@@ -747,6 +748,7 @@ music/sc/1. arilou.ogg
 music/sc/1. chenjesu-titus.ogg
 music/sc/1. commander.ogg
 music/sc/1. ending.ogg
+music/sc/1. hyperspace-anamnesis.ogg
 music/sc/1. intro.ogg
 music/sc/1. mmrnmhrm-titus.ogg
 music/sc/1. outfit.ogg
@@ -758,6 +760,7 @@ music/sc/1. shofixti.ogg
 music/sc/1. syreen.ogg
 music/sc/1. yehat.ogg
 music/sc/2. androsynth-duoled.ogg
+music/sc/2. androsynth-ramen-rider.ogg
 music/sc/2. ilwrath.ogg
 music/sc/2. mycon.ogg
 music/sc/2. remix-spathi-fwiffo.ogg
@@ -769,6 +772,7 @@ music/sc/2. spathi.ogg
 music/sc/2. thraddash.ogg
 music/sc/2. umgah.ogg
 music/sc/2. urquan-erol-otus.ogg
+music/sc/2. urquan-idan-schneider.ogg
 music/sc/2. urquan-now-and-forever.ogg
 music/sc/2. urquan.ogg
 music/sc/2. vux.ogg

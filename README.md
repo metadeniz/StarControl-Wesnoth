@@ -62,10 +62,11 @@ once before any repeats:
 - **Alliance:** Star Control II's Commander (Earthlings), Yehat, Syreen,
   Arilou and Shofixti themes, Chenjesu and Mmrnmhrm themes by Titus, the
   quasispace theme (original and 3DO versions), Star Control II's opening
-  and ending themes, and Starbase.
-- **Hierarchy:** the Ur-Quan, Mycon, Spathi, Umgah, VUX, Ilwrath and
-  Thraddash themes, an Androsynth theme by TheMisterCat (DUOLED), and
+  and ending themes, Anamnesis's 2014 refresh of the hyperspace theme, and
   Starbase.
+- **Hierarchy:** the Ur-Quan, Mycon, Spathi, Umgah, VUX, Ilwrath and
+  Thraddash themes, an Androsynth theme by TheMisterCat (DUOLED), Idan
+  Schneider's orchestral cover of the Ur-Quan theme, and Starbase.
 
 The Alliance and the Hierarchy have three music modes: those original
 tracks, the Precursors' remixes in place of the tracks they remix, or both.
@@ -78,13 +79,16 @@ right-click menu, which goes through the three in turn. The remixes are:
   Falayalaralfali"), Shofixti ("Bonsai!"), quasispace ("Through the Angles
   of Space", "Mystic Shadows", for both quasispace versions), the opening
   ("Into the Void"), the ending ("Awaking Dreams") and Starbase ("Under a
-  Red Sky"). The Titus themes have no remix and stay.
+  Red Sky"). The Titus themes and the hyperspace refresh
+  have no remix and stay.
 - **Hierarchy:** Ur-Quan ("Now and Forever", and Erol Otus's Ur-Quan theme
   from Remix Pack 3's extras), Mycon ("Rebirth"), Spathi ("Safe Haven",
   "Fwiffo's Starrunner"), Umgah ("Genetic Modification"), VUX
   ("Ultra-gross", "Acid in the Eye"), Ilwrath ("All Evil"), Thraddash
-  ("Culture 19") and Starbase ("Under a Red Sky"). The Androsynth theme has
-  no remix and stays.
+  ("Culture 19"), Androsynth (Ramen Rider's Androsynth encounter theme),
+  Starbase ("Under a Red Sky"), and hyperspace ("Across the Galaxy", which
+  has no original track in the list). The orchestral Ur-Quan cover has no remix
+  and stays.
 
 The New Alliance and the Agents of Chaos have one playlist each:
 
@@ -96,13 +100,14 @@ The New Alliance and the Agents of Chaos have one playlist each:
   Ultron"), Commander ("Corridor Nine"), Arilou ("Welcome to
   Falayalaralfali"), Melnorme ("Turning Purple"), Syreen ("Close Encounters of the Seventh Kind"),
   quasispace ("Mystic Shadows", "Through the Angles of Space"), the opening ("Into the Void"), the ending ("Awaking
-  Dreams") and Starbase ("Under a Red Sky").
+  Dreams"), hyperspace ("Across the Galaxy") and Starbase ("Under a Red
+  Sky").
 - **Agents of Chaos:** modern versions only, the Precursors' remixes: Kohr-Ah ("Cleansing
   Required", "The Eternal Doctrine", "Kohr-Ah" battle remix), Druuge
   ("Property of the Crimson Corporation"), Thraddash ("Culture 19"),
   Slylandro Probes ("We Come In Peace"), Orz ("Squeezing the Juice"), Mycon
-  ("Rebirth"), Ilwrath ("All Evil"), "The Battle of the Sa-Matra" and Starbase ("Under a Red
-  Sky").
+  ("Rebirth"), Ilwrath ("All Evil"), "The Battle of the Sa-Matra", hyperspace ("Across the
+  Galaxy") and Starbase ("Under a Red Sky").
 
 When you win, the old Alliance and the Hierarchy hear Star Control 1's
 victory theme for their side, the New Alliance hears Star Control II's
