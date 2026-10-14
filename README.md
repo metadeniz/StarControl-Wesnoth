@@ -100,8 +100,8 @@ The New Alliance and the Agents of Chaos have one playlist each:
   Ultron"), Commander ("Corridor Nine"), Arilou ("Welcome to
   Falayalaralfali"), Melnorme ("Turning Purple"), Syreen ("Close Encounters of the Seventh Kind"),
   quasispace ("Mystic Shadows", "Through the Angles of Space"), the opening ("Into the Void"), the ending ("Awaking
-  Dreams") and Starbase ("Under a Red Sky"); and Anamnesis's 2014 refresh of
-  the hyperspace theme.
+  Dreams"), hyperspace ("Across the Galaxy") and Starbase ("Under a Red
+  Sky").
 - **Agents of Chaos:** modern versions only, the Precursors' remixes: Kohr-Ah ("Cleansing
   Required", "The Eternal Doctrine", "Kohr-Ah" battle remix), Druuge
   ("Property of the Crimson Corporation"), Thraddash ("Culture 19"),

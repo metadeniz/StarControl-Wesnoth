@@ -580,7 +580,7 @@ REMIXES = {
     "0. ilwrath-all-evil": "remix/3/02_-_Ilwrath_-_All_Evil.ogg",
     "4. druuge-crimson-corporation": "remix/2/07_-_Druuge_-_Property_of_the_Crimson_Corporation.ogg",
     "0. thraddash-culture-19": "remix/3/06_-_Thraddash_-_Culture_19.ogg",
-    "0. remix-hyperspace": "remix/2/05_-_Hyperspace_-_Across_the_Galaxy.ogg",   # Death March and Hierarchy
+    "0. remix-hyperspace": "remix/2/05_-_Hyperspace_-_Across_the_Galaxy.ogg",   # Death March, Hierarchy, New Alliance
     # Hierarchy
     "2. urquan-now-and-forever": "remix/3/01_-_Ur-Quan_-_Now_and_Forever.ogg",
     "2. urquan-erol-otus": "extras3/aliens/urquan-Ur-Quan_by_Erol_Otus.ogg",
@@ -1981,7 +1981,7 @@ def main():
     # ...and Ramen Rider's Androsynth encounter theme (MP3).
     manifest.append("music/sc/2. androsynth-ramen-rider.ogg")
     # ...and Anamnesis's 2014 refresh of the hyperspace theme (MP3).
-    manifest.append("music/sc/0. hyperspace-anamnesis.ogg")
+    manifest.append("music/sc/1. hyperspace-anamnesis.ogg")
     # ...and the Death March victory theme, the opening phrase of Chopin's
     # Funeral March (MP3, trimmed with a fade-out; played as a sound effect).
     manifest.append("sounds/sc/funeral-march.ogg")

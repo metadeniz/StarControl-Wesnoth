@@ -731,7 +731,6 @@ images/units/sc/zoqfotpik-stinger-l3-s.png
 images/units/sc/zoqfotpik-stinger-l3-se.png
 images/units/sc/zoqfotpik-stinger-l3-sw.png
 images/units/sc/zoqfotpik-stinger-l3.png
-music/sc/0. hyperspace-anamnesis.ogg
 music/sc/0. ilwrath-all-evil.ogg
 music/sc/0. mycon-rebirth.ogg
 music/sc/0. remix-arilou.ogg
@@ -749,6 +748,7 @@ music/sc/1. arilou.ogg
 music/sc/1. chenjesu-titus.ogg
 music/sc/1. commander.ogg
 music/sc/1. ending.ogg
+music/sc/1. hyperspace-anamnesis.ogg
 music/sc/1. intro.ogg
 music/sc/1. mmrnmhrm-titus.ogg
 music/sc/1. outfit.ogg
