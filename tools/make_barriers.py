@@ -622,8 +622,24 @@ DISK_STARS = {
                  rim=((215, 235, 255), (150, 175, 225)), body=((14, 18, 34), (62, 68, 92))),
 }
 
+# Single-hex stars behind a debris disk, drawn like the four-hex ones on the
+# 128 px canvas of the plain star (^Yx). The smaller ones are dwarfs.
+SMALL_DISK_STARS = [
+    ("orange", dict(d=60, n_rocks=110, rock=0.7, cols=[(70, 22, 4), (160, 62, 12), (225, 118, 32), (252, 172, 75), (255, 225, 160)],
+                    glow_rgb=(240, 115, 30), reach=5, cells=5, grain=16, limb=0.7, mottle=0.5, smooth=0.3,
+                    rim=((255, 175, 95), (210, 150, 100)), body=((30, 22, 16), (92, 72, 58)))),
+    ("red", dict(d=40, n_rocks=60, rock=0.7, reach=5)),
+    # bluer than the blue giant: no white in its ramp
+    ("blue", dict(d=60, n_rocks=110, rock=0.7, cols=[(8, 20, 110), (25, 60, 205), (60, 110, 255), (115, 160, 255), (185, 205, 255)],
+                  glow_rgb=(45, 85, 255), reach=5, cells=8, grain=24, limb=0.4, boost=1.15, mottle=0.3, smooth=0.5,
+                  rim=((170, 200, 255), (120, 145, 215)), body=((10, 14, 34), (58, 64, 92)))),
+    ("white", dict(d=40, n_rocks=60, rock=0.7, cols=[(150, 155, 178), (200, 205, 226), (230, 233, 246), (246, 248, 255), (255, 255, 255)],
+                   glow_rgb=(215, 222, 255), reach=5, cells=8, grain=24, limb=0.35, boost=1.1, mottle=0.25, smooth=0.55,
+                   rim=((255, 255, 255), (200, 202, 218)), body=((22, 22, 30), (80, 80, 92)))),
+]
 
-def red_supergiant(rng, n_rocks=420, cols=((45, 4, 4), (120, 16, 10), (190, 40, 18), (235, 90, 35), (255, 165, 90)),
+
+def red_supergiant(rng, n_rocks=420, d=GIANT_D, canvas=BIG, rock=1.0, cols=((45, 4, 4), (120, 16, 10), (190, 40, 18), (235, 90, 35), (255, 165, 90)),
                    glow_rgb=(200, 35, 20), reach=7, cells=4, grain=14, limb=0.8, boost=1.15, mottle=0.6, smooth=0.2,
                    rim=((255, 110, 55), (200, 120, 90)), body=((32, 20, 18), (90, 68, 60))):
     """A red supergiant seen through the debris disk round it: a huge,
@@ -633,9 +649,9 @@ def red_supergiant(rng, n_rocks=420, cols=((45, 4, 4), (120, 16, 10), (190, 40, 
     facing it; those past its edge are lit from the star. The keywords
     (see DISK_STARS) draw other stars behind the same kind of disk."""
     S = 3
-    W = BIG * S
+    W = canvas * S
     x, y = _grid(W)
-    R = GIANT_D / 2 * S
+    R = d / 2 * S
     r = np.hypot(x, y)
     mu = np.sqrt(np.clip(1 - (r / R) ** 2, 0, 1))
     cells = _noise(rng, W, 3, cells)
@@ -662,7 +678,7 @@ def red_supergiant(rng, n_rocks=420, cols=((45, 4, 4), (120, 16, 10), (190, 40, 
         else:                                       # strewn over the star
             a, q = rng.uniform(0, 2 * math.pi), R * math.sqrt(rng.uniform(0, 1)) * 0.95
             px, py = q * math.cos(a), q * math.sin(a)
-        size = S * min(0.7 + rng.pareto(2.6) * 1.0, 4.5)
+        size = S * min(0.7 + rng.pareto(2.6) * 1.0, 4.5) * rock
         k = int(rng.integers(6, 10))
         pts = [(px + math.cos(2 * math.pi * j / k) * size * rng.uniform(0.6, 1.25),
                 py + math.sin(2 * math.pi * j / k) * size * rng.uniform(0.6, 1.25)) for j in range(k)]
@@ -677,7 +693,7 @@ def red_supergiant(rng, n_rocks=420, cols=((45, 4, 4), (120, 16, 10), (190, 40, 
         d.polygon([(c + X + to_star[0] * sh, c + Y + to_star[1] * sh) for X, Y in pts], fill=rim_c + (255,))
         d.polygon([(c + X - to_star[0] * sh * 0.5, c + Y - to_star[1] * sh * 0.5) for X, Y in pts],
                   fill=body_c + (255,))
-    return out.resize((BIG, BIG), Image.LANCZOS)
+    return out.resize((canvas, canvas), Image.LANCZOS)
 
 
 def _fblur(a, r):
@@ -911,6 +927,14 @@ def build_objects(rng, out, save, apply_mask, starfield, mask):
     tile = apply_mask(starfield(brng), mask)
     tile.alpha_composite(img.resize((HEX - 4, HEX - 4), Image.LANCZOS), (2, 2))
     save(apply_mask(tile, mask), out, "images/terrain/sc/blue-giant-tile.png", False)
+    # The single-hex stars behind debris disks, with their own seed.
+    krng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 10)
+    for name, style in SMALL_DISK_STARS:
+        img = red_supergiant(krng, canvas=128, **style)
+        save(img, out, f"images/terrain/sc/disk-star-{name}.png", False)
+        tile = apply_mask(starfield(krng), mask)
+        tile.alpha_composite(img.crop((28, 28, 100, 100)))
+        save(apply_mask(tile, mask), out, f"images/terrain/sc/disk-star-{name}-tile.png", False)
     mrng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 4)
     for i, style in enumerate(BIG_BLACK_HOLES_MORE):
         save(big_black_hole(mrng, **style), out,

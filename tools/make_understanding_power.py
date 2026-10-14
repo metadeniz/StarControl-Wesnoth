@@ -38,15 +38,17 @@ LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 # In the south half the same ridge circles a blue giant instead.
 T.update({"D": "Yqd", "S": "Yqd^Yx", "R": "Yqr", "U": "Yqr^Yxp",
           "P": "Yqp", "T": "Yqp^Yxs1", "E": "Yqe", "X": "Yqe^Yxb2",
-          "M": "Ys^Ysg", "J": "Ys^Ysb"})
-WESNOTH.update({ch: "Md^Xm" for ch in "DSRUPTEXMJ"})
+          "M": "Ys^Ysg", "J": "Ys^Ysb",
+          "A": "Ys^Yxd1", "Z": "Ys^Yxd2", "F": "Ys^Yxd3", "G": "Ys^Yxd4"})
+WESNOTH.update({ch: "Md^Xm" for ch in "DSRUPTEXMJAZFG"})
+SOUTH = {"M": "J", "A": "F", "Z": "G"}     # the south half's own stars
 # Hexes opened up since, in the north half like BARRIERS (the south half
 # follows): bits of the west cliffs, the spiral, the long ridge's east end
 # and the stream banks.
 CLEARED = [(1, 7), (1, 8), (4, 9), (5, 9),
            (18, 13), (20, 13), (19, 12), (18, 12),
            (15, 6), (16, 6), (17, 6),
-           (23, 1), (24, 2), (26, 0), (26, 1), (27, 4)]
+           (23, 1), (24, 2), (26, 0), (26, 1), (27, 4), (2, 7)]
 BARRIERS = {
     # the west cliffs by the north keep: a pulsar in a radiation zone
     "R": [(1, 7), (2, 7), (3, 7), (3, 9), (4, 9), (5, 9)],
@@ -65,6 +67,10 @@ BARRIERS = {
     # the long ridge: the star fills the four hexes round its bend, one of
     # them (9, 7) open space before, so the star has room
     "M": [(9, 7), (10, 7), (11, 7), (10, 8)],
+    # and two one-hex stars in it, an orange one and a red dwarf (in the
+    # south a blue one and a white dwarf)
+    "A": [(13, 7)],
+    "Z": [(9, 9)],
 }
 
 FEATURES = {
@@ -166,8 +172,7 @@ def build():
     for y in range(H // 2, H):                       # turn the north half
         for x in range(W):
             grid[y][x] = grid[H - 1 - y][W - 1 - x]
-            if grid[y][x] == "M":
-                grid[y][x] = "J"                     # the blue giant
+            grid[y][x] = SOUTH.get(grid[y][x], grid[y][x])   # its own stars
     return shallows(grid)
 
 
