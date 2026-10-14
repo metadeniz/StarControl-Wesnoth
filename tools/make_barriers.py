@@ -69,7 +69,11 @@ def _lightning(rng, w, h, n, colour):
     return img
 
 
-def _bolts(rng, w, h, n, S=3):
+# smaller, more numerous, more branched bolts (D asked for more of them)
+STORM_BOLTS = dict(per=(2, 4), size=0.7, forks=(2, 4))
+
+
+def _bolts(rng, w, h, n, S=3, per=(1, 2), size=1.0, forks=(1, 3)):
     """Fewer, bolder bolts for the plasma storm: n bolts, each in a hex of
     its own and fading out well inside it, so no bolt is ever cut off at a
     hex edge. A bolt is a thick jagged channel, zigzagging about one
@@ -102,15 +106,24 @@ def _bolts(rng, w, h, n, S=3):
     hexes = [(c, r) for c in range(cols) for r in range(rows)]
     for i in rng.choice(len(hexes), n, replace=False):
         c, r = hexes[i]
-        cx, cy = 54 * c + 36, 72 * r + 36 + (36 if c % 2 else 0)
-        a = rng.uniform(0, 2 * math.pi)
-        steps, step = int(rng.integers(4, 6)), 11.5
-        x0, y0 = cx - math.cos(a) * steps * step / 2, cy - math.sin(a) * steps * step / 2
-        pts = channel(x0, y0, a, steps, rng.uniform(4.0, 5.0), step)
-        for _ in range(int(rng.integers(1, 3))):          # a fork or two
-            px, py = pts[int(rng.integers(1, len(pts) - 1))]
-            channel(px, py, a + rng.choice([-1, 1]) * rng.uniform(0.5, 0.9),
-                    int(rng.integers(1, 3)), 2.5, 9)
+        k = int(rng.integers(per[0], per[1]))
+        for j in range(k):                                # per[0]..per[1]-1 bolts in the hex
+            cx, cy = 54 * c + 36, 72 * r + 36 + (36 if c % 2 else 0)
+            if k > 1:                                     # spread round the middle
+                t = 2 * math.pi * j / k + rng.uniform(-0.5, 0.5)
+                cx += 13 * math.cos(t); cy += 13 * math.sin(t)
+            # each bolt runs roughly round the middle, not across it,
+            # so bolts in one hex don't tangle
+            a = (t + math.pi / 2 + rng.uniform(-0.5, 0.5)) if k > 1 else rng.uniform(0, 2 * math.pi)
+            steps, step = int(rng.integers(4, 6)), 11.5 * size
+            x0, y0 = cx - math.cos(a) * steps * step / 2, cy - math.sin(a) * steps * step / 2
+            pts = channel(x0, y0, a, steps, rng.uniform(4.0, 5.0) * size, step)
+            for _ in range(int(rng.integers(*forks))):    # forks, some forking again
+                px, py = pts[int(rng.integers(1, len(pts) - 1))]
+                fa = a + rng.choice([-1, 1]) * rng.uniform(0.5, 0.9)
+                fp = channel(px, py, fa, int(rng.integers(1, 3)), 2.5 * size, 9 * size)
+                if size < 1 and len(fp) > 1 and rng.random() < 0.5:
+                    channel(*fp[-1], fa + rng.choice([-1, 1]) * rng.uniform(0.4, 0.8), 1, 1.8 * size, 7 * size)
     # fade out towards the edge of each hex (wrapping round the field)
     pts = _hex_centres(w, h)
     yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
@@ -159,7 +172,7 @@ def gas_painters(rng, w, h, noise):
     # the same, but no longer used: the bolts now are fewer and bolder,
     # with their own seed)
     _lightning(rng, w, h, w * h // 3600, (255, 205, 255))
-    bolt, glow = _bolts(np.random.default_rng(rng.bit_generator.seed_seq.entropy + 1), w, h, 6)
+    bolt, glow = _bolts(np.random.default_rng(rng.bit_generator.seed_seq.entropy + 1), w, h, 12, **STORM_BOLTS)
 
     def storm(sl, col, row):
         a, b = p1[sl], p2[sl]
@@ -178,7 +191,7 @@ def gas_painters(rng, w, h, noise):
     # The storm hexes next to a star: a bolt in every one (its own seed),
     # each fading out inside its own hex, so the star's hex stays calm
     nbolt, nglow = _bolts(np.random.default_rng(rng.bit_generator.seed_seq.entropy + 2),
-                          w, h, (w // 54) * (h // 72))
+                          w, h, (w // 54) * (h // 72), **STORM_BOLTS)
 
     def near_storm(sl, col, row):
         a, b = p1[sl], p2[sl]
