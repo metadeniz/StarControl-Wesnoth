@@ -265,8 +265,8 @@ def swirl_rocks(rng, spin, arms, twist):
 
 
 def debris_disk(rng, pad, spin):
-    """One debris disk hex: a small black mass at the centre, faint dust
-    streaming round it in a spiral, and loose rocks of every size swept
+    """One debris disk hex: an empty dark middle, faint dust streaming
+    round it in a spiral, and loose rocks of every size swept
     along the same spiral, each trailing a little dust."""
     size = HEX + 2 * pad
     c = size / 2
@@ -279,7 +279,8 @@ def debris_disk(rng, pad, spin):
     lanes = 0.5 + 0.5 * np.cos(arms * (th - spin * twist * np.log(np.maximum(d, 1) / 11)) - arms * 0.0)
     grain = np.asarray(Image.fromarray((value_noise(rng, size, 5, 5) * 255).astype(np.uint8))
                        .resize((W, W), Image.BICUBIC), np.float32) / 255
-    fade = np.clip((29 - d) / 9, 0, 1) * np.clip((d - 5) / 4, 0, 1)   # gone before the hex edge
+    inner = np.clip((d - 4) / 9, 0, 1)
+    fade = np.clip((29 - d) / 9, 0, 1) * inner * inner * (3 - 2 * inner)   # gone before the hex edge and in the middle
     dust = lanes ** 3 * (0.45 + 0.55 * grain) * fade * 0.42
     dust_rgb = np.dstack([np.full_like(d, 120), np.full_like(d, 104), np.full_like(d, 92)])
     canvas = Image.fromarray(np.dstack([dust_rgb, dust * 255]).clip(0, 255).astype(np.uint8), "RGBA")
@@ -299,17 +300,13 @@ def debris_disk(rng, pad, spin):
     trail_img = Image.fromarray(np.dstack([dust_rgb * 1.1, t * 255]).clip(0, 255).astype(np.uint8), "RGBA")
     canvas = canvas.resize((W, W), Image.LANCZOS) if canvas.size != (W, W) else canvas
     canvas.alpha_composite(trail_img)
-    # the black mass: a dark lumpy core with a faint warm rim where the
-    # dust falling into it glows
-    core_r = rng.uniform(4.5, 5.5)
-    wob = 1 + 0.12 * np.cos(3 * th + rng.uniform(0, 6.3)) + 0.07 * np.cos(5 * th + rng.uniform(0, 6.3))
-    rho = d / (core_r * wob)
-    glow = np.exp(-np.clip(rho - 1, 0, None) / 0.3) * (rho > 0.95) * 0.5
-    glow_rgb = np.dstack([np.full_like(d, 190), np.full_like(d, 95), np.full_like(d, 50)])
-    canvas.alpha_composite(Image.fromarray(np.dstack([glow_rgb, glow * 255]).clip(0, 255).astype(np.uint8), "RGBA"))
-    body = np.clip((1 - rho) * core_r * S / 1.5, 0, 1)
-    shade = 6 + 10 * np.clip(-(xx * LIGHT[0] + yy * LIGHT[1]) / core_r, 0, 1) * (rho > 0.6)
-    canvas.alpha_composite(Image.fromarray(np.dstack([shade, shade, shade * 1.2, body * 255]).clip(0, 255).astype(np.uint8), "RGBA"))
+    # the empty middle: a round, soft-edged void where the dust thins out
+    # into darkness, with no rim, so it fades into the rest of the disk
+    void_r = rng.uniform(4.5, 5.5) + 2.5
+    rng.uniform(0, 6.3); rng.uniform(0, 6.3)   # keeps the random stream as it was
+    void = 0.6 * np.exp(-(d / void_r) ** 2)
+    canvas.alpha_composite(Image.fromarray(np.dstack([np.full_like(d, 3), np.full_like(d, 3), np.full_like(d, 8),
+                                                      void * 255]).clip(0, 255).astype(np.uint8), "RGBA"))
     canvas = canvas.convert("RGBa").resize((size, size), Image.LANCZOS).convert("RGBA")
     canvas.alpha_composite(compose(rng, placed, pad, darken=0.9, kinds=WALL_KINDS, shadow=0.6))
     return canvas
@@ -357,7 +354,7 @@ def build(rng, out, save, combos, hex_mask):
         # the old packed walls: still drawn so the art after them stays
         # the same, but replaced by the debris disks below
         compose(rng, wall_rocks(rng), wpad, darken=0.82, kinds=WALL_KINDS, shadow=0.6, fill=True)
-    # Debris disks: loose rocks swirling round a small black mass, with
+    # Debris disks: loose rocks swirling round an empty middle, with
     # their own seed; half spin one way, half the other.
     drng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 1)
     for v in range(8):
