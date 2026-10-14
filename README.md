@@ -130,7 +130,7 @@ leaves them as loud as before.
 
 | New Alliance of Free Stars | | Agents of Chaos | |
 |---|---|---|---|
-| **Precursor Flagship** (leader only) | 4 moves, a Precursor drive (like the Chmmr's) and **hyperjump** between planets; fusion blaster, point-defense, self-repair, heals +4, leadership | **Sa-Matra** (leader only) | 4 moves and a stronger Precursor drive (1 move through nebulae and asteroids); red plasma, homing sentinels, slowing green blobs, self-repair +8, cures and heals +8, leadership |
+| **Precursor Flagship** (leader only) | 4 moves, a Precursor drive (like the Chmmr's) and **hyperjump** between planets; fusion blaster, point-defense, self-repair, heals +4, leadership | **Sa-Matra** (leader only) | 4 moves and a stronger Precursor drive (1 move through nebulae and asteroids); yellow comets (near and far), slowing green blobs, self-repair +8, cures and heals +8, leadership |
 | Earthling Cruiser | as in the Alliance | Kohr-Ah Marauder | 4 moves; spinning blades; F.R.I.E.D. plasma ring (**magical**) |
 | Chmmr Avatar | 4 moves, and a drive that handles nebulae, dust, badlands and asteroids better than other large hulls; close-range tractor beam + laser and Tractor + ZapSats (**first strike**, **auto-targeting** 70% on offense and defense, **swarm**, +1 damage vs. small and tiny hulls); ranged megawatt laser (**marksman**, **slows**); point-defense | Druuge Mauler | 4 moves; long-range mass driver (**marksman**); nothing up close |
 | Zoq-Fot-Pik Stinger | cheap; acid spit, hard-hitting tongue | Thraddash Torch | fast; afterburner (**charge**, **backstab**), horn blasters (**backstab**) |
