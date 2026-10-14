@@ -264,7 +264,26 @@ def swirl_rocks(rng, spin, arms, twist):
     return placed
 
 
-def debris_disk(rng, pad, spin):
+def dust_haze(rng, d, W):
+    """A cloud of brown dust behind a debris disk, in the dust clouds'
+    colours, thinning out just past the hex so neighbouring disks' clouds
+    run together."""
+    n1, n2, f2 = (np.asarray(Image.fromarray((value_noise(rng, W // S, o, b) * 255).astype(np.uint8))
+                             .resize((W, W), Image.BICUBIC), np.float32) / 255
+                  for o, b in ((5, 3), (4, 4), (4, 6)))
+    streak = (1 - np.abs(2 * n1 - 1)) ** 3
+    fine = (1 - np.abs(2 * f2 - 1)) ** 16
+    col_a, col_b, col_hi = (np.array(c, np.float32) for c in ((150, 115, 75), (115, 90, 65), (200, 165, 115)))
+    mix = (0.5 + 0.5 * (n2 - 0.5))[..., None]
+    rgb = col_a * (1 - mix) + col_b * mix
+    rgb = rgb * (0.75 + 0.5 * (n1 - 0.5) + 0.35 * streak)[..., None]
+    rgb = rgb * (1 - 0.5 * fine[..., None]) + col_hi * 0.5 * fine[..., None]
+    edge = np.clip((50 - d - 10 * (n2 - 0.5)) / 24, 0, 1)
+    alpha = np.clip(0.3 + 0.12 * (n1 - 0.5) + 0.3 * streak + 0.2 * fine, 0, 0.85) * 0.45 * edge * edge * (3 - 2 * edge)
+    return Image.fromarray(np.dstack([rgb, alpha * 255]).clip(0, 255).astype(np.uint8), "RGBA")
+
+
+def debris_disk(rng, pad, spin, haze_rng=None):
     """One debris disk hex: an empty dark middle, faint dust streaming
     round it in a spiral, and loose rocks of every size swept
     along the same spiral, each trailing a little dust."""
@@ -284,6 +303,9 @@ def debris_disk(rng, pad, spin):
     dust = lanes ** 3 * (0.45 + 0.55 * grain) * fade * 0.42
     dust_rgb = np.dstack([np.full_like(d, 120), np.full_like(d, 104), np.full_like(d, 92)])
     canvas = Image.fromarray(np.dstack([dust_rgb, dust * 255]).clip(0, 255).astype(np.uint8), "RGBA")
+    if haze_rng is not None:
+        canvas = dust_haze(haze_rng, d, W)
+        canvas.alpha_composite(Image.fromarray(np.dstack([dust_rgb, dust * 255]).clip(0, 255).astype(np.uint8), "RGBA"))
     # each rock trails a short streak of dust behind it along its orbit
     trails = Image.new("L", (W, W), 0)
     dt = ImageDraw.Draw(trails)
@@ -356,12 +378,16 @@ def build(rng, out, save, combos, hex_mask):
         compose(rng, wall_rocks(rng), wpad, darken=0.82, kinds=WALL_KINDS, shadow=0.6, fill=True)
     # Debris disks: loose rocks swirling round an empty middle, with
     # their own seed; half spin one way, half the other.
+    # Each sits in a cloud of dust (its own seed too), drawn past the hex
+    # so the clouds of neighbouring disks run together.
     drng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 1)
+    hrng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 2)
+    dpad = 18
     for v in range(8):
-        canvas = debris_disk(drng, wpad, 1 if v % 2 == 0 else -1)
+        canvas = debris_disk(drng, dpad, 1 if v % 2 == 0 else -1, hrng)
         put(canvas, "asteroid-wall" if v == 0 else f"asteroid-wall{v + 1}")
         if v == 0:
-            put(tile_icon(canvas, wpad), "asteroid-wall-tile")
+            put(tile_icon(canvas, dpad), "asteroid-wall-tile")
 
     # Spill: per edge, a fixed set of loose rocks; each combo image is the
     # union of its edges' sets, so neighbouring rule matches agree.
