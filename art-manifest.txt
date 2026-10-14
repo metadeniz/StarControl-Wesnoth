@@ -855,8 +855,8 @@ sounds/sc/orz-howitzer.wav
 sounds/sc/orz-marines.wav
 sounds/sc/pkunk-bug.wav
 sounds/sc/pkunk-rebirth.wav
-sounds/sc/samatra-plasma.wav
-sounds/sc/samatra-sentinels.wav
+sounds/sc/samatra-blob.wav
+sounds/sc/samatra-comet.wav
 sounds/sc/ship-dies.wav
 sounds/sc/shofixti-dart.wav
 sounds/sc/shofixti-glory.wav

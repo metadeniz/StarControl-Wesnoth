@@ -192,8 +192,8 @@ SOUNDS = {
     "flagship-blaster": "base/ships/flagship/primary.wav",
     "melnorme-blaster": "base/ships/melnorme/primary.wav",
     "melnorme-confuser": "base/ships/melnorme/secondary.wav",
-    "samatra-plasma": "base/ships/samatra/primary.wav",
-    "samatra-sentinels": "base/ships/samatra/secondary.wav",
+    "samatra-comet": "base/ships/samatra/primary.wav",       # comet launch
+    "samatra-blob": "base/ships/samatra/secondary.wav",      # green sentinel hit
     "boom-small": "base/battle/boom1.wav",
     "boom-medium": "base/battle/boom23.wav",
     "boom-large": "base/battle/boom45.wav",
@@ -414,14 +414,60 @@ def build_samatra(uqm, out):
     for facing in FACINGS:
         save(canvas, out, f"images/units/sc/samatra-{facing}.png", True)
     save(canvas, out, "images/units/sc/samatra.png", True)
-    # its sentinels: glowing red orbs (UQM draws them from masks)
-    orb = Image.new("RGBA", (22, 22), (0, 0, 0, 0))
-    d = ImageDraw.Draw(orb)
-    for r, col in ((10, (255, 40, 60, 70)), (7, (255, 70, 90, 170)), (4, (255, 200, 210, 255))):
-        d.ellipse([11 - r, 11 - r, 11 + r, 11 + r], fill=col)
-    orb = orb.filter(ImageFilter.GaussianBlur(1))
+    build_samatra_comet(out)
+    build_samatra_blobs(out)
+
+
+def samatra_comet():
+    """A yellow fiery comet heading north: a white-hot head, a flaming tail
+    and a trail of shrinking fireballs, like UQM's (which it draws from
+    masks)."""
+    w, h = 26, 64
+    yy, xx = np.mgrid[0:h, 0:w].astype(float)
+    hx, hy = w / 2 - 0.5, 11.0
+    rng = np.random.default_rng(501)
+    # tail: a cone widening back from the head, flickering along its length
+    t = np.clip((yy - hy) / (h - hy - 4), 0, 1)
+    flicker = 1 + 0.25 * np.sin(yy * 1.3 + rng.uniform(0, 6)) * t
+    width = (8.0 * (1 - t) ** 0.7 + 0.5) * flicker
+    tail = np.clip(1 - np.abs(xx - hx) / width, 0, 1) * (yy >= hy) * (1 - t) ** 1.2
+    # head: a bright disc
+    r = np.hypot(xx - hx, yy - hy)
+    head = np.clip(1 - r / 8.5, 0, 1)
+    heat = np.clip(np.maximum(head * 1.6, tail), 0, 1)
+    # trailing fireballs, shrinking
+    for cy, rad in ((34, 3.2), (44, 2.5), (53, 1.8)):
+        heat = np.maximum(heat, 0.7 * np.clip(1 - np.hypot(xx - hx, yy - cy) / rad, 0, 1))
+    # colour ramp: deep orange -> yellow -> white as heat rises
+    red = np.full_like(heat, 255)
+    green = 50 + 205 * np.clip(heat * 1.2, 0, 1) ** 1.5
+    blue = 255 * np.clip((heat - 0.7) / 0.3, 0, 1)
+    alpha = 255 * np.clip(heat * 1.8, 0, 1)
+    img = np.dstack([red, green, blue, alpha]).astype("uint8")
+    return Image.fromarray(img).filter(ImageFilter.GaussianBlur(0.7))
+
+
+def build_samatra_comet(out):
+    comet = samatra_comet()
     for facing in ("n", "ne"):
-        save(orb, out, f"images/projectiles/sc/sentinel-{facing}.png", False)
+        save(trim(rotated(comet, FACINGS[facing])), out,
+             f"images/projectiles/sc/samatra-comet-{facing}.png", False)
+
+
+def build_samatra_blobs(out):
+    """The Sa-Matra's green blobs: lumpy glowing globs that ram ships off
+    course. Drawn here, not taken from UQM."""
+    blob = Image.new("RGBA", (24, 24), (0, 0, 0, 0))
+    d = ImageDraw.Draw(blob)
+    lumps = ((12, 12, 1.0), (9, 10, 0.7), (15, 11, 0.65), (12, 15, 0.6), (11, 8, 0.55))
+    for r, col in ((10, (40, 230, 60, 70)), (7, (60, 240, 80, 180)), (4, (190, 255, 170, 255))):
+        for x, y, k in lumps:
+            rr = r * k
+            d.ellipse([x - rr, y - rr, x + rr, y + rr], fill=col)
+    blob = blob.filter(ImageFilter.GaussianBlur(1))
+    for facing in ("n", "ne"):
+        save(rotated(blob, FACINGS[facing]) if facing == "ne" else blob, out,
+             f"images/projectiles/sc/samatra-blob-{facing}.png", False)
 
 
 # race id -> the ship's victory ditty (a tracker module) in the UQM content
@@ -1619,7 +1665,8 @@ def build_attack_icons(out):
     sources = {pid: (f"images/projectiles/sc/{pid}-ne.png", True) for pid in PROJECTILES}
     sources.update({lid: (f"images/projectiles/sc/{lid}-ne.png", False) for lid in LASERS})
     sources["blazer"] = ("images/units/sc/androsynth-blazer-l1-ne.png", True)
-    sources["sentinel"] = ("images/projectiles/sc/sentinel-ne.png", False)
+    sources["samatra-comet"] = ("images/projectiles/sc/samatra-comet-ne.png", False)
+    sources["samatra-blob"] = ("images/projectiles/sc/samatra-blob-ne.png", False)
     for iid, (rel, uqm) in sources.items():
         item = trim(Image.open(os.path.join(out, rel)).convert("RGBA"))
         k = 44 / max(item.size)
