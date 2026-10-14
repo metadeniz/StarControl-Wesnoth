@@ -61,6 +61,33 @@ def line(a, b):
     return out
 
 
+# The full map's barriers, placed by hand on the small grid (game
+# coordinates, north half; the south half follows, with its own stars):
+# see BARRIERS in make_understanding_power.py.
+BARRIERS = {
+    "R": [(3, 6), (3, 8)], "U": [(3, 7)],              # west cliffs
+    "M": [(8, 6), (9, 6), (10, 6), (9, 7)],             # the long ridge
+    "w": [(8, 5), (7, 7), (12, 5)],
+    "Z": [(7, 8)], "A": [(11, 6)],
+    "P": [(16, 1), (19, 2), (19, 4)], "T": [(19, 3)],   # stream banks
+    "D": [(20, 5), (21, 6), (23, 6)], "S": [(24, 5)],   # north-east ridges
+    "E": [(16, 9), (15, 10)], "X": [(16, 10)],          # the centre
+    "V": [(13, 10)],
+}
+CLEARED = [(4, 7), (17, 2), (19, 1), (15, 9)]
+
+
+def barriers(grid):
+    H, W = len(grid), len(grid[0])
+    for ch, hexes in list(BARRIERS.items()) + [(".", CLEARED)]:
+        for x, y in hexes:
+            x, y = x - 1, y - 1
+            assert y < H // 2, (ch, x, y)
+            grid[y][x] = ch
+            grid[H - 1 - y][W - 1 - x] = full.SOUTH.get(ch, ch)
+    return grid
+
+
 def shrink(W, H):
     fx = (W - 1) / (full.W - 1)
     fy = (H - 1) / (full.H - 1)
@@ -108,7 +135,7 @@ def shrink(W, H):
     for y in range(H // 2, H):
         for x in range(W):
             grid[y][x] = grid[H - 1 - y][W - 1 - x]
-    return full.shallows(grid), keeps[(5, 3)]
+    return full.shallows(barriers(grid)), keeps[(5, 3)]
 
 
 if __name__ == "__main__":
