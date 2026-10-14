@@ -17,6 +17,8 @@ Usage:
     make_art.py --only asteroids --out <add-on dir>   (asteroid fields, dense asteroids, walls)
     make_art.py --only fried --out <add-on dir>       (Kohr-Ah F.R.I.E.D. plumes)
     make_art.py --only terrain --out <add-on dir>     (all terrain, no UQM content needed)
+    make_art.py --only gas --nebula-style soft --out <add-on dir>
+                                                      (nebulae in the alternate soft-glow look)
 """
 
 import argparse
@@ -35,6 +37,7 @@ from make_alliance_starbase import build_alliance_starbase
 from make_asteroids import build as build_asteroid_art
 from make_barriers import build_objects as build_barrier_objects, gas_painters
 from make_fried import build as build_fried_plumes
+from make_nebulae import STYLES as NEBULA_STYLES, nebula_field
 from make_starbase import build_hierarchy_starbase
 
 HEX = 72
@@ -875,12 +878,9 @@ def build_nebula(rng, mask, tmasks, out):
 NEBULA_EDGE = 0.5   # gas strength exactly on a nebula/space hex edge
 GAS_DENSITY = 0.7   # overall opacity of nebulae and dust (1 = original); lower shows more space
 
-# name -> (base colour A, base colour B, highlight colour)
-GAS_NEBULAE = {
-    "nebula": ((60, 210, 120), (150, 230, 80), (90, 170, 255)),       # green, blue wisps
-    "rednebula": ((225, 55, 40), (150, 25, 70), (255, 160, 50)),      # red, orange wisps
-    "dust": None,                                                       # painted by dust_cloud
-}
+# Green and red nebulae are painted in make_nebulae.py, in one of its
+# STYLES: "veils" (gauzy streamers) or "soft" (billowing glow).
+NEBULA_STYLE = "veils"
 
 
 GAS_PERIOD = (6, 4)    # gas clouds repeat every 6 columns and 4 rows of hexes
@@ -911,12 +911,13 @@ def _spill_wedges(soft=4.0):
 SPILL_WEDGE = _spill_wedges()
 
 
-def periodic_fractal_noise(rng, width, height, octaves, cell):
+def periodic_fractal_noise(rng, width, height, octaves, cell, cell_x=None):
     """fractal_noise over a width x height field that wraps round at its
-    edges, with cells of about `cell` pixels in its coarsest octave."""
+    edges, with cells of about `cell` pixels in its coarsest octave
+    (`cell_x` pixels across, if given, for noise stretched sideways)."""
     total = np.zeros((height, width), np.float32)
     amp, norm = 1.0, 0.0
-    cx, cy = max(1, round(width / cell)), max(1, round(height / cell))
+    cx, cy = max(1, round(width / (cell_x or cell))), max(1, round(height / cell))
     for o in range(octaves):
         grid = rng.random((cy << o, cx << o)).astype(np.float32)
         tiled = np.tile(grid, (3, 3))
@@ -1133,17 +1134,20 @@ def dust_cloud(rng):
     return painter, decor
 
 
-def build_gas(seed, out):
+def build_gas(seed, out, nebula_style=NEBULA_STYLE):
     rules = []
-    for i, (name, colours) in enumerate(GAS_NEBULAE.items()):
-        rng = np.random.default_rng(seed + 10 + i)
-        if name == "dust":
-            painter, decor = dust_cloud(rng)
-            rules += build_gas_nebula(rng, out, name, None, painter, decor=decor)
-        else:
-            rules += build_gas_nebula(rng, out, name, colours)
-    # added later, with their own seeds, so the nebulae above stay the same
     w, h = GAS_PERIOD[0] * 54, GAS_PERIOD[1] * 72
+    for i, name in enumerate(("nebula", "rednebula")):
+        # each cloud has its own seed, so the hexes' starfields and edges
+        # stay the same whichever style is picked
+        field = nebula_field(np.random.default_rng(seed + 100 + i), w, h, periodic_fractal_noise,
+                             name, nebula_style, GAS_DENSITY)
+        rules += build_gas_nebula(np.random.default_rng(seed + 10 + i), out, name, None,
+                                  lambda sl, col, row, field=field: Image.fromarray(field[sl], "RGBA"))
+    rng = np.random.default_rng(seed + 12)
+    painter, decor = dust_cloud(rng)
+    rules += build_gas_nebula(rng, out, "dust", None, painter, decor=decor)
+    # added later, with their own seeds, so the nebulae above stay the same
     painters = gas_painters(np.random.default_rng(seed + 30), w, h, periodic_fractal_noise)
     for i, name in enumerate(BARRIER_GASES):
         rules += build_gas_nebula(np.random.default_rng(seed + 31 + i), out, name, None, painters[name])
@@ -1899,7 +1903,7 @@ def build_terrain(rng, mask, tmasks, args):
     build_star(rng, args.out)
     build_starbase(rng, mask, args.out)
     # Added later with its own seed so the art above stays byte-identical.
-    build_gas(args.seed, args.out)
+    build_gas(args.seed, args.out, args.nebula_style)
     build_badlands(np.random.default_rng(args.seed + 4), args.out)
     build_asteroid_art(np.random.default_rng(args.seed + 20), args.out, save, TRANSITION_COMBOS, mask)
     build_barrier_objects(np.random.default_rng(args.seed + 40), args.out, save, apply_mask, starfield, mask)
@@ -1914,6 +1918,8 @@ def main():
     ap.add_argument("--threedo", help="unzipped UQM 3DO music add-on (optional)")
     ap.add_argument("--wesnoth-data", default="/usr/share/games/wesnoth/1.16/data")
     ap.add_argument("--seed", type=int, default=1990)
+    ap.add_argument("--nebula-style", choices=NEBULA_STYLES, default=NEBULA_STYLE,
+                    help="look of the green and red nebulae: veils (gauzy streamers) or soft (billowing glow)")
     ap.add_argument("--only", choices=["badlands", "gas", "asteroids", "fried", "barriers", "terrain"],
                     help="rebuild just this terrain (barriers: all gas clouds and the barrier objects)")
     args = ap.parse_args()
@@ -1931,10 +1937,10 @@ def main():
         build_badlands(np.random.default_rng(args.seed + 4), args.out)
         return 0
     if args.only == "gas":
-        build_gas(args.seed, args.out)
+        build_gas(args.seed, args.out, args.nebula_style)
         return 0
     if args.only == "barriers":
-        build_gas(args.seed, args.out)
+        build_gas(args.seed, args.out, args.nebula_style)
         build_barrier_objects(np.random.default_rng(args.seed + 40), args.out, save, apply_mask, starfield, mask)
         return 0
     if args.only == "asteroids":
