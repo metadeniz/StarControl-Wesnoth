@@ -44,7 +44,7 @@ T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
      "O": "Yqe^Ybh", "T": "Yqp^Yx", "V": "Yqp^Yxp",
      **{str(n): f"Yqe^Ybh{n}" for n in range(1, 7)},
      "Y": "Ys^Ytu5", "Z": "Ys^Ytu2",
-     "q": "Ys^Yxd7", "g": "Yd^Yxd6", "b": "Ys^Ysb"}
+     "q": "Ys^Yxd5", "g": "Yd^Yxd6", "b": "Ys^Ysb"}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "r": "Re", "B": "Wo", "f": "Wo^Bsb\\",
            "s": "Ss", "m": "Gg^Tf"}
@@ -407,7 +407,7 @@ HAND_EDITS = [
     # 2,15 and 4,14 open, 1,16 an asteroid field (mirrored west to east)
     ((2, 15), "."), ((40, 15), "."), ((4, 14), "."), ((38, 14), "."),
     ((1, 16), "a"), ((41, 16), "a"),
-    # the east side's stars get colours of their own: a purple star at
+    # the east side's stars get colours of their own: a yellow star at
     # 37,13, and at 37,16 a blue giant with a green star beside it
     ((37, 13), "q"), ((38, 16), "g"),
     *[((x, y), "b") for x in (36, 37) for y in (16, 17)],
