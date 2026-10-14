@@ -43,7 +43,7 @@ T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
      "o": "Ys^Yxd1", "y": "Yd^Yxd5",
      "O": "Yqe^Ybh", "T": "Yqp^Yx", "V": "Yqp^Yxp",
      **{str(n): f"Yqe^Ybh{n}" for n in range(1, 7)},
-     "Y": "Ys^Ysu1", "Z": "Ys^Ysu4"}
+     "Y": "Ys^Ysu5", "Z": "Ys^Ysu2"}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "r": "Re", "B": "Wo", "f": "Wo^Bsb\\",
            "s": "Ss", "m": "Gg^Tf"}
@@ -396,8 +396,8 @@ HAND_EDITS = [
     *[(h, ch) for xy, ch in [((9, 5), "p"), ((10, 5), "a")]
       for h in mirrored4(*xy)],
     # the south-east black hole takes the look of the centre's south one,
-    # and the two centre black holes become supergiants (yellow north,
-    # white south) in open space
+    # and the two centre black holes become supergiants (green north,
+    # blue south) in open space
     *[((x, y), "6") for x, y in [(24, 19), (25, 19), (25, 20), (26, 19)]],
     *[((x, y), "Y") for x, y in [(20, 12), (21, 12), (22, 12), (21, 13)]],
     *[((x, y), "Z") for x, y in [(20, 16), (21, 16), (22, 16), (21, 17)]],
