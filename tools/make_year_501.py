@@ -120,7 +120,7 @@ class Map:
             self.put(x, y, ch)
 
     def big_object(self, hexes, code, under):
-        """A four-hex object (brown dwarf, dark star, ...) on a diamond: three
+        """A four-hex object (supergiant, dark star, ...) on a diamond: three
         across and two down, or two by two slanting either way. code may be
         two codes, the west one and its mirror image (to show two looks)."""
         west, east = (code, code) if isinstance(code, str) else code
@@ -225,9 +225,10 @@ def build():
     m.hexes([(13, 1), (14, 1), (14, 2), (15, 2), (13, 2), (15, 3)], "S")
     m.put(14, 2, "s")
     m.hexes([(12, 2), (16, 1)], "p")
-    # a brown dwarf in a nebula, a planet in asteroids beside it
+    # a supergiant in a nebula, blue in the west and yellow in the east,
+    # a planet in asteroids beside it
     m.blob(15, 8, 1, "n")
-    m.big_object(diamond_slant(15, 8), ("Ygg1", "Ygg2"), "n")
+    m.big_object(diamond_slant(15, 8), ("Ysu2", "Ysu1"), "n")
     m.hexes([(13, 7)], "a")
     m.hexes([(13, 8)], "p")
     # south: a dark star in its dark nebula
@@ -275,7 +276,7 @@ def build():
     m.hexes([(20, 28)], "p")
     m.blob(20, 28, 1, "a", keep="pR")
     # small starbases with one docking ring, three a side: in front of the
-    # middle start, by the brown dwarf and by the dark star
+    # middle start, by the supergiant and by the dark star
     for (x, y), ring in [((7, 14), (8, 14)), ((17, 10), (18, 10)),
                          ((17, 21), (18, 21))]:
         m.put(x, y, "K")
