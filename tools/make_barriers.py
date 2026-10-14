@@ -625,15 +625,15 @@ DISK_STARS = {
 # Single-hex stars behind a debris disk, drawn like the four-hex ones on the
 # 128 px canvas of the plain star (^Yx). The smaller ones are dwarfs.
 SMALL_DISK_STARS = [
-    ("orange", dict(d=60, n_rocks=110, rock=0.7, cols=[(70, 22, 4), (160, 62, 12), (225, 118, 32), (252, 172, 75), (255, 225, 160)],
+    ("orange", dict(d=60, n_rocks=240, rock=0.7, cols=[(70, 22, 4), (160, 62, 12), (225, 118, 32), (252, 172, 75), (255, 225, 160)],
                     glow_rgb=(240, 115, 30), reach=5, cells=5, grain=16, limb=0.7, mottle=0.5, smooth=0.3,
                     rim=((255, 175, 95), (210, 150, 100)), body=((30, 22, 16), (92, 72, 58)))),
-    ("red", dict(d=40, n_rocks=60, rock=0.7, reach=5)),
+    ("red", dict(d=40, n_rocks=140, rock=0.7, reach=5)),
     # bluer than the blue giant: no white in its ramp
-    ("blue", dict(d=60, n_rocks=110, rock=0.7, cols=[(8, 20, 110), (25, 60, 205), (60, 110, 255), (115, 160, 255), (185, 205, 255)],
+    ("blue", dict(d=60, n_rocks=240, rock=0.7, cols=[(8, 20, 110), (25, 60, 205), (60, 110, 255), (115, 160, 255), (185, 205, 255)],
                   glow_rgb=(45, 85, 255), reach=5, cells=8, grain=24, limb=0.4, boost=1.15, mottle=0.3, smooth=0.5,
                   rim=((170, 200, 255), (120, 145, 215)), body=((10, 14, 34), (58, 64, 92)))),
-    ("white", dict(d=40, n_rocks=60, rock=0.7, cols=[(150, 155, 178), (200, 205, 226), (230, 233, 246), (246, 248, 255), (255, 255, 255)],
+    ("white", dict(d=40, n_rocks=140, rock=0.7, cols=[(150, 155, 178), (200, 205, 226), (230, 233, 246), (246, 248, 255), (255, 255, 255)],
                    glow_rgb=(215, 222, 255), reach=5, cells=8, grain=24, limb=0.35, boost=1.1, mottle=0.25, smooth=0.55,
                    rim=((255, 255, 255), (200, 202, 218)), body=((22, 22, 30), (80, 80, 92)))),
 ]

@@ -41,7 +41,7 @@ T.update({"D": "Yqd", "S": "Yqd^Yx", "R": "Yqr", "U": "Yqr^Yxp",
           "M": "Ys^Ysg", "J": "Ys^Ysb",
           "A": "Ys^Yxd1", "Z": "Ys^Yxd2", "F": "Ys^Yxd3", "G": "Ys^Yxd4"})
 WESNOTH.update({ch: "Md^Xm" for ch in "DSRUPTEXMJAZFG"})
-SOUTH = {"M": "J", "A": "F", "Z": "G"}     # the south half's own stars
+SOUTH = {"M": "J", "A": "G", "Z": "F"}     # the south half's own stars
 # Hexes opened up since, in the north half like BARRIERS (the south half
 # follows): bits of the west cliffs, the spiral, the long ridge's east end
 # and the stream banks.
@@ -68,7 +68,7 @@ BARRIERS = {
     # them (9, 7) open space before, so the star has room
     "M": [(9, 7), (10, 7), (11, 7), (10, 8)],
     # and two one-hex stars in it, an orange one and a red dwarf (in the
-    # south a blue one and a white dwarf)
+    # south a white dwarf and a blue one)
     "A": [(13, 7)],
     "Z": [(9, 9)],
 }
