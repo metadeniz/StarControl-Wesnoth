@@ -758,6 +758,7 @@ music/sc/1. shofixti.ogg
 music/sc/1. syreen.ogg
 music/sc/1. yehat.ogg
 music/sc/2. androsynth-duoled.ogg
+music/sc/2. androsynth-ramen-rider.ogg
 music/sc/2. ilwrath.ogg
 music/sc/2. mycon.ogg
 music/sc/2. remix-spathi-fwiffo.ogg

@@ -83,8 +83,9 @@ right-click menu, which goes through the three in turn. The remixes are:
   from Remix Pack 3's extras), Mycon ("Rebirth"), Spathi ("Safe Haven",
   "Fwiffo's Starrunner"), Umgah ("Genetic Modification"), VUX
   ("Ultra-gross", "Acid in the Eye"), Ilwrath ("All Evil"), Thraddash
-  ("Culture 19") and Starbase ("Under a Red Sky"). The Androsynth theme and
-  the orchestral Ur-Quan cover have no remix and stay.
+  ("Culture 19"), Androsynth (Ramen Rider's Androsynth encounter theme) and
+  Starbase ("Under a Red Sky"). The orchestral Ur-Quan cover has no remix
+  and stays.
 
 The New Alliance and the Agents of Chaos have one playlist each:
 

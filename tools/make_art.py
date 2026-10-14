@@ -1977,6 +1977,8 @@ def main():
     manifest.append("music/sc/3. syreen-ramen-rider.ogg")
     # ...and Idan Schneider's orchestral cover of the Ur-Quan theme (MP3).
     manifest.append("music/sc/2. urquan-idan-schneider.ogg")
+    # ...and Ramen Rider's Androsynth encounter theme (MP3).
+    manifest.append("music/sc/2. androsynth-ramen-rider.ogg")
     # ...and the Death March victory theme, the opening phrase of Chopin's
     # Funeral March (MP3, trimmed with a fade-out; played as a sound effect).
     manifest.append("sounds/sc/funeral-march.ogg")
