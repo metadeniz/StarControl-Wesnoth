@@ -236,8 +236,7 @@ def build():
     keep = at(15, 0)
     m.put(keep, "K")
     for h in neighbours(*keep):
-        if h != at(16, 0):
-            m.put(h, "c")
+        m.put(h, "c")
     # home planets, one in an asteroid field by the corner
     m.blob(at(16, 2), 1, "a", keep="Kc")
     m.put(at(16, 2), "p")

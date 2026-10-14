@@ -177,7 +177,7 @@ def build():
     # ---------------------------------------------------- the north-west
     # start, Media Control style: a river of light badlands round the
     # corner, two fords out
-    keep(m, 4, 3, 5, skip=[(4, 2)])
+    keep(m, 4, 3, 6)
     m.hexes(path([(0, 7), (7, 7), (9, 4), (9, 0)]), "b")
     m.hexes([(3, 7), (9, 2)], "f")                   # the two fords
     m.hexes([(1, 1), (7, 1)], "p")                   # home planets
@@ -193,7 +193,7 @@ def build():
 
     # ------------------------------------ the south-west start, by a long
     # badland lake reaching to the south edge (Understanding Power)
-    keep(m, 4, 25, 5, skip=[(4, 26)])
+    keep(m, 4, 25, 6)
     lake(m, [(8, 23), (9, 24), (9, 25), (10, 26), (10, 27), (11, 28)])
     m.hexes([(9, 27)], "f")                          # a calm passage
     m.hexes([(10, 24)], "q")                         # a sea planet in it
