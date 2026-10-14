@@ -1980,6 +1980,8 @@ def main():
     manifest.append("music/sc/2. urquan-idan-schneider.ogg")
     # ...and Ramen Rider's Androsynth encounter theme (MP3).
     manifest.append("music/sc/2. androsynth-ramen-rider.ogg")
+    # ...and Anamnesis's 2014 refresh of the hyperspace theme (MP3).
+    manifest.append("music/sc/0. hyperspace-anamnesis.ogg")
     # ...and the Death March victory theme, the opening phrase of Chopin's
     # Funeral March (MP3, trimmed with a fade-out; played as a sound effect).
     manifest.append("sounds/sc/funeral-march.ogg")

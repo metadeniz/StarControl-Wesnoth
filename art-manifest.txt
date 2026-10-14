@@ -731,6 +731,7 @@ images/units/sc/zoqfotpik-stinger-l3-s.png
 images/units/sc/zoqfotpik-stinger-l3-se.png
 images/units/sc/zoqfotpik-stinger-l3-sw.png
 images/units/sc/zoqfotpik-stinger-l3.png
+music/sc/0. hyperspace-anamnesis.ogg
 music/sc/0. ilwrath-all-evil.ogg
 music/sc/0. mycon-rebirth.ogg
 music/sc/0. remix-arilou.ogg

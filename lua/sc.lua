@@ -213,6 +213,7 @@ local VERSIONS = {
 		{ "1. quasispace", "1. quasispace-3do", remix = { "0. remix-quasispace", "0. remix-mystic-shadows" } },
 		{ "1. intro", remix = { "0. remix-intro" } },
 		{ "1. ending", remix = { "0. remix-ending" } },
+		{ "0. hyperspace-anamnesis" },   -- a cover; no remix, so in every mode
 		{ "0. starbase", remix = { "0. remix-starbase" } },
 	},
 	SC_Hierarchy = {
@@ -242,7 +243,8 @@ local PLAYLISTS = {   -- faction -> mode -> tracks
 	-- re-imagined Melnorme theme)
 	SC_NewAlliance = { "3. remix-chmmr", "3. remix-zoqfotpik", "3. remix-pkunk", "3. remix-supox", "3. remix-utwig",
 		"3. remix-utwig-ultron", "0. remix-commander", "0. remix-arilou", "3. remix-melnorme", "3. melnorme-lipavsky", "0. remix-syreen", "3. syreen-ramen-rider",
-		"0. remix-mystic-shadows", "0. remix-quasispace", "0. remix-intro", "0. remix-ending", "0. remix-starbase" },
+		"0. remix-mystic-shadows", "0. remix-quasispace", "0. remix-intro", "0. remix-ending", "0. hyperspace-anamnesis",
+		"0. remix-starbase" },
 	-- the Agents of Chaos hear modern versions: the Precursors' remixes
 	SC_DeathMarch = { "4. kohrah-cleansing-required", "4. kohrah-eternal-doctrine", "4. kohrah-battle",
 		"4. druuge-crimson-corporation", "0. thraddash-culture-19", "4. slylandro-we-come-in-peace",
