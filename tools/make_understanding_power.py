@@ -130,7 +130,7 @@ FEATURES = {
     # half, about hex 2,19 in game coordinates), no starting side; the
     # shore beside it is open space so it is easy to reach
     "k": [(36, 9)],
-    "h": [(35, 8), (35, 9)],
+    "h": [(35, 8), (35, 9), (36, 8)],
 }
 
 
