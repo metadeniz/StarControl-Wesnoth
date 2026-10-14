@@ -498,7 +498,7 @@ MUSIC = {
     "1. arilou": "base/comm/arilou/arilou.mod",
     "1. shofixti": "base/comm/shofixti/shofixti.mod",
     "1. intro": "base/cutscene/intro/introx.mod",          # SC2 opening
-    "1. victory": "base/cutscene/ending/victoryf.mod",     # SC2 final victory
+    "1. ending": "base/cutscene/ending/victoryf.mod",      # SC2 ending (final slideshow)
     "victory-fanfare": "base/cutscene/ending/victory1.mod",
     "1. quasispace": "base/nav/quasispace.mod",
     # Alliance and Hierarchy

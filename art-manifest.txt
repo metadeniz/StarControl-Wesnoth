@@ -736,6 +736,7 @@ music/sc/0. starbase.ogg
 music/sc/1. arilou.ogg
 music/sc/1. chenjesu-titus.ogg
 music/sc/1. commander.ogg
+music/sc/1. ending.ogg
 music/sc/1. intro.ogg
 music/sc/1. mmrnmhrm-titus.ogg
 music/sc/1. outfit.ogg
@@ -743,7 +744,6 @@ music/sc/1. quasispace-3do.ogg
 music/sc/1. quasispace.ogg
 music/sc/1. shofixti.ogg
 music/sc/1. syreen.ogg
-music/sc/1. victory.ogg
 music/sc/1. yehat.ogg
 music/sc/2. androsynth-duoled.ogg
 music/sc/2. ilwrath.ogg

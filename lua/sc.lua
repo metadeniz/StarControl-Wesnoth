@@ -199,7 +199,7 @@ end
 -- 2. Hierarchy, 3. New Alliance, 4. Death March.
 local PLAYLISTS = {
 	SC_Alliance = { "1. commander", "1. chenjesu-titus", "1. mmrnmhrm-titus", "1. yehat", "1. syreen", "1. arilou", "1. shofixti", "1. quasispace", "1. quasispace-3do",
-		"1. intro", "0. starbase" },
+		"1. intro", "1. ending", "0. starbase" },
 	-- the New Alliance hears the Precursors' remixes (and a cover and a
 	-- re-imagined Melnorme theme)
 	SC_NewAlliance = { "3. remix-chmmr", "3. remix-zoqfotpik", "3. remix-pkunk", "3. remix-supox", "3. remix-utwig",
