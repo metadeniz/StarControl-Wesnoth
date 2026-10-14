@@ -44,11 +44,11 @@ T = {".": "Ys", "n": "Yn", "a": "Ys^Ya", "w": "Ys^Yw", "p": "Ys^Vyp",
      "O": "Yqe^Ybh", "T": "Yqp^Yx", "V": "Yqp^Yxp",
      **{str(n): f"Yqe^Ybh{n}" for n in range(1, 7)},
      "Y": "Ys^Ytu5", "Z": "Ys^Ytu2",
-     "q": "Ys^Yxd5", "g": "Yd^Yxd6", "b": "Ys^Ysb"}
+     "q": "Ys^Yxd5", "u": "Ys^Yxd4", "v": "Ys^Yxd2", "g": "Yd^Yxd6", "b": "Ys^Ysb"}
 WESNOTH = {".": "Gg", "n": "Gs^Fp", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "r": "Re", "B": "Wo", "f": "Wo^Bsb\\",
            "s": "Ss", "m": "Gg^Tf"}
-WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUSOTVMoy123456YZqgb"})
+WESNOTH.update({ch: "Md^Xm" for ch in "DRPEGHXUSOTVMoy123456YZqgbuv"})
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
 
 # The dark stars: each diamond of "G" (gas giant in dark nebula) becomes one
@@ -417,6 +417,12 @@ HAND_EDITS = [
     ((24, 13), "m"), ((18, 13), "m"),
     # more red nebula at 24,15, 25,16, 18,15 and 17,16
     *[((x, y), "m") for x, y in [(24, 15), (25, 16), (18, 15), (17, 16)]],
+    # the planet at 3,15 moves to 4,14, 3,14 and 4,13 open, and the debris
+    # disk at 3,13 becomes a star in its disk: white in the west, red in
+    # the east (mirrored west to east)
+    ((3, 15), "."), ((39, 15), "."), ((4, 14), "p"), ((38, 14), "p"),
+    ((3, 14), "."), ((39, 14), "."), ((4, 13), "."), ((38, 13), "."),
+    ((3, 13), "u"), ((39, 13), "v"),
 ]
 
 
