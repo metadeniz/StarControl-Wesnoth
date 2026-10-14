@@ -4,7 +4,8 @@
 Traced hex by hex from a screenshot of a 2-player ground map: rivers became
 light badlands (thin badlands where roads forded them), one ridge a swamp
 line of light badlands, lakes badlands
-ringed by dust (the east and west seas by light badlands), cliffs asteroid walls, woods nebulae, ore fields asteroid
+ringed by dust (the east and west seas by light badlands), cliffs asteroid walls (since
+replaced, all but one ridge, by other barriers: see BARRIERS), woods nebulae, ore fields asteroid
 fields with a planet at each mine, gem patches asteroid fields, buildings
 planets. Only the north half (rows 0-13) is drawn; the south half is the
 north half turned 180 degrees, so both players get exactly the same map.
@@ -29,6 +30,35 @@ WESNOTH = {".": "Gg", "s": "Ss", "n": "Gs^Fp", "d": "Ds", "r": "Re", "B": "Wo",
            "l": "Ww", "f": "Wwf", "a": "Hh", "w": "Md^Xm", "p": "Gg^Vh",
            "K": "Kh", "c": "Ch", "k": "Khw", "h": "Chw"}
 LEAFY = "Gg^Fds"                 # every third wood hex is deciduous
+
+# Barriers that replace most of the asteroid walls, in the north half (the
+# south half is turned like the rest of the map). Only the long ridge
+# across the north-west stays rock: a red supergiant behind its debris disk
+# at the ridge's bend, the rest of the ridge single hexes of debris disk.
+# In the south half the same ridge circles a blue giant instead.
+T.update({"D": "Yqd", "S": "Yqd^Yx", "R": "Yqr", "U": "Yqr^Yxp",
+          "P": "Yqp", "T": "Yqp^Yxs1", "E": "Yqe", "X": "Yqe^Yxb2",
+          "M": "Ys^Ysg", "J": "Ys^Ysb"})
+WESNOTH.update({ch: "Md^Xm" for ch in "DSRUPTEXMJ"})
+BARRIERS = {
+    # the west cliffs by the north keep: a pulsar in a radiation zone
+    "R": [(1, 7), (2, 7), (3, 7), (3, 9), (4, 9), (5, 9)],
+    "U": [(3, 8)],
+    # the banks of the stream into the pond: plasma storms, a sun in the
+    # bigger one
+    "P": [(23, 0), (23, 1), (24, 2),
+          (26, 0), (26, 1), (27, 1), (27, 3), (27, 4)],
+    "T": [(27, 2)],
+    # the short ridges in the north-east: dark nebulae, a sun in one
+    "D": [(28, 7), (29, 7), (32, 7), (34, 6)],
+    "S": [(33, 6)],
+    # the spiral in the middle: gravity eddies, a black hole in one arm
+    "E": [(19, 11), (18, 13), (20, 13), (21, 11), (22, 12), (22, 13)],
+    "X": [(19, 12)],
+    # the long ridge: the star fills the four hexes round its bend, one of
+    # them (9, 7) open space before, so the star has room
+    "M": [(9, 7), (10, 7), (11, 7), (10, 8)],
+}
 
 FEATURES = {
     # river across the north-west, fords where roads crossed it
@@ -120,9 +150,15 @@ def build():
         for x, y in hexes:
             assert y < H // 2, (ch, x, y)
             grid[y][x] = ch
+    for ch, hexes in BARRIERS.items():
+        for x, y in hexes:
+            assert grid[y][x] == "w" or (ch, x, y) == ("M", 9, 7), (ch, x, y)
+            grid[y][x] = ch
     for y in range(H // 2, H):                       # turn the north half
         for x in range(W):
             grid[y][x] = grid[H - 1 - y][W - 1 - x]
+            if grid[y][x] == "M":
+                grid[y][x] = "J"                     # the blue giant
     return shallows(grid)
 
 
