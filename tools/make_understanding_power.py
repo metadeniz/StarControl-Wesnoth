@@ -125,7 +125,7 @@ FEATURES = {
           (14, 11)],                 # a small keep in the central woods
 
     "c": [(4, 3), (4, 4), (5, 2), (6, 3), (6, 4),
-          (14, 12)],                 # its one recruit hex
+          (14, 12), (13, 10)],       # its two recruit hexes
     # a second, smaller castle in the east lake (west lake in the south
     # half, about hex 2,19 in game coordinates), no starting side; the
     # shore beside it is open space so it is easy to reach

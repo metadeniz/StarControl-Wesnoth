@@ -65,16 +65,18 @@ def line(a, b):
 # coordinates, north half; the south half follows, with its own stars):
 # see BARRIERS in make_understanding_power.py.
 BARRIERS = {
-    "R": [(3, 6), (3, 8)], "U": [(3, 7)],              # west cliffs
+    "R": [(3, 5)], "U": [(3, 6)],                       # west cliffs
     "M": [(8, 6), (9, 6), (10, 6), (9, 7)],             # the long ridge
-    "w": [(8, 5), (7, 7), (12, 5)],
+    "w": [(7, 7), (12, 5)],
     "Z": [(7, 8)], "A": [(11, 6)],
     "P": [(16, 1), (19, 2), (19, 4)], "T": [(19, 3)],   # stream banks
-    "D": [(20, 5), (21, 6), (23, 6)], "S": [(24, 5)],   # north-east ridges
+    "D": [(23, 6)], "S": [(24, 5)],                     # north-east ridges
+    "a": [(20, 5)],
     "E": [(16, 9), (15, 10)], "X": [(16, 10)],          # the centre
-    "V": [(13, 10)],
+    "V": [(15, 9)],
+    "h": [(25, 6)],              # a third ring for the castle in the lake
 }
-CLEARED = [(4, 7), (17, 2), (19, 1), (15, 9)]
+CLEARED = [(4, 7), (17, 2), (19, 1), (3, 7), (3, 8), (8, 5), (21, 6), (13, 10)]
 
 
 def barriers(grid):
