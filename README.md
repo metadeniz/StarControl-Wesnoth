@@ -214,7 +214,7 @@ panel (hover it for details):
 
 | Trait | Bonus |
 |---|---|
-| +drive | +1 movement |
+| +drive | +1 movement, and +10% defense on every terrain |
 | +crew | +8 max HP |
 | +battery | +1 strike on every attack |
 | +recharge | +2 damage on every attack |

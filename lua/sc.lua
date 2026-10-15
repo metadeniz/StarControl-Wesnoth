@@ -457,17 +457,20 @@ end
 local ARTIFACT_XP = 8
 local ARTIFACTS = {
 	{ id = "drive",    name = _ "+drive",
-	  description = _ "Precursor artifact: a drive unit. +1 movement.",
-	  effect = { apply_to = "movement", increase = 1 } },
+	  description = _ "Precursor artifact: a drive unit. +1 movement, and 10% better defense on every terrain.",
+	  effects = { { apply_to = "movement", increase = 1 },
+		{ apply_to = "defense", replace = false, T.defense {   -- chance to be hit, so -10 is +10% defense
+			space = -10, nebula = -10, rednebula = -10, ionstorm = -10, lightstorm = -10, dust = -10,
+			asteroids = -10, dense_asteroids = -10, planet = -10, starbase = -10 } } } },
 	{ id = "crew",     name = _ "+crew",
 	  description = _ "Precursor artifact: life-support pods, room for more crew. +8 max HP.",
-	  effect = { apply_to = "hitpoints", increase_total = 8, increase = 8 } },
+	  effects = { { apply_to = "hitpoints", increase_total = 8, increase = 8 } } },
 	{ id = "battery",  name = _ "+battery",
 	  description = _ "Precursor artifact: a bigger energy battery. +1 strike on every attack.",
-	  effect = { apply_to = "attack", increase_attacks = 1 } },
+	  effects = { { apply_to = "attack", increase_attacks = 1 } } },
 	{ id = "recharge", name = _ "+recharge",
 	  description = _ "Precursor artifact: a battery recharger. +2 damage on every attack.",
-	  effect = { apply_to = "attack", increase_damage = 2 } },
+	  effects = { { apply_to = "attack", increase_damage = 2 } } },
 }
 
 local function artifact_key(x, y) return "sc_artifact_" .. x .. "_" .. y end
@@ -536,12 +539,13 @@ function sc.check_artifact()
 	local a = ARTIFACTS[mathx.random(#ARTIFACTS)]
 	local n = (u.variables.sc_artifacts or 0) + 1
 	u.variables.sc_artifacts = n
-	u:add_modification("trait", {
+	local trait = {
 		id = "sc_artifact_" .. a.id .. "_" .. n,
 		male_name = a.name, female_name = a.name,
 		description = a.description,
-		T.effect(a.effect),
-	})
+	}
+	for _, e in ipairs(a.effects) do trait[#trait + 1] = T.effect(e) end
+	u:add_modification("trait", trait)
 	-- Sound, animation and floating text are this client's alone (they change
 	-- nothing in the game; the animation is a bare hex overlay, not an [item],
 	-- so it is never saved), so each client shows them only if its player can
