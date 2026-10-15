@@ -32,9 +32,10 @@ still has the same hex counts to everything. Outside the hexagon is the
 void (off the map).
 
 The 4p map is the same hexagon with the northeast and southwest players'
-corners cut away into the void: each start, its planets, its bend, its
-cloud and its small starbase in front of it. The lakes, supergiants and
-starbases on the borders of a cut corner, and the centre, stay whole. The
+corners cut away into the void, from halfway out to the edge: each start,
+its planets, its bend and its rich planet. Its cloud and the small starbase
+in front of it stay, and so do the lakes, supergiants and starbases on the
+borders of a cut corner. The
 map keeps a mirror (through the cut corners) and a half turn, so the four
 starts are still alike.
 
@@ -304,17 +305,18 @@ def keeps(corners=range(6)):
 CUT = (1, 4)        # the 4p map drops the northeast and southwest corners
 KEPT = [k for k in range(6) if k not in CUT]
 MARGIN = 3          # hexes kept either side of the line between two corners
+INNER = 10          # and out to this many hexes from the centre
 
 
 def cut(m, corners=CUT):
     """Turn the area of each cut corner into void: the hexes more than
     MARGIN steps off the line between it and either neighbouring corner,
-    outside the central ring. Docking rings left without their starbase go
+    more than INNER from the centre. Docking rings left without their starbase go
     too."""
     for k in corners:
         for a in range(R + 1):
             for b in range(R + 1 - a):
-                if b - a <= MARGIN or a + b <= 4:
+                if b - a <= MARGIN or a + b <= INNER:
                     continue
                 # b steps towards corner k, from both sides of it
                 for h in (at(a, b, k - 1), at(b, a, k)):
