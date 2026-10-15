@@ -460,14 +460,14 @@ local ARTIFACTS = {
 	  description = _ "Precursor artifact: a drive unit. +1 movement.",
 	  effect = { apply_to = "movement", increase = 1 } },
 	{ id = "crew",     name = _ "+crew",
-	  description = _ "Precursor artifact: life-support pods, room for more crew. +6 max HP.",
-	  effect = { apply_to = "hitpoints", increase_total = 6, increase = 6 } },
+	  description = _ "Precursor artifact: life-support pods, room for more crew. +8 max HP.",
+	  effect = { apply_to = "hitpoints", increase_total = 8, increase = 8 } },
 	{ id = "battery",  name = _ "+battery",
 	  description = _ "Precursor artifact: a bigger energy battery. +1 strike on every attack.",
 	  effect = { apply_to = "attack", increase_attacks = 1 } },
 	{ id = "recharge", name = _ "+recharge",
-	  description = _ "Precursor artifact: a battery recharger. +1 damage on every attack.",
-	  effect = { apply_to = "attack", increase_damage = 1 } },
+	  description = _ "Precursor artifact: a battery recharger. +2 damage on every attack.",
+	  effect = { apply_to = "attack", increase_damage = 2 } },
 }
 
 local function artifact_key(x, y) return "sc_artifact_" .. x .. "_" .. y end
