@@ -214,10 +214,10 @@ panel (hover it for details):
 
 | Trait | Bonus |
 |---|---|
-| +drive | +1 movement |
-| +crew | +6 max HP |
+| +drive | +1 movement, and +10% defense on every terrain |
+| +crew | +8 max HP |
 | +battery | +1 strike on every attack |
-| +recharge | +1 damage on every attack |
+| +recharge | +2 damage on every attack |
 
 **Right-click actions** (click your own ship, then pick the top menu entry):
 
