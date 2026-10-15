@@ -2,9 +2,12 @@
 
 Cuts the frames of a short clip (100x66, 30 fps: the device on a starfield,
 its display filling with Precursor glyphs) out of their background, at
-15 fps, into images/halo/sc/artifact-NNN.png, plus a few frames fading the
-finished screen out. sc.check_artifact in lua/sc.lua plays them as an item
-halo on the planet where the artifact was found.
+15 fps, plus a few frames fading the finished screen out. sc.check_artifact
+in lua/sc.lua plays them as a halo on the planet where the artifact was
+found. A halo is drawn centred on its hex, so the frames are baked twice
+onto a taller canvas with the device one hex (72 px) off centre:
+images/halo/sc/artifact-above-NNN.png shows it on the hex above the planet,
+artifact-below-NNN.png on the hex below (for planets on the top edge).
 
 The device never moves, so one alpha mask serves every frame: the part of
 the clip's median frame that is not dark background connected to the
@@ -25,7 +28,8 @@ import tempfile
 import numpy as np
 from PIL import Image
 
-OUT = "images/halo/sc/artifact-{:03d}.png"
+OUT = "images/halo/sc/artifact-{}-{:03d}.png"
+HEX = 72            # device centre this far above / below the planet's
 STEP = 2            # keep every 2nd frame: 30 fps -> 15 fps
 FADE = (0.8, 0.6, 0.4, 0.2)
 
@@ -77,17 +81,18 @@ def main(clip):
         paths = sorted(glob.glob(os.path.join(tmp, "*.png")))
         frames = [np.asarray(Image.open(p).convert("RGB")) for p in paths]
     alpha = alpha_mask([f.astype(int) for f in frames])
-    for old in glob.glob(OUT.replace("{:03d}", "*")):
+    for old in glob.glob("images/halo/sc/artifact-*.png"):
         os.remove(old)
     kept = frames[::STEP]
-    n = 0
-    for rgb in kept:
-        n += 1
-        Image.fromarray(np.dstack([rgb, (alpha * 255).astype("uint8")]), "RGBA").save(OUT.format(n))
-    for f in FADE:
-        n += 1
-        Image.fromarray(np.dstack([kept[-1], (alpha * f * 255).astype("uint8")]), "RGBA").save(OUT.format(n))
-    print(f"{n} frames ({len(kept)} + {len(FADE)} fading)")
+    shown = [(rgb, alpha) for rgb in kept] + [(kept[-1], alpha * f) for f in FADE]
+    h, w = alpha.shape
+    for n, (rgb, a) in enumerate(shown, 1):
+        device = Image.fromarray(np.dstack([rgb, (a * 255).astype("uint8")]), "RGBA")
+        for where, top in (("above", 0), ("below", 2 * HEX)):
+            canvas = Image.new("RGBA", (w, h + 2 * HEX))
+            canvas.paste(device, (0, top))
+            canvas.save(OUT.format(where, n))
+    print(f"{len(shown)} frames ({len(kept)} + {len(FADE)} fading), above and below")
 
 
 if __name__ == "__main__":

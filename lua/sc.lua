@@ -474,20 +474,22 @@ local ARTIFACTS = {
 
 local function artifact_key(x, y) return "sc_artifact_" .. x .. "_" .. y end
 
--- The Precursor device's screen booting up on the planet (frames made by
--- tools/make_artifact_anim.py): 100 frames at 15 fps, the finished screen
--- held, 4 frames fading it out, then nothing until the halo is taken off at
--- the finder's next turn. A halo animation loops, so the blank last frame
--- lasts far longer than anyone waits.
+-- The Precursor device's screen booting up on the hex above the planet (on
+-- the hex below for planets on the top edge, where above would be off the
+-- map). Frames made by tools/make_artifact_anim.py: 100 frames at 15 fps, the
+-- finished screen held, 4 frames fading it out, then nothing until the halo
+-- is taken off at the finder's next turn. A halo animation loops, so the
+-- blank last frame lasts far longer than anyone waits.
 local ARTIFACT_ANIM = "sc_artifact_anim"
-local ARTIFACT_ANIM_HALO = (function()
+local function artifact_anim_halo(where)
 	local f = {}
 	for i = 1, 104 do
-		f[i] = string.format("halo/sc/artifact-%03d.png:%d", i, i == 100 and 1500 or 66)
+		f[i] = string.format("halo/sc/artifact-%s-%03d.png:%d", where, i, i == 100 and 1500 or 66)
 	end
 	f[#f + 1] = "misc/blank-hex.png:3600000"
 	return table.concat(f, ",")
-end)()
+end
+local ARTIFACT_ANIM_HALO = { above = artifact_anim_halo("above"), below = artifact_anim_halo("below") }
 
 -- Whether this client's player can see the hex: the find is announced only
 -- to players who could see the planet, not through fog or shroud.
@@ -548,7 +550,7 @@ function sc.check_artifact()
 	-- see the planet.
 	if locally_visible(x, y) then
 		wesnoth.audio.play("sc/artifact.wav")
-		wesnoth.interface.add_hex_overlay(x, y, { name = ARTIFACT_ANIM, halo = ARTIFACT_ANIM_HALO })
+		wesnoth.interface.add_hex_overlay(x, y, { name = ARTIFACT_ANIM, halo = ARTIFACT_ANIM_HALO[y <= 2 and "below" or "above"] })
 		wesnoth.interface.float_label(x, y, "<span color='#ffd84a'>" .. tostring(_ "Precursor artifact!") .. "</span>\n" .. tostring(a.description))
 	end
 	-- The floating text fades within a second or two, so a label naming the
