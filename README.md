@@ -254,7 +254,8 @@ Map makers pick the look per map; the editor lists the rippled ones as
 
 Asteroids over nebula or dust give the better defense and the slower
 movement of the two. The fire-born Mycon and Ilwrath (1 / 60%) and the
-heat-proof Chenjesu (2 / 50%) are at home in red nebulae.
+heat-proof Chenjesu (1 / 50%) are at home in red nebulae. The Chenjesu
+Broodhome also crosses nebulae, dust clouds and badlands for 1 move.
 
 ## Rebuilding (developers)
 
