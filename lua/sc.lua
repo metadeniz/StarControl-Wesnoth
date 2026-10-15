@@ -649,7 +649,9 @@ function sc.syreen_after_healing()
 end
 
 -- The captain watching her ship fill up with the planet's colonists, on the
--- hex above the planet (below on the top edge, like the artifact device).
+-- hex above the planet (below on the top edge, like the artifact device),
+-- captioned "Syreen gains full crew." (baked into the frames, on the far side
+-- from the planet, so it stays readable for as long as the scene plays).
 -- Frames made by tools/make_syreen_capture_anim.py: 59 frames at 15 fps, the
 -- last held, 4 frames fading it out, then nothing until the halo is taken
 -- off at the Syreen side's next turn.
