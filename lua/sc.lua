@@ -474,6 +474,31 @@ local ARTIFACTS = {
 
 local function artifact_key(x, y) return "sc_artifact_" .. x .. "_" .. y end
 
+-- The Precursor device's screen booting up on the hex above the planet (on
+-- the hex below for planets on the top edge, where above would be off the
+-- map). Frames made by tools/make_artifact_anim.py: 100 frames at 15 fps, the
+-- finished screen held, 4 frames fading it out, then nothing until the halo
+-- is taken off at the finder's next turn. A halo animation loops, so the
+-- blank last frame lasts far longer than anyone waits.
+local ARTIFACT_ANIM = "sc_artifact_anim"
+local function artifact_anim_halo(where)
+	local f = {}
+	for i = 1, 104 do
+		f[i] = string.format("halo/sc/artifact-%s-%03d.png:%d", where, i, i == 100 and 1500 or 66)
+	end
+	f[#f + 1] = "misc/blank-hex.png:3600000"
+	return table.concat(f, ",")
+end
+local ARTIFACT_ANIM_HALO = { above = artifact_anim_halo("above"), below = artifact_anim_halo("below") }
+
+-- Whether this client's player can see the hex: the find is announced only
+-- to players who could see the planet, not through fog or shroud.
+local function locally_visible(x, y)
+	local side, full_vision = wesnoth.interface.get_viewing_side()
+	if full_vision then return true end
+	return not wesnoth.sides.is_fogged(side, x, y) and not wesnoth.sides.is_shrouded(side, x, y)
+end
+
 function sc.place_artifacts()
 	local map = wesnoth.current.map
 	local planets = wesnoth.map.find {
@@ -519,11 +544,20 @@ function sc.check_artifact()
 		description = a.description,
 		T.effect(a.effect),
 	})
-	wesnoth.audio.play("sc/artifact.wav")
-	wesnoth.interface.float_label(x, y, "<span color='#ffd84a'>" .. tostring(_ "Precursor artifact!") .. "</span>\n" .. tostring(a.description))
+	-- Sound, animation and floating text are this client's alone (they change
+	-- nothing in the game; the animation is a bare hex overlay, not an [item],
+	-- so it is never saved), so each client shows them only if its player can
+	-- see the planet.
+	if locally_visible(x, y) then
+		wesnoth.audio.play("sc/artifact.wav")
+		wesnoth.interface.add_hex_overlay(x, y, { name = ARTIFACT_ANIM, halo = ARTIFACT_ANIM_HALO[y <= 2 and "below" or "above"] })
+		wesnoth.interface.float_label(x, y, "<span color='#ffd84a'>" .. tostring(_ "Precursor artifact!") .. "</span>\n" .. tostring(a.description))
+	end
 	-- The floating text fades within a second or two, so a label naming the
-	-- find stays on the planet until the finder's next turn starts.
+	-- find stays on the planet until the finder's next turn starts (hidden
+	-- from players who have the planet under fog).
 	wesnoth.map.add_label { x = x, y = y, color = "255,216,74", immutable = true,
+		visible_in_fog = false, visible_in_shroud = false,
 		text = tostring(_ "Precursor artifact: ") .. tostring(a.name) }
 	local labels = wml.array_access.get("sc_artifact_labels")
 	labels[#labels + 1] = { x = x, y = y, side = u.side }
@@ -533,12 +567,14 @@ function sc.check_artifact()
 	if u.experience >= u.max_experience then u:advance(true, true) end
 end
 
--- Start of a side's turn: clear the artifact labels it put up last turn.
+-- Start of a side's turn: clear the artifact labels (and animations) it put
+-- up last turn.
 function sc.expire_artifact_labels()
 	local keep = {}
 	for _, l in ipairs(wml.array_access.get("sc_artifact_labels")) do
 		if l.side == wesnoth.current.side then
 			wesnoth.map.add_label { x = l.x, y = l.y, text = "" }
+			wesnoth.interface.remove_hex_overlay(l.x, l.y, ARTIFACT_ANIM)
 		else
 			keep[#keep + 1] = l
 		end
