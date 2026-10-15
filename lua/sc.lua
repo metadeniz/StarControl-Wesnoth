@@ -648,13 +648,59 @@ function sc.syreen_after_healing()
 	end
 end
 
+-- The captain watching her ship fill up with the planet's colonists, on the
+-- hex above the planet (below on the top edge, like the artifact device).
+-- Frames made by tools/make_syreen_capture_anim.py: 59 frames at 15 fps, the
+-- last held, 4 frames fading it out, then nothing until the halo is taken
+-- off at the Syreen side's next turn.
+local SYREEN_CAPTURE_ANIM = "sc_syreen_capture_anim"
+local function syreen_capture_halo(where)
+	local f = {}
+	for i = 1, 63 do
+		f[i] = string.format("halo/sc/syreen-capture-%s-%03d.png:%d", where, i, i == 59 and 1000 or 66)
+	end
+	f[#f + 1] = "misc/blank-hex.png:3600000"
+	return table.concat(f, ",")
+end
+local SYREEN_CAPTURE_HALO = { above = syreen_capture_halo("above"), below = syreen_capture_halo("below") }
+
 -- Capturing an enemy's planet: its colonists join the Syreen (full HP).
 function sc.syreen_captured()
 	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
 	local owner = wml.variables["owner_side"] or 0
 	if is_a(u, "SC_Syreen_Penetrator") and owner > 0 and wesnoth.sides.is_enemy(u.side, owner) then
 		u.hitpoints = u.max_hitpoints
+		-- this client's alone, so only shown if its player can see the planet
+		if locally_visible(u.x, u.y) then
+			wesnoth.interface.float_label(u.x, u.y, "<span color='#ff80d0'>" .. tostring(_ "Syreen gains full crew.") .. "</span>")
+			wesnoth.interface.remove_hex_overlay(u.x, u.y, SYREEN_CAPTURE_ANIM)
+			wesnoth.interface.add_hex_overlay(u.x, u.y, { name = SYREEN_CAPTURE_ANIM,
+				halo = SYREEN_CAPTURE_HALO[u.y <= 2 and "below" or "above"] })
+		end
+		-- and, like an artifact find, a label on the planet until the Syreen
+		-- side's next turn (hidden from players who have it under fog)
+		wesnoth.map.add_label { x = u.x, y = u.y, color = "255,128,208", immutable = true,
+			visible_in_fog = false, visible_in_shroud = false,
+			text = tostring(_ "Syreen gains full crew.") }
+		local anims = wml.array_access.get("sc_syreen_capture_anims")
+		anims[#anims + 1] = { x = u.x, y = u.y, side = u.side }
+		wml.array_access.set("sc_syreen_capture_anims", anims)
 	end
+end
+
+-- Start of a side's turn: take off the capture animations and labels it put
+-- up last turn.
+function sc.expire_syreen_capture_anims()
+	local keep = {}
+	for _, a in ipairs(wml.array_access.get("sc_syreen_capture_anims")) do
+		if a.side == wesnoth.current.side then
+			wesnoth.map.add_label { x = a.x, y = a.y, text = "" }
+			wesnoth.interface.remove_hex_overlay(a.x, a.y, SYREEN_CAPTURE_ANIM)
+		else
+			keep[#keep + 1] = a
+		end
+	end
+	wml.array_access.set("sc_syreen_capture_anims", keep)
 end
 
 -------------------------------------------------------------------- reporting
