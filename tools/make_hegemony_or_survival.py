@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write maps/6p_Hegemony_or_Survival.map.
+"""Write maps/6p_Hegemony_or_Survival.map and maps/4p_Hegemony_or_Survival.map.
 
 An original space map for six players on one giant hexagon of space, a
 start in each of its six corners. Hex grids turn by 60 degrees exactly, so
@@ -30,6 +30,13 @@ on the line from each start to the centre, beside the start's cloud. Like
 everything else they are turned six ways and mirrored, so every start
 still has the same hex counts to everything. Outside the hexagon is the
 void (off the map).
+
+The 4p map is the same hexagon with the northeast and southwest players'
+corners cut away into the void: each start, its planets, its bend, its
+cloud and its small starbase in front of it. The lakes, supergiants and
+starbases on the borders of a cut corner, and the centre, stay whole. The
+map keeps a mirror (through the cut corners) and a half turn, so the four
+starts are still alike.
 
 Usage: make_hegemony_or_survival.py <add-on dir> [-v]
 """
@@ -290,8 +297,34 @@ def half_fields(m):
         m.g[y][x] = "."
 
 
-def keeps():
-    return [at(15, 0, k) for k in range(6)]
+def keeps(corners=range(6)):
+    return [at(15, 0, k) for k in corners]
+
+
+CUT = (1, 4)        # the 4p map drops the northeast and southwest corners
+KEPT = [k for k in range(6) if k not in CUT]
+MARGIN = 3          # hexes kept either side of the line between two corners
+
+
+def cut(m, corners=CUT):
+    """Turn the area of each cut corner into void: the hexes more than
+    MARGIN steps off the line between it and either neighbouring corner,
+    outside the central ring. Docking rings left without their starbase go
+    too."""
+    for k in corners:
+        for a in range(R + 1):
+            for b in range(R + 1 - a):
+                if b - a <= MARGIN or a + b <= 4:
+                    continue
+                # b steps towards corner k, from both sides of it
+                for h in (at(a, b, k - 1), at(b, a, k)):
+                    m.g[h[1]][h[0]] = " "
+                    m.big.pop(h, None)
+    for y in range(H):
+        for x in range(W):
+            if m.g[y][x] == "c" and not any(
+                    inside(*h) and m.get(*h) == "K" for h in neighbours(x, y)):
+                m.g[y][x] = " "
 
 
 def moves(m, start):
@@ -319,14 +352,15 @@ def code(m, x, y):
     return T[ch]
 
 
-def write(m, path_):
-    side = {k: n + 1 for n, k in enumerate(keeps())}   # clockwise from north
+def write(m, path_, ks):
+    side = {k: n + 1 for n, k in enumerate(ks)}     # clockwise from north
     rows = []
     for Y in range(H + 2):
         row = []
         for X in range(W + 2):
             x, y = X - 1, Y - 1
-            if not (0 <= x < W and 0 <= y < H) or not inside(x, y):
+            if not (0 <= x < W and 0 <= y < H) or not inside(x, y) \
+                    or m.get(x, y) == " ":
                 row.append(T[" "])
                 continue
             c = code(m, x, y)
@@ -338,17 +372,17 @@ def write(m, path_):
         f.write("\n".join(rows) + "\n")
 
 
-def report(m):
+def report(m, ks):
     planets = [(x, y) for y in range(H) for x in range(W)
                if m.get(x, y) in "poq"]
     print(f"{len(planets)} planets")
-    ks = keeps()
     ds = [moves(m, k) for k in ks]
     small = [(x, y) for y in range(H) for x in range(W)
-             if m.get(x, y) == "K" and (x, y) not in ks and (x, y) != (CX, CY)]
+             if m.get(x, y) == "K" and (x, y) not in keeps()
+             and (x, y) != (CX, CY)]
     print(f"{len(small)} small starbases")
     open_hexes = {(x, y) for y in range(H) for x in range(W)
-                  if inside(x, y) and m.get(x, y) not in BARRIER}
+                  if inside(x, y) and m.get(x, y) not in BARRIER + " "}
     print("unreachable:", sorted(open_hexes - set(ds[0])) or "none")
     for k, d in zip(ks, ds):
         own = sorted(d.get(p, 99) for p in planets
@@ -360,9 +394,14 @@ def report(m):
 
 
 if __name__ == "__main__":
-    m = build()
-    write(m, os.path.join(sys.argv[1], "maps/6p_Hegemony_or_Survival.map"))
-    report(m)
-    if "-v" in sys.argv:
-        for row in m.g:
-            print("".join(row))
+    for n, ks, trim in ((6, keeps(), None), (4, keeps(KEPT), cut)):
+        m = build()
+        if trim:
+            trim(m)
+        print(f"{n}p:", end=" ")
+        write(m, os.path.join(sys.argv[1],
+                              f"maps/{n}p_Hegemony_or_Survival.map"), ks)
+        report(m, ks)
+        if "-v" in sys.argv:
+            for row in m.g:
+                print("".join(row))
