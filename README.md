@@ -48,7 +48,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | 4p — Manufacturing Consent | 2 vs 2 (west, players 1 & 3, vs east, players 2 & 4) |
 | 4p — Media Control | 2 vs 2, one player in each corner (players 1 & 3, northwest and southeast, vs 2 & 4, northeast and southwest) |
 | 6p — Hegemony or Survival | 2 vs 2 or 3 vs 3 on a hexagon, a player in each corner, numbered clockwise from the north: odd vs even; for 2 vs 2 leave one odd and one even side empty |
-| 4p — Hegemony or Survival | 2 vs 2: the 6p hexagon with the northeast and southwest corners cut away behind their bends of light badlands; players clockwise from the north, north & south vs. southeast & northwest |
+| 4p — Hegemony or Survival | 2 vs 2: the 6p hexagon with the northeast and southwest corners cut away behind their bends of light badlands; players clockwise from the north: north (players 1 & 4, north and northwest) vs south (2 & 3, southeast and south) |
 | 6p — Year 501 | 2 vs 2 or 3 vs 3, west (players 1, 3 & 5) vs east (2, 4 & 6); for 2 vs 2 leave a mirrored pair empty: 1 & 2 north, 3 & 4 middle, 5 & 6 south |
 | 2p — The Freelands (Deep Space) | 1 vs 1 |
 | 2p — Weldyn Channel (Deep Space) | 1 vs 1 |
