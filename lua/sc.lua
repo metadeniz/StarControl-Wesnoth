@@ -211,7 +211,6 @@ local VERSIONS = {
 		{ "1. arilou", remix = { "0. remix-arilou" } },
 		{ "1. shofixti", remix = { "1. remix-shofixti" } },
 		{ "1. quasispace", "1. quasispace-3do", remix = { "0. remix-quasispace", "0. remix-mystic-shadows" } },
-		{ "1. ending", remix = { "0. remix-ending" } },
 		{ "1. hyperspace-anamnesis" },   -- a cover; no remix, so in every mode
 		{ "0. starbase", remix = { "0. remix-starbase" } },
 	},
@@ -242,7 +241,7 @@ local PLAYLISTS = {   -- faction -> mode -> tracks
 	-- re-imagined Melnorme theme)
 	SC_NewAlliance = { "3. remix-chmmr", "3. remix-zoqfotpik", "3. remix-pkunk", "3. remix-supox", "3. remix-utwig",
 		"3. remix-utwig-ultron", "0. remix-commander", "0. remix-arilou", "3. remix-melnorme", "3. melnorme-lipavsky", "0. remix-syreen", "3. syreen-ramen-rider",
-		"0. remix-mystic-shadows", "0. remix-quasispace", "0. remix-ending", "0. remix-hyperspace",
+		"0. remix-mystic-shadows", "0. remix-quasispace", "0. remix-hyperspace",
 		"0. remix-starbase" },
 	-- the Agents of Chaos hear modern versions: the Precursors' remixes
 	SC_DeathMarch = { "4. kohrah-cleansing-required", "4. kohrah-eternal-doctrine", "4. kohrah-battle",
