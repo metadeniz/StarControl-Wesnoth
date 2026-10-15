@@ -306,18 +306,20 @@ CUT = (1, 4)        # the 4p map drops the northeast and southwest corners
 KEPT = [k for k in range(6) if k not in CUT]
 MARGIN = 3          # hexes kept either side of the line between two corners
 INNER = 11          # and out to a line this far towards the corner
+SPARE = {(3, 10)}   # and a hex past it each side (29,11 and 32,15 in the NE)
 
 
 def cut(m, corners=CUT):
     """Turn the area of each cut corner into void: the hexes more than
     MARGIN steps off the line between it and either neighbouring corner,
     and beyond a straight line across the corner, square to the way from the
-    centre, INNER hexes out (from 28,10 to 32,16 for the northeast). Docking
+    centre, INNER hexes out (from 28,10 to 32,16 for the northeast), but for
+    the SPARE hexes. Docking
     rings left without their starbase go too."""
     for k in corners:
         for a in range(R + 1):
             for b in range(R + 1 - a):
-                if b - a <= MARGIN or a + 2 * b <= 2 * INNER:
+                if b - a <= MARGIN or a + 2 * b <= 2 * INNER or (a, b) in SPARE:
                     continue
                 # b steps towards corner k, from both sides of it
                 for h in (at(a, b, k - 1), at(b, a, k)):
