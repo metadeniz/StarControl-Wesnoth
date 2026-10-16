@@ -12,7 +12,7 @@ other, and gives each set of matching planets the same type, so every
 player gets the same mix. On a map that is only roughly symmetric it
 follows the closest symmetry; on a map with three or six players it uses
 the rotations only. First the script works out the mix of types closest to 40% life,
-40% mineral and 20% dead that the sets can make; then, typing the sets nearest
+40% mineral and 20% dead that the sets can make, with no more than 20% dead; then, typing the sets nearest
 the middle first, each takes the type furthest behind its count (ties broken
 by a generator seeded with the map's name), so the types spread
 from the middle to the edges. Same map, same result.
@@ -131,6 +131,9 @@ def best_mix(count, sizes, total, rng):
         l, m = lm
         d = left - l - m
         return sum((v - SHARE[t] * total) ** 2 for t, v in zip(TYPES, (l, m, d)))
+    # when the shares can't be met exactly, err towards fewer dead worlds
+    capped = {lm for lm in reach if left - lm[0] - lm[1] <= SHARE["d"] * total + 1e-9}
+    reach = capped or reach
     best = min(miss(lm) for lm in reach)
     l, m = rng.choice(sorted(lm for lm in reach if miss(lm) - best < 1e-9))
     return {"l": l, "m": m, "d": left - l - m}

@@ -225,8 +225,16 @@ panel (hover it for details):
   the ship's turn.
 
 Planets are villages (income and repair), starbases are keeps, docking
-rings are castles, stars block movement. Terrain, by hull size
-(moves to enter / defense):
+rings are castles, stars block movement. Planets come in three kinds,
+which replace the game's village gold and support settings:
+
+| Planet | Gold per turn | Upkeep supported | Share of planets |
+|---|---|---|---|
+| Mineral world | 2 | 2 | 40% |
+| Life world | 1 | 2 | 40% |
+| Dead world | 0 | 1 | 20% |
+
+Terrain, by hull size (moves to enter / defense):
 
 | Terrain | Large | Medium | Small | Tiny |
 |---|---|---|---|---|
