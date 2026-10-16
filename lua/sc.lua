@@ -664,44 +664,76 @@ function sc.syreen_after_healing()
 	end
 end
 
--- The captain watching her ship fill up with the planet's colonists, on the
--- hex below the planet, under its label (above on the bottom edge).
--- Frames made by tools/make_syreen_capture_anim.py: 96 frames of the 15 fps
--- clip played at 1.2x (55 ms each), the last held, 4 frames fading it out,
--- then nothing until the halo is taken off at the Syreen side's next turn.
-local SYREEN_CAPTURE_ANIM = "sc_syreen_capture_anim"
-local function syreen_capture_halo(where)
-	local f = {}
-	for i = 1, 100 do
-		f[i] = string.format("halo/sc/syreen-capture-%s-%03d.png:%d", where, i, i == 96 and 1000 or 55)
+-- Planet animations: a halo on the hex below a planet, under its label
+-- (above on the bottom edge), played to this client alone, so only if its
+-- player can see the planet. The last picture is held a second, then faded
+-- out, then nothing until the halo is taken off at the side's next turn
+-- (left until then so one played just before ending the turn plays out in
+-- full). Frames are made by tools/make_*_anim.py.
+local function planet_anim_halo(file, frames, ms)
+	local function halo(where)
+		local f = {}
+		for i = 1, frames do
+			f[i] = string.format("halo/sc/%s-%s-%03d.png:%d", file, where, i, i == frames - 4 and 1000 or ms)
+		end
+		f[#f + 1] = "misc/blank-hex.png:3600000"
+		return table.concat(f, ",")
 	end
-	f[#f + 1] = "misc/blank-hex.png:3600000"
-	return table.concat(f, ",")
+	return { above = halo("above"), below = halo("below") }
 end
-local SYREEN_CAPTURE_HALO = { above = syreen_capture_halo("above"), below = syreen_capture_halo("below") }
 
--- Capturing an enemy's planet: its colonists join the Syreen (full HP).
+-- The captain watching her ship fill up with the planet's colonists: 96
+-- frames of the 15 fps clip played at 1.2x (55 ms each), 4 fading.
+local SYREEN_CAPTURE_ANIM = "sc_syreen_capture_anim"
+local SYREEN_CAPTURE_HALO = planet_anim_halo("syreen-capture", 100, 55)
+-- The colony's domes blown apart and left burning: 104 frames at 15 fps, 4
+-- fading.
+local COLONY_DESTROYED_ANIM = "sc_colony_destroyed_anim"
+local COLONY_DESTROYED_HALO = planet_anim_halo("colony-destroyed", 108, 67)
+-- Each animation's list of { x, y, side } still showing, to take off.
+local PLANET_ANIMS = {
+	[SYREEN_CAPTURE_ANIM] = "sc_syreen_capture_anims",
+	[COLONY_DESTROYED_ANIM] = "sc_colony_destroyed_anims",
+}
+
+local function play_planet_anim(x, y, side, name, halo)
+	if locally_visible(x, y) then
+		wesnoth.interface.remove_hex_overlay(x, y, name)
+		wesnoth.interface.add_hex_overlay(x, y, { name = name,
+			halo = halo[y >= wesnoth.current.map.playable_height - 1 and "above" or "below"] })
+	end
+	local l = wml.array_access.get(PLANET_ANIMS[name])
+	l[#l + 1] = { x = x, y = y, side = side }
+	wml.array_access.set(PLANET_ANIMS[name], l)
+end
+
+local function is_life_world(x, y)
+	local overlay = wesnoth.current.map[{ x, y }]:match("%^(.+)$")
+	return overlay == "Vyl" or overlay == "Vysl"
+end
+
+-- Whether ship u landing on a planet taken from side owner is a Syreen
+-- taking an enemy's colony (life world): its colonists join her crew.
+local function syreen_fills_crew(u, owner)
+	return is_a(u, "SC_Syreen_Penetrator") and owner > 0
+		and wesnoth.sides.is_enemy(u.side, owner) and is_life_world(u.x, u.y)
+end
+
+-- Capturing an enemy's life world: its colonists join the Syreen (full HP).
 function sc.syreen_captured()
 	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
 	local owner = wml.variables["owner_side"] or 0
-	if is_a(u, "SC_Syreen_Penetrator") and owner > 0 and wesnoth.sides.is_enemy(u.side, owner) then
+	if syreen_fills_crew(u, owner) then
 		u.hitpoints = u.max_hitpoints
-		-- this client's alone, so only shown if its player can see the planet
-		if locally_visible(u.x, u.y) then
-			wesnoth.interface.remove_hex_overlay(u.x, u.y, SYREEN_CAPTURE_ANIM)
-			wesnoth.interface.add_hex_overlay(u.x, u.y, { name = SYREEN_CAPTURE_ANIM,
-				halo = SYREEN_CAPTURE_HALO[u.y >= wesnoth.current.map.playable_height - 1 and "above" or "below"] })
-		end
+		play_planet_anim(u.x, u.y, u.side, SYREEN_CAPTURE_ANIM, SYREEN_CAPTURE_HALO)
 		-- and a label on the planet for the rest of the Syreen side's turn
 		-- (hidden from players who have it under fog)
 		wesnoth.map.add_label { x = u.x, y = u.y, color = "255,128,208", immutable = true,
 			visible_in_fog = false, visible_in_shroud = false,
 			text = tostring(_ "Syreen gains full crew.") }
-		for _, list in ipairs { "sc_syreen_capture_labels", "sc_syreen_capture_anims" } do
-			local l = wml.array_access.get(list)
-			l[#l + 1] = { x = u.x, y = u.y, side = u.side }
-			wml.array_access.set(list, l)
-		end
+		local l = wml.array_access.get("sc_syreen_capture_labels")
+		l[#l + 1] = { x = u.x, y = u.y, side = u.side }
+		wml.array_access.set("sc_syreen_capture_labels", l)
 	end
 end
 
@@ -718,19 +750,19 @@ function sc.expire_syreen_capture_labels()
 	wml.array_access.set("sc_syreen_capture_labels", keep)
 end
 
--- Start of a side's turn: take off the capture animations it played last
--- turn (left until now so a capture just before ending the turn still plays
--- out in full).
-function sc.expire_syreen_capture_anims()
-	local keep = {}
-	for _, a in ipairs(wml.array_access.get("sc_syreen_capture_anims")) do
-		if a.side == wesnoth.current.side then
-			wesnoth.interface.remove_hex_overlay(a.x, a.y, SYREEN_CAPTURE_ANIM)
-		else
-			keep[#keep + 1] = a
+-- Start of a side's turn: take off the planet animations it played last turn.
+function sc.expire_planet_anims()
+	for name, list in pairs(PLANET_ANIMS) do
+		local keep = {}
+		for _, a in ipairs(wml.array_access.get(list)) do
+			if a.side == wesnoth.current.side then
+				wesnoth.interface.remove_hex_overlay(a.x, a.y, name)
+			else
+				keep[#keep + 1] = a
+			end
 		end
+		wml.array_access.set(list, keep)
 	end
-	wml.array_access.set("sc_syreen_capture_anims", keep)
 end
 
 -------------------------------------------------------------------- reporting
@@ -1013,6 +1045,11 @@ function sc.planet_captured()
 			"<span color='#ff8060'>" .. tostring(_ "Planet destroyed") .. "</span>")
 	end
 	if not u then return end
+	-- an enemy's colony blown up, unless a Syreen is taking its colonists
+	if owner > 0 and wesnoth.sides.is_enemy(u.side, owner) and is_life_world(c.x1, c.y1)
+		and not syreen_fills_crew(u, owner) then
+		play_planet_anim(c.x1, c.y1, u.side, COLONY_DESTROYED_ANIM, COLONY_DESTROYED_HALO)
+	end
 	local claims = wml.array_access.get(CLAIMS)
 	claims[#claims + 1] = { x = c.x1, y = c.y1, side = u.side, id = u.id }
 	wml.array_access.set(CLAIMS, claims)
