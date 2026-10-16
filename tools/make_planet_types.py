@@ -20,10 +20,10 @@ and drawn fresh:
     planet-dead3.png     dusty brown-grey world with dark basins and a rayed crater
     planet-life4.png     jungle: emerald forest, small lakes and rivers
     planet-life5.png     archipelago: turquoise seas, small sandy islands
-    planet-life6.png     alien life: violet flora round deep blue seas
+    planet-life6.png     green continents, brown uplands, small deserts
     planet-mineral4.png  iron world: rusty plains glittering with ore
-    planet-mineral5.png  crystal world: dark rock with glowing red crystals
-    planet-mineral6.png  volcanic world: black basalt, calderas, lava flows
+    planet-mineral5.png  pool world: dark rock pocked with small lava pools
+    planet-mineral6.png  volcanic world: grey-brown basalt, calderas, lava flows
 
     tools/make_planet_types.py [--out ADDON_DIR]
 
@@ -374,18 +374,24 @@ def life_world5(rng):
 
 
 def life_world6(rng):
-    """Alien life: violet and magenta flora round deep blue seas."""
+    """Green continents with brown uplands and small yellow deserts, in
+    blue seas."""
     nx, ny, nz, inside = sphere_coords()
     n = HEX * SS
     land = noise(rng, n, base=4, octaves=6)
-    coast = np.quantile(land[inside], 0.45)
-    sea = ramp(np.clip((coast - land) / 0.3, 0, 1), [(40, 70, 150), (24, 44, 120), (16, 26, 90)])
-    flora = ramp(noise(rng, n, base=7), [(70, 30, 90), (110, 44, 120), (160, 60, 140), (190, 96, 150)])
+    coast = np.quantile(land[inside], 0.3)
+    sea = ramp(np.clip((coast - land) / 0.3, 0, 1), [(40, 110, 175), (26, 78, 155), (18, 52, 125)])
+    rgb = ramp(noise(rng, n, base=7), [(46, 110, 44), (70, 136, 54), (96, 150, 64)])
+    up = np.clip((land - coast - 0.12) * 8, 0, 0.8)[..., None]            # brown uplands inland
+    rgb = rgb * (1 - up) + np.array([118, 94, 60], np.float32) * up
+    dry = noise(rng, n, base=9, octaves=4)
+    desert = np.clip((dry - np.quantile(dry[inside], 0.8)) * 20, 0, 1)[..., None]
+    rgb = rgb * (1 - desert) + np.array([212, 190, 120], np.float32) * desert
     m = np.clip((land - coast) * 40, 0, 1)[..., None]
-    rgb = sea * (1 - m) + flora * m
-    cloud = np.clip((noise(rng, n, base=6, octaves=6) - 0.68) * 3, 0, 0.6)[..., None]
-    rgb = rgb * (1 - cloud) + np.array([236, 226, 246], np.float32) * cloud
-    return textured_sphere(rgb, glow=(170, 120, 230), atmo=(200, 160, 255))
+    rgb = sea * (1 - m) + rgb * m
+    cloud = np.clip((noise(rng, n, base=6, octaves=6) - 0.7) * 3, 0, 0.55)[..., None]
+    rgb = rgb * (1 - cloud) + np.array([240, 244, 250], np.float32) * cloud
+    return textured_sphere(rgb, glow=(120, 180, 255), atmo=(150, 200, 255))
 
 
 def mineral_world4(rng):
@@ -406,42 +412,28 @@ def mineral_world4(rng):
 
 
 def mineral_world5(rng):
-    """Crystal world: dark red rock studded with glowing rose-red crystals."""
+    """Pool world: dark red rock pocked with many small pools of lava."""
     nx, ny, nz, inside = sphere_coords()
     n = HEX * SS
     rgb = ramp(noise(rng, n, base=6, octaves=6), [(30, 10, 12), (52, 16, 18), (74, 24, 24), (92, 32, 28)])
     s = shade(nx, ny, nz)
     rgb = rgb * s[..., None]
-    yy, xx = np.mgrid[0:n, 0:n].astype(np.float32)
-    glow = np.zeros((n, n), np.float32)
-    for _ in range(14):                                 # single crystals
-        while True:
-            u, v = rng.uniform(-0.9, 0.9, 2)
-            if u * u + v * v < 0.75:
-                break
-        ox, oy = (CX + u * R) * SS, (CY + v * R) * SS
-        a = rng.uniform(0, np.pi)
-        ln, wd = rng.uniform(12, 20), rng.uniform(5, 8)
-        dx, dy = xx - ox, yy - oy
-        along = dx * np.cos(a) + dy * np.sin(a)
-        across = -dx * np.sin(a) + dy * np.cos(a)
-        shard = np.clip(1 - np.abs(along) / ln - np.abs(across) / wd, 0, 1)
-        # one face lit, one in shadow
-        face = np.where(across > 0, 1.0, 0.65)
-        glow = np.maximum(glow, np.clip(shard * 3, 0, 1) * face)
+    pools = noise(rng, n, base=22, octaves=2)
+    edge = np.quantile(pools[inside], 0.84)
+    glow = np.clip((pools - edge) / 0.08, 0, 1)        # many small lava pools
     glow *= limb_fade(nx, ny)
-    crystal = ramp(glow, [(120, 20, 40), (220, 60, 80), (255, 150, 160)])
+    crystal = ramp(glow, [(130, 26, 8), (210, 66, 14), (245, 120, 30)])
     g = glow[..., None]
     rgb = rgb * (1 - g) + crystal * (0.7 + 0.3 * s)[..., None] * g
-    return textured_sphere(rgb, glow=(220, 60, 80), lit=True)
+    return textured_sphere(rgb, glow=(220, 60, 40), lit=True)
 
 
 def mineral_world6(rng):
-    """Volcanic world: black basalt with a few glowing calderas, each
+    """Volcanic world: grey-brown basalt with a few glowing calderas, each
     spilling short orange-red lava flows."""
     nx, ny, nz, inside = sphere_coords()
     n = HEX * SS
-    rgb = ramp(noise(rng, n, base=6, octaves=6), [(22, 16, 16), (38, 26, 24), (56, 38, 32), (70, 48, 40)])
+    rgb = ramp(noise(rng, n, base=6, octaves=6), [(56, 44, 40), (84, 64, 56), (112, 86, 72), (136, 106, 88)])
     s = shade(nx, ny, nz)
     rgb = rgb * s[..., None]
     yy, xx = np.mgrid[0:n, 0:n].astype(np.float32)
