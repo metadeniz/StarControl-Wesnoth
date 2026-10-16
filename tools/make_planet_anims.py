@@ -5,7 +5,7 @@ scene itself: the picture box in the status panel is cropped out (a 107x72
 picture is left), and only the scene's recording frames START..END are
 kept, at 15 fps, then the last picture fades out over a few frames.
   colony-destroyed  the domes on a life world blown apart and left burning,
-                    up to just before the panel switches back to the menu
+                    cut to about as long as mine-destroyed with its hold
   mine-destroyed    the mining vehicle on a mineral world, the blast, and
                     the screen whiting out, up to the moment it is all white
   syreen-capture    the captain watching her ship fill up with the planet's
@@ -44,7 +44,7 @@ HEX = 84                       # picture centre this far above / below the plane
 CROP = (523, 302, 630, 374)    # left, top, right, bottom: inside the box's grey rim
 # recording frames kept (1-based, inclusive): START, END
 SCENES = {
-    "colony-destroyed": (5, 212),
+    "colony-destroyed": (5, 170),
     "mine-destroyed": (54, 188),
     "syreen-capture": (139, 344),
     "artifact": (3, 207),
