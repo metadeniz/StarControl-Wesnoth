@@ -234,6 +234,12 @@ which replace the game's village gold and support settings:
 | Life world | 1 | 2 | 40% |
 | Dead world | 0 | 1 | 20% |
 
+A ship doesn't take a planet the moment it lands. Landing on an enemy's
+planet destroys it (it belongs to nobody); then, as on any free planet,
+the ship starts building a colony (life world), mine (mineral world) or
+outpost (dead world), labelled on the planet. If the ship is still there when its
+side's next turn starts, the planet is that side's and pays that turn.
+
 Terrain, by hull size (moves to enter / defense):
 
 | Terrain | Large | Medium | Small | Tiny |
