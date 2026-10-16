@@ -1030,12 +1030,9 @@ end
 -- A ship that lands on a planet doesn't take it straight away. An enemy's
 -- planet is destroyed (it goes to nobody), and a free planet gets a colony,
 -- mine or outpost built on it, which is the ship's side's once its next turn
--- starts, if the ship is still there. Until then the planet is labelled.
+-- starts, if the ship is still there. A destroyed colony or mine is labelled
+-- so until then.
 local CLAIMS = "sc_planet_claims"
-local BUILD = {
-	Vyl = _ "Colony next turn", Vysl = _ "Colony next turn",
-	Vym = _ "Mine next turn", Vysm = _ "Mine next turn",
-}
 
 local function claim_label(x, y, text)
 	wesnoth.map.add_label { x = x, y = y, color = "160,224,255", immutable = true,
@@ -1052,20 +1049,20 @@ function sc.planet_captured()
 			"<span color='#ff8060'>" .. tostring(_ "Planet destroyed") .. "</span>")
 	end
 	if not u then return end
-	-- an enemy's colony blown up, unless a Syreen is taking its colonists,
-	-- or an enemy's mine
-	if owner > 0 and wesnoth.sides.is_enemy(u.side, owner) then
-		if is_life_world(c.x1, c.y1) and not syreen_fills_crew(u, owner) then
-			play_planet_anim(c.x1, c.y1, u.side, COLONY_DESTROYED_ANIM, COLONY_DESTROYED_HALO)
-		elseif is_mineral_world(c.x1, c.y1) then
-			play_planet_anim(c.x1, c.y1, u.side, MINE_DESTROYED_ANIM, MINE_DESTROYED_HALO)
-		end
-	end
 	local claims = wml.array_access.get(CLAIMS)
 	claims[#claims + 1] = { x = c.x1, y = c.y1, side = u.side, id = u.id }
 	wml.array_access.set(CLAIMS, claims)
-	local overlay = planet_overlay(c.x1, c.y1)
-	claim_label(c.x1, c.y1, tostring(BUILD[overlay] or _ "Outpost next turn"))
+	-- an enemy's colony blown up, unless a Syreen is taking its colonists,
+	-- or an enemy's mine: its scene, and a label until the claim is settled
+	if owner > 0 and wesnoth.sides.is_enemy(u.side, owner) then
+		if is_life_world(c.x1, c.y1) and not syreen_fills_crew(u, owner) then
+			play_planet_anim(c.x1, c.y1, u.side, COLONY_DESTROYED_ANIM, COLONY_DESTROYED_HALO)
+			claim_label(c.x1, c.y1, tostring(_ "Colony destroyed"))
+		elseif is_mineral_world(c.x1, c.y1) then
+			play_planet_anim(c.x1, c.y1, u.side, MINE_DESTROYED_ANIM, MINE_DESTROYED_HALO)
+			claim_label(c.x1, c.y1, tostring(_ "Mine destroyed"))
+		end
+	end
 end
 
 -- Drop the claims whose ship has left or been destroyed; at the start of a

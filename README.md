@@ -237,12 +237,12 @@ which replace the game's village gold and support settings:
 A ship doesn't take a planet the moment it lands. Landing on an enemy's
 planet destroys it (it belongs to nobody); then, as on any free planet,
 the ship starts building a colony (life world), mine (mineral world) or
-outpost (dead world), labelled on the planet. If the ship is still there when its
+outpost (dead world). If the ship is still there when its
 side's next turn starts, the planet is that side's and pays that turn.
 An enemy's colony (life world) blown up this way plays the colony destroyed
-scene below the planet, unless the ship is a Syreen, which takes the
-colonists as crew instead; an enemy's mine (mineral world) plays the mine
-destroyed scene. These scenes, like the Syreen's and the Precursor
+scene below the planet and is labelled "Colony destroyed", unless the ship is
+a Syreen, which takes the colonists as crew instead; an enemy's mine (mineral
+world) plays the mine destroyed scene and is labelled "Mine destroyed". These scenes, like the Syreen's and the Precursor
 artifact's, are cut from Star Control's own and play below the planet, or
 above it near the bottom of the map.
 
