@@ -1,7 +1,7 @@
 """Planet animations: Star Control's scenes from the status panel's picture box.
 
 Takes a 1920x1080 recording of one of the scenes and cuts it down to the
-scene itself: the picture box in the status panel is cropped out (a 108x74
+scene itself: the picture box in the status panel is cropped out (a 107x72
 picture is left), and only the scene's recording frames START..END are
 kept, at 15 fps. The last picture is held, then faded out over a few frames.
   colony-destroyed  the domes on a life world blown apart and left burning,
@@ -35,7 +35,7 @@ from PIL import Image
 
 OUT = "images/halo/sc/{}-{}-{:03d}.png"
 HEX = 72                       # picture centre this far above / below the planet's
-CROP = (523, 302, 631, 376)    # left, top, right, bottom: the panel's picture box
+CROP = (523, 302, 630, 374)    # left, top, right, bottom: inside the box's grey rim
 # recording frames kept (1-based, inclusive): START, END
 SCENES = {
     "colony-destroyed": (5, 212),
