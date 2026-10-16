@@ -454,7 +454,7 @@ end
 -- Hidden on about one planet in five (never next to a starbase). The first
 -- ship to enter that planet finds it: a random permanent bonus, shown as a
 -- trait, plus some experience. On mirrored maps they come in mirror pairs.
-local ARTIFACT_XP = 8
+local ARTIFACT_XP = 8   -- also in the floating text, tools/make_artifact_text.py
 local ARTIFACTS = {
 	{ id = "drive",    name = _ "+drive",
 	  description = _ "Precursor artifact: a drive unit. +1 movement, and 10% better defense on every terrain.",
@@ -491,6 +491,17 @@ local function artifact_anim_halo(where)
 	return table.concat(f, ",")
 end
 local ARTIFACT_ANIM_HALO = { above = artifact_anim_halo("above"), below = artifact_anim_halo("below") }
+
+-- "Precursor Artifact! / Crew gets +8 XP", rising slowly off the planet over
+-- 3 s and fading out (frames made by tools/make_artifact_text.py: 1.16's own
+-- floating text is gone within a second, too fast to read).
+local ARTIFACT_TEXT = "sc_artifact_text"
+local ARTIFACT_TEXT_HALO = (function()
+	local f = {}
+	for i = 1, 72 do f[i] = string.format("halo/sc/artifact-text-%03d.png:50", i) end
+	f[#f + 1] = "misc/blank-hex.png:3600000"
+	return table.concat(f, ",")
+end)()
 
 -- Whether this client's player can see the hex: the find is announced only
 -- to players who could see the planet, not through fog or shroud.
@@ -553,9 +564,9 @@ function sc.check_artifact()
 	if locally_visible(x, y) then
 		wesnoth.audio.play("sc/artifact.wav")
 		wesnoth.interface.add_hex_overlay(x, y, { name = ARTIFACT_ANIM, halo = ARTIFACT_ANIM_HALO[y <= 2 and "below" or "above"] })
-		wesnoth.interface.float_label(x, y, "<span color='#ffd84a'>" .. tostring(_ "Precursor artifact!") .. "</span>\n" .. tostring(a.description))
+		wesnoth.interface.add_hex_overlay(x, y, { name = ARTIFACT_TEXT, halo = ARTIFACT_TEXT_HALO })
 	end
-	-- The floating text fades within a second or two, so a label naming the
+	-- The floating text fades within a few seconds, so a label naming the
 	-- find stays on the planet until the finder's next turn starts (hidden
 	-- from players who have the planet under fog).
 	wesnoth.map.add_label { x = x, y = y, color = "255,216,74", immutable = true,
@@ -577,6 +588,7 @@ function sc.expire_artifact_labels()
 		if l.side == wesnoth.current.side then
 			wesnoth.map.add_label { x = l.x, y = l.y, text = "" }
 			wesnoth.interface.remove_hex_overlay(l.x, l.y, ARTIFACT_ANIM)
+			wesnoth.interface.remove_hex_overlay(l.x, l.y, ARTIFACT_TEXT)
 		else
 			keep[#keep + 1] = l
 		end
