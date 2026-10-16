@@ -131,7 +131,7 @@ explosion, and the game waits for it to finish.
 
 | Alliance of Free Stars | | Ur-Quan Hierarchy | |
 |---|---|---|---|
-| **Alliance Starbase** (leader only) | 3 moves, 110 HP; point-defense laser (**first strike**), missile battery (**marksman**); heals +4, defense grid (+10% resistance for the ships next to it), point-defense, leadership | **Hierarchy Starbase** (leader only) | 3 moves, 120 HP; defense turrets (**first strike**), fighter bays at range; repair dock (heals +8 and cures the ships next to it), slave shield (+20% resistance when attacked), leadership |
+| **Alliance Starbase** (leader only) | 4 moves, 110 HP; point-defense laser (**first strike**), missile battery (**marksman**); heals +4, defense grid (+10% resistance for the ships next to it), point-defense, leadership | **Hierarchy Starbase** (leader only) | 4 moves, 120 HP; defense turrets (**first strike**), fighter bays at range; repair dock (heals +8 and cures the ships next to it), slave shield (+20% resistance when attacked), leadership |
 | Earthling Cruiser | homing nukes, point-defense (fighters hit it at most 50%) | Ur-Quan Dreadnought | close-range fusion blast; fighters at any range (**swarm**: fewer as crew is lost) |
 | Chenjesu Broodhome | photon crystal (ranged; lighter shards close up), DOGI (slows) | Mycon Podship | homing plasmoids at range, heavier plasmoids close up (both half damage against Yehat and Utwig shields); regrows crew |
 | Mmrnmhrm X-Wing / Y-Wing | recruit either; lasers or torpedoes, transforms; X-Wing cures (heals +8 and cures poison), Y-Wing cures +4 | Spathi Eluder | howitzer, B.U.T.T. |
@@ -142,7 +142,7 @@ explosion, and the game waits for it to finish.
 
 | New Alliance of Free Stars | | Agents of Chaos | |
 |---|---|---|---|
-| **Precursor Flagship** (leader only) | 4 moves, a Precursor drive (like the Chmmr's) and **hyperjump** between planets; fusion blaster, point-defense, self-repair, heals +4, leadership | **Sa-Matra** (leader only) | 4 moves and a stronger Precursor drive (1 move through nebulae and asteroids); yellow comets (near and far), slowing green blobs, self-repair +8, cures and heals +8, leadership |
+| **Precursor Flagship** (leader only) | 4 moves, a Precursor drive (like the Chmmr's) and **hyperjump** between planets; fusion blaster, point-defense, self-repair, heals +4, leadership | **Sa-Matra** (leader only) | 4 moves and a stronger Precursor drive (1 move through nebulae, dust, badlands and asteroids); yellow comets (near and far), slowing green blobs, self-repair +8, cures and heals +8, leadership |
 | Earthling Cruiser | as in the Alliance | Kohr-Ah Marauder | 4 moves; spinning blades; F.R.I.E.D. plasma ring (**magical**) |
 | Chmmr Avatar | 4 moves, and a drive that handles nebulae, dust, badlands and asteroids better than other large hulls; close-range tractor beam + laser and Tractor + ZapSats (**first strike**, **auto-targeting** 70% on offense and defense, **swarm**, +1 damage vs. small and tiny hulls); ranged megawatt laser (**marksman**, **slows**); point-defense | Druuge Mauler | 4 moves; long-range mass driver (**marksman**); nothing up close |
 | Zoq-Fot-Pik Stinger | cheap; acid spit, hard-hitting tongue | Thraddash Torch | fast; afterburner (**charge**, **backstab**), horn blasters (**backstab**) |
@@ -279,7 +279,7 @@ Map makers pick the look per map; the editor lists the rippled ones as
 Asteroids over nebula or dust give the better defense and the slower
 movement of the two. The fire-born Mycon and Ilwrath (1 / 60%) and the
 heat-proof Chenjesu (1 / 50%) are at home in red nebulae. The Chenjesu
-Broodhome also crosses nebulae, dust clouds and badlands for 1 move.
+Broodhome and the Sa-Matra also cross nebulae, dust clouds and badlands for 1 move.
 
 ## Rebuilding (developers)
 
