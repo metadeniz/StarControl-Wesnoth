@@ -32,6 +32,8 @@ import math
 import os
 import sys
 
+from assign_planet_types import assign_file
+
 W, H = 41, 29                 # playable hexes; Wesnoth adds a one-hex border
 MID = W // 2                  # the middle column, its own mirror image
 
@@ -368,6 +370,7 @@ def write(m, path):
         rows.append(", ".join(row))
     with open(path, "w") as f:
         f.write("\n".join(rows) + "\n")
+    assign_file(path, quiet=True)          # life, mineral and dead worlds
 
 
 def report(m):

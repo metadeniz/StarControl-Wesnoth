@@ -514,7 +514,7 @@ end
 function sc.place_artifacts()
 	local map = wesnoth.current.map
 	local planets = wesnoth.map.find {
-		terrain = "*^Vyp,*^Vys",
+		terrain = "*^Vy*",
 		T["not"] { T.filter_adjacent_location { terrain = "Yk,Yc,Yci" } },
 		T["not"] { terrain = "Yk,Yc,Yci" },
 	}
@@ -929,4 +929,60 @@ function sc.cone_release()
 		wesnoth.wml_actions.remove_item { x = h.x, y = h.y, image = h.halo }
 	end
 	held_cones = {}
+end
+
+-- Planet types --------------------------------------------------------------
+-- Each planet type pays its own gold and supports its own upkeep:
+--   mineral world  2 gold, supports 2 levels of upkeep
+--   life world     1 gold, supports 2
+--   dead world     0 gold, supports 1
+-- An untyped planet (^Vyp, ^Vys) pays what the game settings say.
+-- Wesnoth only knows one village gold and support per side, so those are
+-- set to 0 and the planets' share is folded into the side's base income,
+-- kept up to date whenever planets or ships change hands:
+--   base income = the game's base income + planet gold
+--                 + the upkeep the planets support (no more than is owed)
+-- which leaves the engine's income = base + gold - (upkeep - support, if any).
+local PLANET_YIELD = {
+	Vym = { 2, 2 }, Vysm = { 2, 2 },
+	Vyl = { 1, 2 }, Vysl = { 1, 2 },
+	Vyd = { 0, 1 }, Vysd = { 0, 1 },
+}
+
+local function planet_yield(terrain, side)
+	local overlay = terrain:match("%^(.+)$")
+	local y = overlay and PLANET_YIELD[overlay]
+	if y then return y[1], y[2] end
+	return wml.variables["sc_village_gold_" .. side], wml.variables["sc_village_support_" .. side]
+end
+
+function sc.setup_planet_income()
+	for _, side in ipairs(wesnoth.sides) do
+		local n = side.side
+		wml.variables["sc_base_income_" .. n] = side.base_income
+		wml.variables["sc_village_gold_" .. n] = side.village_gold
+		wml.variables["sc_village_support_" .. n] = side.village_support
+		side.village_gold = 0
+		side.village_support = 0
+	end
+	sc.update_planet_income()
+end
+
+function sc.update_planet_income()
+	local gold, support = {}, {}
+	for _, v in ipairs(wesnoth.map.find { terrain = "*^Vy*" }) do
+		local owner = wesnoth.map.get_owner(v)
+		if owner and owner > 0 then
+			local g, s = planet_yield(wesnoth.current.map[v], owner)
+			gold[owner] = (gold[owner] or 0) + (g or 0)
+			support[owner] = (support[owner] or 0) + (s or 0)
+		end
+	end
+	for _, side in ipairs(wesnoth.sides) do
+		local n = side.side
+		local base = wml.variables["sc_base_income_" .. n]
+		if base then
+			side.base_income = base + (gold[n] or 0) + math.min(side.total_upkeep, support[n] or 0)
+		end
+	end
 end
