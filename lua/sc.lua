@@ -665,11 +665,12 @@ function sc.syreen_after_healing()
 end
 
 -- Planet animations: a halo on the hex below a planet, under its label
--- (above on the bottom edge), played to this client alone, so only if its
+-- (above near the bottom edge), played to this client alone, so only if its
 -- player can see the planet. The last picture is held a second, then faded
 -- out, then nothing until the halo is taken off at the side's next turn
 -- (left until then so one played just before ending the turn plays out in
--- full). Frames are made by tools/make_*_anim.py.
+-- full). Frames are made by tools/make_syreen_capture_anim.py and
+-- tools/make_planet_destroyed_anims.py.
 local function planet_anim_halo(file, frames, ms)
 	local function halo(where)
 		local f = {}
@@ -690,10 +691,15 @@ local SYREEN_CAPTURE_HALO = planet_anim_halo("syreen-capture", 100, 55)
 -- fading.
 local COLONY_DESTROYED_ANIM = "sc_colony_destroyed_anim"
 local COLONY_DESTROYED_HALO = planet_anim_halo("colony-destroyed", 108, 67)
+-- The mining vehicle on the planet, the blast, and the screen whiting out:
+-- 104 frames at 15 fps, 4 fading.
+local MINE_DESTROYED_ANIM = "sc_mine_destroyed_anim"
+local MINE_DESTROYED_HALO = planet_anim_halo("mine-destroyed", 108, 67)
 -- Each animation's list of { x, y, side } still showing, to take off.
 local PLANET_ANIMS = {
 	[SYREEN_CAPTURE_ANIM] = "sc_syreen_capture_anims",
 	[COLONY_DESTROYED_ANIM] = "sc_colony_destroyed_anims",
+	[MINE_DESTROYED_ANIM] = "sc_mine_destroyed_anims",
 }
 
 local function play_planet_anim(x, y, side, name, halo)
@@ -707,9 +713,18 @@ local function play_planet_anim(x, y, side, name, halo)
 	wml.array_access.set(PLANET_ANIMS[name], l)
 end
 
+local function planet_overlay(x, y)
+	return wesnoth.current.map[{ x, y }]:match("%^(.+)$")
+end
+
 local function is_life_world(x, y)
-	local overlay = wesnoth.current.map[{ x, y }]:match("%^(.+)$")
+	local overlay = planet_overlay(x, y)
 	return overlay == "Vyl" or overlay == "Vysl"
+end
+
+local function is_mineral_world(x, y)
+	local overlay = planet_overlay(x, y)
+	return overlay == "Vym" or overlay == "Vysm"
 end
 
 -- Whether ship u landing on a planet taken from side owner is a Syreen
@@ -1045,15 +1060,19 @@ function sc.planet_captured()
 			"<span color='#ff8060'>" .. tostring(_ "Planet destroyed") .. "</span>")
 	end
 	if not u then return end
-	-- an enemy's colony blown up, unless a Syreen is taking its colonists
-	if owner > 0 and wesnoth.sides.is_enemy(u.side, owner) and is_life_world(c.x1, c.y1)
-		and not syreen_fills_crew(u, owner) then
-		play_planet_anim(c.x1, c.y1, u.side, COLONY_DESTROYED_ANIM, COLONY_DESTROYED_HALO)
+	-- an enemy's colony blown up, unless a Syreen is taking its colonists,
+	-- or an enemy's mine
+	if owner > 0 and wesnoth.sides.is_enemy(u.side, owner) then
+		if is_life_world(c.x1, c.y1) and not syreen_fills_crew(u, owner) then
+			play_planet_anim(c.x1, c.y1, u.side, COLONY_DESTROYED_ANIM, COLONY_DESTROYED_HALO)
+		elseif is_mineral_world(c.x1, c.y1) then
+			play_planet_anim(c.x1, c.y1, u.side, MINE_DESTROYED_ANIM, MINE_DESTROYED_HALO)
+		end
 	end
 	local claims = wml.array_access.get(CLAIMS)
 	claims[#claims + 1] = { x = c.x1, y = c.y1, side = u.side, id = u.id }
 	wml.array_access.set(CLAIMS, claims)
-	local overlay = wesnoth.current.map[{ c.x1, c.y1 }]:match("%^(.+)$")
+	local overlay = planet_overlay(c.x1, c.y1)
 	claim_label(c.x1, c.y1, tostring(BUILD[overlay] or _ "Outpost next turn"))
 end
 

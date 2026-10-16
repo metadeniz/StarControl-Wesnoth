@@ -240,8 +240,10 @@ the ship starts building a colony (life world), mine (mineral world) or
 outpost (dead world), labelled on the planet. If the ship is still there when its
 side's next turn starts, the planet is that side's and pays that turn.
 An enemy's colony (life world) blown up this way plays the colony destroyed
-scene beside the planet, unless the ship is a Syreen, which takes the
-colonists as crew instead.
+scene below the planet, unless the ship is a Syreen, which takes the
+colonists as crew instead; an enemy's mine (mineral world) plays the mine
+destroyed scene. Like the Syreen's, these scenes play above the planet when
+it is near the bottom of the map.
 
 Terrain, by hull size (moves to enter / defense):
 
