@@ -18,6 +18,12 @@ and drawn fresh:
     planet-mineral3.png  dark red crust in plates, some rich in copper ore,
                          with craters
     planet-dead3.png     dusty brown-grey world with dark basins and a rayed crater
+    planet-life4.png     jungle: emerald forest, small lakes and rivers
+    planet-life5.png     archipelago: turquoise seas, small sandy islands
+    planet-life6.png     alien life: violet flora round deep blue seas
+    planet-mineral4.png  iron world: rusty plains glittering with ore
+    planet-mineral5.png  crystal world: dark rock with glowing red crystals
+    planet-mineral6.png  volcanic world: black basalt, calderas, lava flows
 
     tools/make_planet_types.py [--out ADDON_DIR]
 
@@ -332,6 +338,138 @@ def dead_world1(rng):
     return craters(textured_sphere(rgb), rng, count=6)
 
 
+def life_world4(rng):
+    """Jungle world: dense emerald forest with small dark lakes and winding
+    rivers, thin cloud."""
+    nx, ny, nz, inside = sphere_coords()
+    n = HEX * SS
+    rgb = ramp(noise(rng, n, base=6, octaves=6), [(20, 70, 34), (34, 100, 42), (58, 128, 50), (90, 150, 62)])
+    lake = noise(rng, n, base=14, octaves=3)
+    lakes = np.clip((lake - np.quantile(lake[inside], 0.93)) * 30, 0, 1)
+    r = noise(rng, n, base=4, octaves=5)
+    river = np.clip(1 - np.abs(r - 0.5) / 0.018, 0, 1) * np.clip((noise(rng, n, base=3) - 0.4) * 4, 0, 1)
+    water = np.maximum(lakes, river * 0.9)[..., None]
+    rgb = rgb * (1 - water) + np.array([22, 58, 110], np.float32) * water
+    cloud = np.clip((noise(rng, n, base=8, octaves=5) - 0.7) * 3, 0, 0.5)[..., None]
+    rgb = rgb * (1 - cloud) + np.array([230, 240, 235], np.float32) * cloud
+    return textured_sphere(rgb, glow=(120, 210, 140), atmo=(150, 220, 170))
+
+
+def life_world5(rng):
+    """Archipelago: shallow turquoise seas scattered with small sandy,
+    green-topped islands."""
+    nx, ny, nz, inside = sphere_coords()
+    n = HEX * SS
+    land = 0.8 * noise(rng, n, base=14, octaves=3) + 0.2 * noise(rng, n, base=3)
+    coast = np.quantile(land[inside], 0.84)
+    depth = np.clip((coast - land) / 0.25, 0, 1)
+    rgb = ramp(depth, [(70, 200, 200), (34, 150, 180), (20, 92, 150), (14, 60, 120)])
+    isle = np.clip((land - coast) * 40, 0, 1)
+    green = np.clip((land - coast - 0.03) * 30, 0, 1)
+    ground = np.array([214, 196, 140], np.float32) * (1 - green[..., None]) + np.array([70, 140, 60], np.float32) * green[..., None]
+    rgb = rgb * (1 - isle[..., None]) + ground * isle[..., None]
+    cloud = np.clip((noise(rng, n, base=5, octaves=6) - 0.72) * 3, 0, 0.55)[..., None]
+    rgb = rgb * (1 - cloud) + np.array([240, 244, 250], np.float32) * cloud
+    return textured_sphere(rgb, glow=(110, 210, 230), atmo=(150, 230, 240))
+
+
+def life_world6(rng):
+    """Alien life: violet and magenta flora round deep blue seas."""
+    nx, ny, nz, inside = sphere_coords()
+    n = HEX * SS
+    land = noise(rng, n, base=4, octaves=6)
+    coast = np.quantile(land[inside], 0.45)
+    sea = ramp(np.clip((coast - land) / 0.3, 0, 1), [(40, 70, 150), (24, 44, 120), (16, 26, 90)])
+    flora = ramp(noise(rng, n, base=7), [(70, 30, 90), (110, 44, 120), (160, 60, 140), (190, 96, 150)])
+    m = np.clip((land - coast) * 40, 0, 1)[..., None]
+    rgb = sea * (1 - m) + flora * m
+    cloud = np.clip((noise(rng, n, base=6, octaves=6) - 0.68) * 3, 0, 0.6)[..., None]
+    rgb = rgb * (1 - cloud) + np.array([236, 226, 246], np.float32) * cloud
+    return textured_sphere(rgb, glow=(170, 120, 230), atmo=(200, 160, 255))
+
+
+def mineral_world4(rng):
+    """Iron world: rusty oxide plains and darker iron highlands, glittering
+    with flecks of copper and gold ore."""
+    nx, ny, nz, inside = sphere_coords()
+    n = HEX * SS
+    rgb = ramp(noise(rng, n, base=4, octaves=6), [(60, 22, 14), (110, 44, 22), (150, 66, 30), (176, 92, 46)])
+    high = np.clip((noise(rng, n, base=3, octaves=5) - 0.55) * 4, 0, 0.6)[..., None]
+    rgb = rgb * (1 - high) + np.array([46, 34, 32], np.float32) * high
+    fl = (rng.random((n, n)) < 0.004).astype(np.float32)
+    fl = np.asarray(Image.fromarray((fl * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(5)), np.float32) / 255
+    fl *= np.clip((noise(rng, n, base=5) - 0.35) * 3, 0, 1)
+    gold = np.where(rng.random((n, n)) < 0.5, 1.0, 0.0)[..., None]
+    ore = np.array([240, 200, 90], np.float32) * gold + np.array([230, 130, 70], np.float32) * (1 - gold)
+    rgb = rgb * (1 - fl[..., None]) + ore * fl[..., None]
+    return craters(textured_sphere(rgb, glow=(210, 90, 50)), rng, count=8)
+
+
+def mineral_world5(rng):
+    """Crystal world: dark red rock studded with glowing rose-red crystals."""
+    nx, ny, nz, inside = sphere_coords()
+    n = HEX * SS
+    rgb = ramp(noise(rng, n, base=6, octaves=6), [(30, 10, 12), (52, 16, 18), (74, 24, 24), (92, 32, 28)])
+    s = shade(nx, ny, nz)
+    rgb = rgb * s[..., None]
+    yy, xx = np.mgrid[0:n, 0:n].astype(np.float32)
+    glow = np.zeros((n, n), np.float32)
+    for _ in range(14):                                 # single crystals
+        while True:
+            u, v = rng.uniform(-0.9, 0.9, 2)
+            if u * u + v * v < 0.75:
+                break
+        ox, oy = (CX + u * R) * SS, (CY + v * R) * SS
+        a = rng.uniform(0, np.pi)
+        ln, wd = rng.uniform(12, 20), rng.uniform(5, 8)
+        dx, dy = xx - ox, yy - oy
+        along = dx * np.cos(a) + dy * np.sin(a)
+        across = -dx * np.sin(a) + dy * np.cos(a)
+        shard = np.clip(1 - np.abs(along) / ln - np.abs(across) / wd, 0, 1)
+        # one face lit, one in shadow
+        face = np.where(across > 0, 1.0, 0.65)
+        glow = np.maximum(glow, np.clip(shard * 3, 0, 1) * face)
+    glow *= limb_fade(nx, ny)
+    crystal = ramp(glow, [(120, 20, 40), (220, 60, 80), (255, 150, 160)])
+    g = glow[..., None]
+    rgb = rgb * (1 - g) + crystal * (0.7 + 0.3 * s)[..., None] * g
+    return textured_sphere(rgb, glow=(220, 60, 80), lit=True)
+
+
+def mineral_world6(rng):
+    """Volcanic world: black basalt with a few glowing calderas, each
+    spilling short orange-red lava flows."""
+    nx, ny, nz, inside = sphere_coords()
+    n = HEX * SS
+    rgb = ramp(noise(rng, n, base=6, octaves=6), [(22, 16, 16), (38, 26, 24), (56, 38, 32), (70, 48, 40)])
+    s = shade(nx, ny, nz)
+    rgb = rgb * s[..., None]
+    yy, xx = np.mgrid[0:n, 0:n].astype(np.float32)
+    heat = np.zeros((n, n), np.float32)
+    wob = noise(rng, n, base=12, octaves=3)
+    for _ in range(5):
+        while True:
+            u, v = rng.uniform(-0.75, 0.75, 2)
+            if u * u + v * v < 0.55:
+                break
+        cx, cy = (CX + u * R) * SS, (CY + v * R) * SS
+        d = np.hypot(xx - cx, yy - cy)
+        heat = np.maximum(heat, np.clip(1 - d / rng.uniform(7, 11), 0, 1))   # caldera
+        for _ in range(int(rng.integers(3, 6))):                            # flows
+            a = rng.uniform(0, 2 * np.pi)
+            ln = rng.uniform(18, 34)
+            dx, dy = xx - cx, yy - cy
+            along = dx * np.cos(a) + dy * np.sin(a)
+            across = -dx * np.sin(a) + dy * np.cos(a) + 6 * (wob - 0.5)
+            flow = np.clip(1 - np.abs(across) / 2.4, 0, 1) * np.clip(1 - along / ln, 0, 1) * (along > 0)
+            heat = np.maximum(heat, flow * 0.8)
+    heat *= limb_fade(nx, ny)
+    lava = ramp(heat, [(120, 20, 8), (190, 46, 12), (230, 90, 20), (250, 150, 40)])
+    h = np.clip(heat * 1.8, 0, 1)[..., None]
+    rgb = rgb * (1 - h) + lava * (0.7 + 0.3 * s)[..., None] * h
+    return textured_sphere(rgb, glow=(200, 60, 40), lit=True)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=os.path.join(os.path.dirname(__file__), ".."))
@@ -351,6 +489,10 @@ def main():
     life_world1(np.random.default_rng(args.seed + 3)).save(os.path.join(d, "planet-life1.png"))
     mineral_world1(np.random.default_rng(args.seed + 4)).save(os.path.join(d, "planet-mineral1.png"))
     dead_world1(np.random.default_rng(args.seed + 5)).save(os.path.join(d, "planet-dead1.png"))
+    for k, make in enumerate((life_world4, life_world5, life_world6,
+                              mineral_world4, mineral_world5, mineral_world6)):
+        kind, v = make.__name__.split("_world")
+        make(np.random.default_rng(args.seed + 10 + k)).save(os.path.join(d, f"planet-{kind}{v}.png"))
 
 
 if __name__ == "__main__":
