@@ -145,6 +145,7 @@ SOUNDS = {
     "earthling-pd": "base/ships/human/secondary.wav",
     "chenjesu-crystal": "base/ships/chenjesu/primary.wav",
     "chenjesu-dogi": "base/ships/chenjesu/secondary.wav",
+    "chenjesu-shrapnel": "base/ships/chenjesu/shrapnel.wav",  # crystal shattering
     "mmrnmhrm-laser": "base/ships/mmrnmhrm/primaryx.wav",
     "mmrnmhrm-torpedo": "base/ships/mmrnmhrm/primaryy.wav",
     "mmrnmhrm-transform": "base/ships/mmrnmhrm/secondary.wav",

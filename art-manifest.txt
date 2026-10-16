@@ -1138,6 +1138,7 @@ sounds/sc/boom-medium.wav
 sounds/sc/boom-small.wav
 sounds/sc/chenjesu-crystal.wav
 sounds/sc/chenjesu-dogi.wav
+sounds/sc/chenjesu-shrapnel.wav
 sounds/sc/chmmr-laser-long.wav
 sounds/sc/chmmr-laser.wav
 sounds/sc/chmmr-tractor-laser.wav
