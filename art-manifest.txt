@@ -137,6 +137,9 @@ images/halo/sc/artifact-above-101.png
 images/halo/sc/artifact-above-102.png
 images/halo/sc/artifact-above-103.png
 images/halo/sc/artifact-above-104.png
+images/halo/sc/artifact-above-105.png
+images/halo/sc/artifact-above-106.png
+images/halo/sc/artifact-above-107.png
 images/halo/sc/artifact-below-001.png
 images/halo/sc/artifact-below-002.png
 images/halo/sc/artifact-below-003.png
@@ -241,6 +244,9 @@ images/halo/sc/artifact-below-101.png
 images/halo/sc/artifact-below-102.png
 images/halo/sc/artifact-below-103.png
 images/halo/sc/artifact-below-104.png
+images/halo/sc/artifact-below-105.png
+images/halo/sc/artifact-below-106.png
+images/halo/sc/artifact-below-107.png
 images/halo/sc/blast-1.png
 images/halo/sc/blast-2.png
 images/halo/sc/blast-3.png
@@ -806,6 +812,13 @@ images/halo/sc/syreen-capture-above-097.png
 images/halo/sc/syreen-capture-above-098.png
 images/halo/sc/syreen-capture-above-099.png
 images/halo/sc/syreen-capture-above-100.png
+images/halo/sc/syreen-capture-above-101.png
+images/halo/sc/syreen-capture-above-102.png
+images/halo/sc/syreen-capture-above-103.png
+images/halo/sc/syreen-capture-above-104.png
+images/halo/sc/syreen-capture-above-105.png
+images/halo/sc/syreen-capture-above-106.png
+images/halo/sc/syreen-capture-above-107.png
 images/halo/sc/syreen-capture-below-001.png
 images/halo/sc/syreen-capture-below-002.png
 images/halo/sc/syreen-capture-below-003.png
@@ -906,6 +919,13 @@ images/halo/sc/syreen-capture-below-097.png
 images/halo/sc/syreen-capture-below-098.png
 images/halo/sc/syreen-capture-below-099.png
 images/halo/sc/syreen-capture-below-100.png
+images/halo/sc/syreen-capture-below-101.png
+images/halo/sc/syreen-capture-below-102.png
+images/halo/sc/syreen-capture-below-103.png
+images/halo/sc/syreen-capture-below-104.png
+images/halo/sc/syreen-capture-below-105.png
+images/halo/sc/syreen-capture-below-106.png
+images/halo/sc/syreen-capture-below-107.png
 images/halo/sc/umgah-cone-n.png
 images/halo/sc/umgah-cone-ne.png
 images/halo/sc/umgah-cone-nw.png

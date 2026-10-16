@@ -475,22 +475,34 @@ local ARTIFACTS = {
 
 local function artifact_key(x, y) return "sc_artifact_" .. x .. "_" .. y end
 
--- The Precursor device's screen booting up on the hex above the planet (on
--- the hex below for planets on the top edge, where above would be off the
--- map). Frames made by tools/make_artifact_anim.py: 100 frames at 15 fps, the
--- finished screen held, 4 frames fading it out, then nothing until the halo
--- is taken off at the finder's next turn. A halo animation loops, so the
--- blank last frame lasts far longer than anyone waits.
-local ARTIFACT_ANIM = "sc_artifact_anim"
-local function artifact_anim_halo(where)
-	local f = {}
-	for i = 1, 104 do
-		f[i] = string.format("halo/sc/artifact-%s-%03d.png:%d", where, i, i == 100 and 1500 or 66)
+-- Planet animations: Star Control's scenes from the status panel, played as
+-- a halo on the hex below a planet, under its label (above near the bottom
+-- edge), to this client alone, so only if its player can see the planet.
+-- The last picture is held, then faded out over 4 frames, then nothing until
+-- the halo is taken off at the side's next turn (left until then so one
+-- played just before ending the turn plays out in full; a halo animation
+-- loops, so the blank last frame lasts far longer than anyone waits). Frames
+-- are made by tools/make_planet_anims.py.
+local function planet_anim_halo(file, frames, ms, hold)
+	local function halo(where)
+		local f = {}
+		for i = 1, frames do
+			f[i] = string.format("halo/sc/%s-%s-%03d.png:%d", file, where, i, i == frames - 4 and hold or ms)
+		end
+		f[#f + 1] = "misc/blank-hex.png:3600000"
+		return table.concat(f, ",")
 	end
-	f[#f + 1] = "misc/blank-hex.png:3600000"
-	return table.concat(f, ",")
+	return { above = halo("above"), below = halo("below") }
 end
-local ARTIFACT_ANIM_HALO = { above = artifact_anim_halo("above"), below = artifact_anim_halo("below") }
+
+local function planet_anim_where(y)
+	return y >= wesnoth.current.map.playable_height - 1 and "above" or "below"
+end
+
+-- The Precursor device's screen filling with glyphs: 103 frames at 15 fps,
+-- the finished screen held 1.5 s.
+local ARTIFACT_ANIM = "sc_artifact_anim"
+local ARTIFACT_ANIM_HALO = planet_anim_halo("artifact", 107, 66, 1500)
 
 -- "Precursor Artifact! / Crew gets +8 XP", rising slowly off the planet over
 -- 3 s and fading out (frames made by tools/make_artifact_text.py: 1.16's own
@@ -563,7 +575,7 @@ function sc.check_artifact()
 	-- see the planet.
 	if locally_visible(x, y) then
 		wesnoth.audio.play("sc/artifact.wav")
-		wesnoth.interface.add_hex_overlay(x, y, { name = ARTIFACT_ANIM, halo = ARTIFACT_ANIM_HALO[y <= 2 and "below" or "above"] })
+		wesnoth.interface.add_hex_overlay(x, y, { name = ARTIFACT_ANIM, halo = ARTIFACT_ANIM_HALO[planet_anim_where(y)] })
 		wesnoth.interface.add_hex_overlay(x, y, { name = ARTIFACT_TEXT, halo = ARTIFACT_TEXT_HALO })
 	end
 	-- The floating text fades within a few seconds, so a label naming the
@@ -664,37 +676,17 @@ function sc.syreen_after_healing()
 	end
 end
 
--- Planet animations: a halo on the hex below a planet, under its label
--- (above near the bottom edge), played to this client alone, so only if its
--- player can see the planet. The last picture is held a second, then faded
--- out, then nothing until the halo is taken off at the side's next turn
--- (left until then so one played just before ending the turn plays out in
--- full). Frames are made by tools/make_syreen_capture_anim.py and
--- tools/make_planet_destroyed_anims.py.
-local function planet_anim_halo(file, frames, ms)
-	local function halo(where)
-		local f = {}
-		for i = 1, frames do
-			f[i] = string.format("halo/sc/%s-%s-%03d.png:%d", file, where, i, i == frames - 4 and 1000 or ms)
-		end
-		f[#f + 1] = "misc/blank-hex.png:3600000"
-		return table.concat(f, ",")
-	end
-	return { above = halo("above"), below = halo("below") }
-end
-
--- The captain watching her ship fill up with the planet's colonists: 96
--- frames of the 15 fps clip played at 1.2x (55 ms each), 4 fading.
+-- The captain watching her ship fill up with the planet's colonists: 103
+-- frames of the 15 fps clip played at 1.2x (55 ms each).
 local SYREEN_CAPTURE_ANIM = "sc_syreen_capture_anim"
-local SYREEN_CAPTURE_HALO = planet_anim_halo("syreen-capture", 100, 55)
--- The colony's domes blown apart and left burning: 104 frames at 15 fps, 4
--- fading.
+local SYREEN_CAPTURE_HALO = planet_anim_halo("syreen-capture", 107, 55, 1000)
+-- The colony's domes blown apart and left burning: 104 frames at 15 fps.
 local COLONY_DESTROYED_ANIM = "sc_colony_destroyed_anim"
-local COLONY_DESTROYED_HALO = planet_anim_halo("colony-destroyed", 108, 67)
+local COLONY_DESTROYED_HALO = planet_anim_halo("colony-destroyed", 108, 67, 1000)
 -- The mining vehicle on the planet, the blast, and the screen whiting out:
--- 104 frames at 15 fps, 4 fading.
+-- 104 frames at 15 fps.
 local MINE_DESTROYED_ANIM = "sc_mine_destroyed_anim"
-local MINE_DESTROYED_HALO = planet_anim_halo("mine-destroyed", 108, 67)
+local MINE_DESTROYED_HALO = planet_anim_halo("mine-destroyed", 108, 67, 1000)
 -- Each animation's list of { x, y, side } still showing, to take off.
 local PLANET_ANIMS = {
 	[SYREEN_CAPTURE_ANIM] = "sc_syreen_capture_anims",
@@ -706,7 +698,7 @@ local function play_planet_anim(x, y, side, name, halo)
 	if locally_visible(x, y) then
 		wesnoth.interface.remove_hex_overlay(x, y, name)
 		wesnoth.interface.add_hex_overlay(x, y, { name = name,
-			halo = halo[y >= wesnoth.current.map.playable_height - 1 and "above" or "below"] })
+			halo = halo[planet_anim_where(y)] })
 	end
 	local l = wml.array_access.get(PLANET_ANIMS[name])
 	l[#l + 1] = { x = x, y = y, side = side }

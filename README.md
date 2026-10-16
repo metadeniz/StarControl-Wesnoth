@@ -242,8 +242,9 @@ side's next turn starts, the planet is that side's and pays that turn.
 An enemy's colony (life world) blown up this way plays the colony destroyed
 scene below the planet, unless the ship is a Syreen, which takes the
 colonists as crew instead; an enemy's mine (mineral world) plays the mine
-destroyed scene. Like the Syreen's, these scenes play above the planet when
-it is near the bottom of the map.
+destroyed scene. These scenes, like the Syreen's and the Precursor
+artifact's, are cut from Star Control's own and play below the planet, or
+above it near the bottom of the map.
 
 Terrain, by hull size (moves to enter / defense):
 
