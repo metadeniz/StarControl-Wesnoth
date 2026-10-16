@@ -121,38 +121,22 @@ def craters(src, rng, count=34, basins=0):
 
 
 def mineral_world(rng):
-    """Dark red rock seamed with glowing ore veins, in planet5's red glow."""
+    """Dark red rock cut by bright rivers of lava, in planet5's red glow."""
     nx, ny, nz, inside = sphere_coords()
     n = HEX * SS
-    base = noise(rng, n, base=3)
-    pal = np.array([(26, 8, 8), (52, 14, 12), (86, 22, 16), (120, 34, 22), (96, 26, 20)], np.float32)
-    idx = np.clip(base * (len(pal) - 1), 0, len(pal) - 1.001)
-    lo = np.floor(idx).astype(int)
-    f = (idx - lo)[..., None]
-    rgb = pal[lo] * (1 - f) + pal[lo + 1] * f
-    # veins: thin ridges of two noise fields
-    vein = np.zeros((n, n), np.float32)
-    for b, wdt in ((4, 0.035), (7, 0.025)):
+    rock = ramp(noise(rng, n, base=3), [(30, 9, 8), (56, 16, 12), (84, 24, 16), (104, 32, 20)])
+    # rivers: ridges of two noise fields, wide channels with a hot core
+    river = np.zeros((n, n), np.float32)
+    for b, wdt in ((4, 0.075), (7, 0.05)):
         r = noise(rng, n, base=b, octaves=4)
-        vein = np.maximum(vein, np.clip(1 - np.abs(r - 0.5) / wdt, 0, 1))
-    vein *= np.clip((noise(rng, n, base=3) - 0.35) * 3, 0, 1)   # broken up
-    glow = np.array([255, 96, 40], np.float32)
+        river = np.maximum(river, np.clip(1 - np.abs(r - 0.5) / wdt, 0, 1))
+    river *= np.clip((noise(rng, n, base=3) - 0.12) * 3, 0, 1)   # a few breaks
+    lava = ramp(river, [(170, 34, 10), (240, 96, 18), (255, 170, 40), (255, 236, 140)])
     s = shade(nx, ny, nz)
-    rgb = rgb * s[..., None]
-    # ore glows on its own, a little dimmer on the night side
-    rgb = rgb * (1 - vein[..., None] * 0.85) + glow * (vein * (0.55 + 0.45 * s))[..., None]
-    rgb = down_rgb(rgb)
-    d = np.sqrt(down(nx ** 2 + ny ** 2))
-    alpha = down(inside.astype(np.float32)) * 255
-    sphere = Image.fromarray(np.dstack([rgb, alpha]).clip(0, 255).astype(np.uint8), "RGBA")
-    canvas = Image.new("RGBA", (HEX, HEX), (0, 0, 0, 0))
-    g = Image.new("RGBA", (HEX, HEX), (0, 0, 0, 0))
-    dia = 2 * R
-    ImageDraw.Draw(g).ellipse([36 - dia / 2 - 3.5, 36 - dia / 2 - 3.5, 36 + dia / 2 + 2.5, 36 + dia / 2 + 2.5],
-                              fill=(220, 60, 40, 110))
-    canvas.alpha_composite(g.filter(ImageFilter.GaussianBlur(3)))
-    canvas.alpha_composite(sphere)
-    return canvas
+    m = np.clip(river * 2.2, 0, 1)[..., None]
+    # lava glows on its own, a little dimmer on the night side
+    rgb = rock * s[..., None] * (1 - m) + lava * (0.6 + 0.4 * s)[..., None] * m
+    return textured_sphere(rgb, glow=(220, 60, 40), lit=True)
 
 
 def textured_sphere(rgb, glow=None, lift=None, atmo=None, lit=False):
@@ -227,11 +211,11 @@ def life_world2(rng):
 
 
 def mineral_world3(rng):
-    """Dark red crust broken into plates, a few of them rich with copper ore,
-    pocked by craters."""
+    """Blocky continents of dark red rock adrift on a sea of lava; thin
+    bright cracks where the blocks meet."""
     nx, ny, nz, inside = sphere_coords()
     n = HEX * SS
-    pts = rng.normal(size=(70, 3))
+    pts = rng.normal(size=(140, 3))
     pts /= np.linalg.norm(pts, axis=1, keepdims=True)
     normals = np.stack([nx, ny, nz], -1).reshape(-1, 3)
     ang = np.arccos(np.clip(normals @ pts.T, -1, 1))
@@ -239,16 +223,32 @@ def mineral_world3(rng):
     first = order[:, 0]
     a1 = np.take_along_axis(ang, order[:, :1], 1)[:, 0]
     a2 = np.take_along_axis(ang, order[:, 1:2], 1)[:, 0]
+    # blocks cluster into continents: a plate is land where a coarse field is high
+    # four continents spread over the near side, jittered
+    xy = np.array([(-0.52, -0.40), (0.50, -0.42), (-0.40, 0.50), (0.48, 0.45)]) + rng.uniform(-0.1, 0.1, (4, 2))
+    seeds = np.column_stack([xy, np.sqrt(1 - (xy ** 2).sum(1))])
+    near = np.arccos(np.clip(pts @ seeds.T, -1, 1)).min(axis=1)
+    is_land = near < 0.44
+    land_px = is_land[first].reshape(n, n)
+    # land keeps a dark gap to the sea: the plate edge, measured inward
+    edge = (a2 - a1).reshape(n, n)
+    other = order[:, 1].reshape(n, n)
+    shore = land_px & ~is_land[other]                   # next plate is sea
+    block = land_px & ~(shore & (edge < 0.07))          # sea eats a margin
     tone = rng.random(len(pts))[first].reshape(n, n)
-    ore = (rng.random(len(pts)) < 0.3)[first].reshape(n, n).astype(np.float32)
-    grain = noise(rng, n, base=8, octaves=4)
-    rgb = ramp(np.clip(0.65 * tone + 0.35 * grain, 0, 1),
-               [(44, 12, 12), (70, 18, 16), (98, 28, 20), (124, 40, 26)])
-    crack = np.clip(1 - (a2 - a1).reshape(n, n) / 0.045, 0, 1)
-    rgb *= (1 - 0.75 * crack)[..., None]
-    speck = np.clip((noise(rng, n, base=40, octaves=2) - 0.58) * 6, 0, 0.8) * ore
-    rgb = rgb * (1 - speck[..., None]) + np.array([215, 120, 60], np.float32) * speck[..., None]
-    return craters(textured_sphere(rgb, glow=(200, 50, 40)), rng, count=10)
+    grain = noise(rng, n, base=10, octaves=4)
+    rock = ramp(np.clip(0.6 * tone + 0.4 * grain, 0, 1), [(40, 12, 12), (64, 18, 15), (90, 28, 20), (112, 38, 24)])
+    s = shade(nx, ny, nz)
+    rock = rock * s[..., None]
+    # cracks between neighbouring blocks: thin and bright
+    crack = (land_px & is_land[other] & (edge < 0.016)).astype(np.float32)
+    heat = noise(rng, n, base=6)
+    sea = ramp(heat, [(150, 30, 8), (205, 66, 14), (240, 112, 24), (255, 160, 48)])
+    sea = sea * (0.65 + 0.35 * s)[..., None]
+    rgb = np.where(block[..., None], rock, sea)
+    hot = np.array([255, 190, 70], np.float32) * (0.7 + 0.3 * s)[..., None]
+    rgb = rgb * (1 - crack[..., None]) + hot * crack[..., None]
+    return textured_sphere(rgb, glow=(230, 80, 40), lit=True)
 
 
 def spend(rng, *bases):
