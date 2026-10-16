@@ -136,7 +136,7 @@ explosion, and the game waits for it to finish.
 | Chenjesu Broodhome | photon crystal (ranged; lighter shards close up), DOGI (slows) | Mycon Podship | homing plasmoids at range, heavier plasmoids close up (both half damage against Yehat and Utwig shields); regrows crew |
 | Mmrnmhrm X-Wing / Y-Wing | recruit either; lasers or torpedoes, transforms; X-Wing cures (heals +8 and cures poison), Y-Wing cures +4 | Spathi Eluder | howitzer, B.U.T.T. |
 | Yehat Terminator | Attack with Shields (pulse cannons), Attack Only (rail cannons, pierce); armored hull (resists blade 40%, pierce 30%, impact 20%, arcane 10%); force shield (+40% with Attack with Shields, attacking or defending; +50% against ranged; down with Attack Only) | Umgah Drone | antimatter cone, skirmisher |
-| Syreen Penetrator | crew capacity as big as the Ur-Quan's (max HP 64 / 80 / 96) but always starts low (28 / 36 / 44 HP); promotion adds +8 HP instead of a full heal, or raises it to the new level's 36 / 44 if still below; planets, healers and resting only repair it up to that starting HP: only stolen crew (the song's drain, or capturing an enemy planet, which fills it to max) takes it higher; ranged particle dagger; close range: one-shot Syreen song (**lures crew**: heals the full damage dealt; **backstab**: one extra strike when flanking) and an entrancing hum (**slows**; **backstab**: double damage and one extra strike when flanking); neither works on the unmanned Slylandro Probe | VUX Intruder | close-range laser (**first strike**); long-range limpets (slow) |
+| Syreen Penetrator | crew capacity as big as the Ur-Quan's (max HP 64 / 80 / 96) but always starts low (28 / 36 / 44 HP); promotion adds +8 HP instead of a full heal, or raises it to the new level's 36 / 44 if still below; planets, healers and resting only repair it up to that starting HP: only stolen crew (the song's drain, or capturing an enemy's life world, which fills it to max) takes it higher; ranged particle dagger; close range: one-shot Syreen song (**lures crew**: heals the full damage dealt; **backstab**: one extra strike when flanking) and an entrancing hum (**slows**; **backstab**: double damage and one extra strike when flanking); neither works on the unmanned Slylandro Probe | VUX Intruder | close-range laser (**first strike**); long-range limpets (slow) |
 | Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison), Blazer ram |
 | Shofixti Scout | dart gun; **Glory Device**: one unavoidable fire strike of 8–16 / 10–20 / 12–24 by level on one ship, destroying the Scout | Ilwrath Avenger | Hellfire, cloaking device |
 
@@ -242,8 +242,15 @@ which replace the game's village gold and support settings:
 A ship doesn't take a planet the moment it lands. Landing on an enemy's
 planet destroys it (it belongs to nobody); then, as on any free planet,
 the ship starts building a colony (life world), mine (mineral world) or
-outpost (dead world), labelled on the planet. If the ship is still there when its
+outpost (dead world). If the ship is still there when its
 side's next turn starts, the planet is that side's and pays that turn.
+An enemy's colony (life world) blown up this way plays the colony destroyed
+scene below the planet, with "Colony destroyed" under the ship until it fades,
+unless the ship is a Syreen, which takes the colonists as crew instead; an
+enemy's mine (mineral world) plays the mine destroyed scene, with "Mine
+destroyed". These scenes, like the Syreen's and the Precursor
+artifact's, are cut from Star Control's own and play below the planet, or
+above it near the bottom of the map.
 
 Terrain, by hull size (moves to enter / defense):
 
