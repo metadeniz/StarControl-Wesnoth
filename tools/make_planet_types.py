@@ -7,6 +7,12 @@ make_art.py draws:
                                                         with glowing veins)
     dead world     planet6.png -> planet-dead2.png     (cratered)
 
+and a third look for each, drawn fresh:
+
+    planet-life3.png     ocean world: scattered islands under swirling cloud
+    planet-mineral3.png  crimson world banded in rust strata, flecked with ore
+    planet-dead3.png     dusty brown-grey world with dark basins and a rayed crater
+
     tools/make_planet_types.py [--out ADDON_DIR]
 
 The edits are worked out at 4x and scaled down, so caps and craters are
@@ -85,7 +91,7 @@ def down_rgb(arr):
     return np.dstack([down(arr[..., i]) for i in range(arr.shape[2])])
 
 
-def craters(src, rng, count=34):
+def craters(src, rng, count=34, basins=0):
     nx, ny, nz, inside = sphere_coords()
     n = HEX * SS
     yy, xx = np.mgrid[0:n, 0:n].astype(np.float32)
@@ -162,6 +168,83 @@ def mineral_world(rng):
     return canvas
 
 
+def textured_sphere(rgb, glow=None):
+    """4x rgb on the sphere, lit, scaled down, on a hex canvas with an optional glow."""
+    nx, ny, nz, inside = sphere_coords()
+    rgb = rgb * shade(nx, ny, nz)[..., None]
+    alpha = down(inside.astype(np.float32)) * 255
+    sphere = Image.fromarray(np.dstack([down_rgb(rgb), alpha]).clip(0, 255).astype(np.uint8), "RGBA")
+    canvas = Image.new("RGBA", (HEX, HEX), (0, 0, 0, 0))
+    if glow:
+        g = Image.new("RGBA", (HEX, HEX), (0, 0, 0, 0))
+        e = R + 3
+        ImageDraw.Draw(g).ellipse([CX - e - 0.5, CY - e - 0.5, CX + e - 0.5, CY + e - 0.5], fill=glow + (110,))
+        canvas.alpha_composite(g.filter(ImageFilter.GaussianBlur(3)))
+    canvas.alpha_composite(sphere)
+    return canvas
+
+
+def ramp(t, pal):
+    pal = np.array(pal, np.float32)
+    idx = np.clip(t * (len(pal) - 1), 0, len(pal) - 1.001)
+    lo = np.floor(idx).astype(int)
+    f = (idx - lo)[..., None]
+    return pal[lo] * (1 - f) + pal[lo + 1] * f
+
+
+def life_world3(rng):
+    """Mostly ocean: small green islands, wisps of cloud in bands."""
+    nx, ny, nz, inside = sphere_coords()
+    n = HEX * SS
+    land = noise(rng, n, base=5)
+    ocean = ramp(noise(rng, n, base=3), [(10, 40, 110), (18, 62, 150), (28, 86, 175)])
+    isle = ramp(np.clip((land - 0.52) / 0.48, 0, 1), [(70, 130, 60), (110, 150, 75), (150, 160, 110)])
+    m = np.clip((land - 0.52) * 25, 0, 1)[..., None]
+    rgb = ocean * (1 - m) + isle * m
+    # clouds: noise stretched along latitude bands
+    c = noise(rng, n, base=4)
+    warp = np.sin(ny * 8 + 9 * (c - 0.5)) * 0.5 + 0.5
+    cloud = np.clip((noise(rng, n, base=6) * 0.7 + warp * 0.3 - 0.55) * 3, 0, 0.8)[..., None]
+    rgb = rgb * (1 - cloud) + np.array([235, 240, 248], np.float32) * cloud
+    return textured_sphere(rgb, glow=(130, 190, 255))
+
+
+def mineral_world3(rng):
+    """Crimson world in tilted rust strata, flecked with bright ore."""
+    nx, ny, nz, inside = sphere_coords()
+    n = HEX * SS
+    t = noise(rng, n, base=3)
+    lat = ny * 0.8 + nx * 0.6 + 0.45 * (t - 0.5)
+    bands = np.sin(lat * 13) * 0.5 + 0.5
+    rgb = ramp(0.6 * bands + 0.4 * noise(rng, n, base=6),
+               [(40, 10, 12), (78, 18, 20), (128, 40, 26), (150, 62, 34), (92, 24, 22)])
+    flecks = (rng.random((n, n)) < 0.0025).astype(np.float32)
+    flecks = np.asarray(Image.fromarray((flecks * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(5)), np.float32) / 255
+    flecks *= np.clip((noise(rng, n, base=4) - 0.2) * 3, 0, 1)
+    rgb = rgb * (1 - flecks[..., None]) + np.array([255, 170, 90], np.float32) * flecks[..., None]
+    return textured_sphere(rgb, glow=(200, 50, 40))
+
+
+def dead_world3(rng):
+    """Dusty brown-grey: dark lava basins, a few craters, one bright rayed crater."""
+    nx, ny, nz, inside = sphere_coords()
+    n = HEX * SS
+    rgb = ramp(noise(rng, n, base=5), [(82, 74, 64), (118, 108, 94), (150, 140, 124), (176, 166, 150)])
+    basin = np.clip((noise(rng, n, base=3, octaves=4) - 0.5) * 5, 0, 0.75)[..., None]
+    rgb = rgb * (1 - basin) + np.array([52, 48, 46], np.float32) * basin
+    # rays from one young crater, upper right
+    yy, xx = np.mgrid[0:n, 0:n].astype(np.float32)
+    px, py = (xx + 0.5) / SS, (yy + 0.5) / SS
+    rx, ry = CX + 0.30 * R, CY - 0.22 * R
+    ang = np.arctan2(py - ry, px - rx)
+    dist = np.hypot(px - rx, py - ry)
+    spokes = np.clip(np.cos(ang * 9 + 2.0 * noise(rng, n, base=3)) * 1.6 - 0.6, 0, 1)
+    ray = spokes * np.clip(1 - dist / 14, 0, 1) * 0.55
+    rgb = rgb * (1 - ray[..., None]) + np.array([225, 220, 210], np.float32) * ray[..., None]
+    sphere = textured_sphere(rgb)
+    return craters(sphere, rng, count=14)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=os.path.join(os.path.dirname(__file__), ".."))
@@ -174,6 +257,9 @@ def main():
     mineral_world(rng).save(os.path.join(d, "planet-mineral2.png"))
     craters(Image.open(os.path.join(d, "planet6.png")).convert("RGBA"), rng).save(
         os.path.join(d, "planet-dead2.png"))
+    life_world3(rng).save(os.path.join(d, "planet-life3.png"))
+    mineral_world3(rng).save(os.path.join(d, "planet-mineral3.png"))
+    dead_world3(rng).save(os.path.join(d, "planet-dead3.png"))
 
 
 if __name__ == "__main__":
