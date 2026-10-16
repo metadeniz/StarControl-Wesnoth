@@ -145,6 +145,7 @@ SOUNDS = {
     "earthling-pd": "base/ships/human/secondary.wav",
     "chenjesu-crystal": "base/ships/chenjesu/primary.wav",
     "chenjesu-dogi": "base/ships/chenjesu/secondary.wav",
+    "chenjesu-shrapnel": "base/ships/chenjesu/shrapnel.wav",  # crystal shattering
     "mmrnmhrm-laser": "base/ships/mmrnmhrm/primaryx.wav",
     "mmrnmhrm-torpedo": "base/ships/mmrnmhrm/primaryy.wav",
     "mmrnmhrm-transform": "base/ships/mmrnmhrm/secondary.wav",
@@ -200,6 +201,7 @@ SOUNDS = {
     "boom-small": "base/battle/boom1.wav",
     "boom-medium": "base/battle/boom23.wav",
     "boom-large": "base/battle/boom45.wav",
+    "boom-huge": "base/battle/boom67.wav",        # a hit for 6+ (Chenjesu crystal)
     "ship-dies": "base/battle/shipdies.wav",
     "artifact": "base/battle/getcrew.wav",
 }
