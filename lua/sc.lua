@@ -288,6 +288,24 @@ function sc.victory_theme()
 	local side = local_human_side()
 	local theme = side and VICTORY_THEME[side.__cfg.faction]
 	if theme then wesnoth.audio.play(theme) end
+	if side and side.__cfg.faction == "SC_Alliance" then sc.alliance_victory() end
+end
+
+-- Star Control 1's Alliance victory screen, shown like a campaign's story
+-- screen while the victory theme plays: Earth ringed by the Alliance races
+-- (picture made by tools/make_alliance_victory.py), over the game's caption.
+function sc.alliance_victory()
+	gui.show_story({
+		T.part {
+			show_title = false,
+			story = _ "The Alliance humbles the Hierarchy",
+			T.background_layer {
+				image = "story/sc/alliance-victory.png",
+				base_layer = true,
+				keep_aspect_ratio = true,
+			},
+		},
+	}, _ "Victory")
 end
 
 -- Wesnoth 1.16 and 1.18 never move past a track marked shuffle=no: when it

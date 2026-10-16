@@ -114,7 +114,8 @@ The New Alliance and the Agents of Chaos have one playlist each:
 When you win, the old Alliance and the Hierarchy hear Star Control 1's
 victory theme for their side, the New Alliance hears Star Control II's
 victory fanfare, and the Agents of Chaos the opening of Chopin's Funeral
-March. When a ship destroys
+March. An Alliance win also shows Star Control 1's victory picture, Earth
+ringed by the Alliance races, as a story screen while its theme plays. When a ship destroys
 another, its race's victory ditty plays over the music (the Sa-Matra, which has
 none in Star Control II, plays the Precursors' remix of the Kohr-Ah ditty), which keeps going at
 full volume. A Pkunk that is reborn gets Star Control II's "hallelujah"
