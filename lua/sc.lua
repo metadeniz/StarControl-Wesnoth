@@ -665,7 +665,7 @@ function sc.syreen_after_healing()
 end
 
 -- The captain watching her ship fill up with the planet's colonists, on the
--- hex above the planet (below on the top edge, like the artifact device).
+-- hex below the planet, under its label (above on the bottom edge).
 -- Frames made by tools/make_syreen_capture_anim.py: 96 frames of the 15 fps
 -- clip played at 1.2x (55 ms each), the last held, 4 frames fading it out,
 -- then nothing until the halo is taken off at the Syreen side's next turn.
@@ -690,7 +690,7 @@ function sc.syreen_captured()
 		if locally_visible(u.x, u.y) then
 			wesnoth.interface.remove_hex_overlay(u.x, u.y, SYREEN_CAPTURE_ANIM)
 			wesnoth.interface.add_hex_overlay(u.x, u.y, { name = SYREEN_CAPTURE_ANIM,
-				halo = SYREEN_CAPTURE_HALO[u.y <= 2 and "below" or "above"] })
+				halo = SYREEN_CAPTURE_HALO[u.y >= wesnoth.current.map.playable_height - 1 and "above" or "below"] })
 		end
 		-- and a label on the planet for the rest of the Syreen side's turn
 		-- (hidden from players who have it under fog)

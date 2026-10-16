@@ -11,9 +11,9 @@ last picture is held, then faded out over a few frames.
 sc.syreen_captured in lua/sc.lua plays them as a halo when a Syreen takes an
 enemy planet and refills its crew. A halo is drawn centred on its hex, so
 the frames are baked twice onto a taller canvas with the picture one hex
-(72 px) off centre: images/halo/sc/syreen-capture-above-NNN.png shows it on
-the hex above the planet, syreen-capture-below-NNN.png on the hex below (for
-planets on the top edge).
+(72 px) off centre: images/halo/sc/syreen-capture-below-NNN.png shows it on
+the hex below the planet, under its label, syreen-capture-above-NNN.png on
+the hex above (for planets on the bottom edge).
 
 Needs ffmpeg. Run from the repository root:
     python3 tools/make_syreen_capture_anim.py path/to/clip.mp4
