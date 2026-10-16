@@ -544,6 +544,7 @@ images/projectiles/sc/torpedo-n.png
 images/projectiles/sc/torpedo-ne.png
 images/projectiles/sc/zapsat-n.png
 images/projectiles/sc/zapsat-ne.png
+images/story/sc/alliance-victory.png
 images/units/sc/androsynth-blazer-l1-n.png
 images/units/sc/androsynth-blazer-l1-ne.png
 images/units/sc/androsynth-blazer-l1-nw.png
