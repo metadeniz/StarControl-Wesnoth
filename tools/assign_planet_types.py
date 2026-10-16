@@ -11,9 +11,10 @@ and rotation (in steps of 60 degrees) that maps the planets onto each
 other, and gives each set of matching planets the same type, so every
 player gets the same mix. On a map that is only roughly symmetric it
 follows the closest symmetry; on a map with three or six players it uses
-the rotations only. Sets nearest the middle are typed first, each
-taking whichever type is rarest so far (ties broken by a generator seeded
-with the map's name), so the three types come out about even and spread
+the rotations only. First the script works out the mix of types closest to 40% life,
+40% mineral and 20% dead that the sets can make; then, typing the sets nearest
+the middle first, each takes the type furthest behind its count (ties broken
+by a generator seeded with the map's name), so the types spread
 from the middle to the edges. Same map, same result.
 
 The map scripts (make_*.py, convert_map.py) call this on the maps they
@@ -26,6 +27,7 @@ import random
 import sys
 
 TYPES = ("l", "m", "d")             # life, mineral, dead
+SHARE = {"l": 0.4, "m": 0.4, "d": 0.2}
 UNTYPED = ("Vyp", "Vys")
 SEA = "Vys"
 TOL = 0.5                           # in hexes: an exact match
@@ -119,6 +121,21 @@ def orbits(n, syms):
     return list(groups.values())
 
 
+def best_mix(count, sizes, total, rng):
+    """Final type counts the sets can make that come closest to the shares."""
+    reach = {(count["l"], count["m"])}
+    for n in sizes:
+        reach = {(l + dl, m + dm) for l, m in reach for dl, dm in ((n, 0), (0, n), (0, 0))}
+    left = sum(sizes) + count["l"] + count["m"] + count["d"]
+    def miss(lm):
+        l, m = lm
+        d = left - l - m
+        return sum((v - SHARE[t] * total) ** 2 for t, v in zip(TYPES, (l, m, d)))
+    best = min(miss(lm) for lm in reach)
+    l, m = rng.choice(sorted(lm for lm in reach if miss(lm) - best < 1e-9))
+    return {"l": l, "m": m, "d": left - l - m}
+
+
 def assign(text, name, retype=False):
     """Returns the new map text and a one-line report."""
     rows = parse(text)
@@ -153,10 +170,40 @@ def assign(text, name, retype=False):
         else:
             todo.append(g)
     dist = lambda g: min(math.hypot(pts[i][0] - mx, pts[i][1] - my) for i in g)
-    for g in sorted(todo, key=lambda g: (round(dist(g), 3), min(cells[i] for i in g))):
-        low = min(count.values())
-        t = rng.choice([t for t in TYPES if count[t] == low])
-        count[t] += len(g)
+    todo.sort(key=lambda g: (round(dist(g), 3), min(cells[i] for i in g)))
+    sizes = [len(g) for g in todo]
+    target = best_mix(count, sizes, len(cells), rng)
+    need = {t: target[t] - count[t] for t in TYPES}
+
+    from functools import lru_cache
+
+    @lru_cache(maxsize=None)
+    def fits(k, nl, nm):
+        """Can sets k.. fill exactly nl life and nm mineral (dead the rest)?"""
+        if k == len(sizes):
+            return nl == 0 and nm == 0
+        n = sizes[k]
+        return ((nl >= n and fits(k + 1, nl - n, nm)) or (nm >= n and fits(k + 1, nl, nm - n))
+                or fits(k + 1, nl, nm) and sum(sizes[k:]) - n >= nl + nm)
+
+    got = {t: 0 for t in TYPES}
+    for k, g in enumerate(todo):
+        # the type furthest behind its target once this set is added, among
+        # those that still let the remaining sets hit the target exactly
+        n = len(g)
+        options = []
+        for t in TYPES:
+            left = dict(need)
+            if left[t] < n:
+                continue
+            left[t] -= n
+            if fits(k + 1, left["l"], left["m"]):
+                options.append(((got[t] + n) / max(target[t], 1), t))
+        low = min(o[0] for o in options)
+        t = rng.choice([t for v, t in options if v - low < 1e-9])
+        need[t] -= n
+        got[t] += n
+        count[t] += n
         for i in g:
             x, y = cells[i]
             code = rows[y][x]
