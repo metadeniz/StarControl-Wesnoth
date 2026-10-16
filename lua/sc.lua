@@ -688,7 +688,6 @@ function sc.syreen_captured()
 		u.hitpoints = u.max_hitpoints
 		-- this client's alone, so only shown if its player can see the planet
 		if locally_visible(u.x, u.y) then
-			wesnoth.interface.float_label(u.x, u.y, "<span color='#ff80d0'>" .. tostring(_ "Syreen gains full crew.") .. "</span>")
 			wesnoth.interface.remove_hex_overlay(u.x, u.y, SYREEN_CAPTURE_ANIM)
 			wesnoth.interface.add_hex_overlay(u.x, u.y, { name = SYREEN_CAPTURE_ANIM,
 				halo = SYREEN_CAPTURE_HALO[u.y <= 2 and "below" or "above"] })
