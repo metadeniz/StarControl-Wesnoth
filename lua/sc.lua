@@ -457,17 +457,20 @@ end
 local ARTIFACT_XP = 8
 local ARTIFACTS = {
 	{ id = "drive",    name = _ "+drive",
-	  description = _ "Precursor artifact: a drive unit. +1 movement.",
-	  effect = { apply_to = "movement", increase = 1 } },
+	  description = _ "Precursor artifact: a drive unit. +1 movement, and 10% better defense on every terrain.",
+	  effects = { { apply_to = "movement", increase = 1 },
+		{ apply_to = "defense", replace = false, T.defense {   -- chance to be hit, so -10 is +10% defense
+			space = -10, nebula = -10, rednebula = -10, ionstorm = -10, lightstorm = -10, dust = -10,
+			asteroids = -10, dense_asteroids = -10, planet = -10, starbase = -10 } } } },
 	{ id = "crew",     name = _ "+crew",
-	  description = _ "Precursor artifact: life-support pods, room for more crew. +6 max HP.",
-	  effect = { apply_to = "hitpoints", increase_total = 6, increase = 6 } },
+	  description = _ "Precursor artifact: life-support pods, room for more crew. +8 max HP.",
+	  effects = { { apply_to = "hitpoints", increase_total = 8, increase = 8 } } },
 	{ id = "battery",  name = _ "+battery",
 	  description = _ "Precursor artifact: a bigger energy battery. +1 strike on every attack.",
-	  effect = { apply_to = "attack", increase_attacks = 1 } },
+	  effects = { { apply_to = "attack", increase_attacks = 1 } } },
 	{ id = "recharge", name = _ "+recharge",
-	  description = _ "Precursor artifact: a battery recharger. +1 damage on every attack.",
-	  effect = { apply_to = "attack", increase_damage = 1 } },
+	  description = _ "Precursor artifact: a battery recharger. +2 damage on every attack.",
+	  effects = { { apply_to = "attack", increase_damage = 2 } } },
 }
 
 local function artifact_key(x, y) return "sc_artifact_" .. x .. "_" .. y end
@@ -536,12 +539,13 @@ function sc.check_artifact()
 	local a = ARTIFACTS[mathx.random(#ARTIFACTS)]
 	local n = (u.variables.sc_artifacts or 0) + 1
 	u.variables.sc_artifacts = n
-	u:add_modification("trait", {
+	local trait = {
 		id = "sc_artifact_" .. a.id .. "_" .. n,
 		male_name = a.name, female_name = a.name,
 		description = a.description,
-		T.effect(a.effect),
-	})
+	}
+	for _, e in ipairs(a.effects) do trait[#trait + 1] = T.effect(e) end
+	u:add_modification("trait", trait)
 	-- Sound, animation and floating text are this client's alone (they change
 	-- nothing in the game; the animation is a bare hex overlay, not an [item],
 	-- so it is never saved), so each client shows them only if its player can
@@ -677,24 +681,39 @@ function sc.syreen_captured()
 			wesnoth.interface.add_hex_overlay(u.x, u.y, { name = SYREEN_CAPTURE_ANIM,
 				halo = SYREEN_CAPTURE_HALO[u.y <= 2 and "below" or "above"] })
 		end
-		-- and, like an artifact find, a label on the planet until the Syreen
-		-- side's next turn (hidden from players who have it under fog)
+		-- and a label on the planet for the rest of the Syreen side's turn
+		-- (hidden from players who have it under fog)
 		wesnoth.map.add_label { x = u.x, y = u.y, color = "255,128,208", immutable = true,
 			visible_in_fog = false, visible_in_shroud = false,
 			text = tostring(_ "Syreen gains full crew.") }
-		local anims = wml.array_access.get("sc_syreen_capture_anims")
-		anims[#anims + 1] = { x = u.x, y = u.y, side = u.side }
-		wml.array_access.set("sc_syreen_capture_anims", anims)
+		for _, list in ipairs { "sc_syreen_capture_labels", "sc_syreen_capture_anims" } do
+			local l = wml.array_access.get(list)
+			l[#l + 1] = { x = u.x, y = u.y, side = u.side }
+			wml.array_access.set(list, l)
+		end
 	end
 end
 
--- Start of a side's turn: take off the capture animations and labels it put
--- up last turn.
+-- End of a side's turn: take down the capture labels it put up this turn.
+function sc.expire_syreen_capture_labels()
+	local keep = {}
+	for _, a in ipairs(wml.array_access.get("sc_syreen_capture_labels")) do
+		if a.side == wesnoth.current.side then
+			wesnoth.map.add_label { x = a.x, y = a.y, text = "" }
+		else
+			keep[#keep + 1] = a
+		end
+	end
+	wml.array_access.set("sc_syreen_capture_labels", keep)
+end
+
+-- Start of a side's turn: take off the capture animations it played last
+-- turn (left until now so a capture just before ending the turn still plays
+-- out in full).
 function sc.expire_syreen_capture_anims()
 	local keep = {}
 	for _, a in ipairs(wml.array_access.get("sc_syreen_capture_anims")) do
 		if a.side == wesnoth.current.side then
-			wesnoth.map.add_label { x = a.x, y = a.y, text = "" }
 			wesnoth.interface.remove_hex_overlay(a.x, a.y, SYREEN_CAPTURE_ANIM)
 		else
 			keep[#keep + 1] = a

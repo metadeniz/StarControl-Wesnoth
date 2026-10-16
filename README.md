@@ -130,7 +130,7 @@ leaves them as loud as before.
 | Earthling Cruiser | homing nukes, point-defense (fighters hit it at most 50%) | Ur-Quan Dreadnought | close-range fusion blast; fighters at any range (**swarm**: fewer as crew is lost) |
 | Chenjesu Broodhome | photon crystal (ranged; lighter shards close up), DOGI (slows) | Mycon Podship | homing plasmoids at range, heavier plasmoids close up (both half damage against Yehat and Utwig shields); regrows crew |
 | Mmrnmhrm X-Wing / Y-Wing | recruit either; lasers or torpedoes, transforms; X-Wing cures (heals +8 and cures poison), Y-Wing cures +4 | Spathi Eluder | howitzer, B.U.T.T. |
-| Yehat Terminator | pulse cannons, rail cannons (pierce); armored hull (resists blade 40%, pierce 30%, impact 20%, arcane 10%); force shield (+40% while firing pulse cannons, attacking or defending; +50% against ranged; down while firing rail cannons) | Umgah Drone | antimatter cone, skirmisher |
+| Yehat Terminator | Attack with Shields (pulse cannons), Attack Only (rail cannons, pierce); armored hull (resists blade 40%, pierce 30%, impact 20%, arcane 10%); force shield (+40% with Attack with Shields, attacking or defending; +50% against ranged; down with Attack Only) | Umgah Drone | antimatter cone, skirmisher |
 | Syreen Penetrator | crew capacity as big as the Ur-Quan's (max HP 64 / 80 / 96) but always starts low (28 / 36 / 44 HP); promotion adds +8 HP instead of a full heal, or raises it to the new level's 36 / 44 if still below; planets, healers and resting only repair it up to that starting HP: only stolen crew (the song's drain, or capturing an enemy planet, which fills it to max) takes it higher; ranged particle dagger; close range: one-shot Syreen song (**lures crew**: heals the full damage dealt; **backstab**: one extra strike when flanking) and an entrancing hum (**slows**; **backstab**: double damage and one extra strike when flanking); neither works on the unmanned Slylandro Probe | VUX Intruder | close-range laser (**first strike**); long-range limpets (slow) |
 | Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison), Blazer ram |
 | Shofixti Scout | dart gun; **Glory Device**: one unavoidable fire strike of 8–16 / 10–20 / 12–24 by level on one ship, destroying the Scout | Ilwrath Avenger | Hellfire, cloaking device |
@@ -171,7 +171,7 @@ from the start (and the Spathi and Shofixti, which only get it as Elites):
 | Earthling Cruiser | heavier nukes, stronger point-defense, **heals +4** | nukes ×3, **leadership** |
 | Chenjesu Broodhome | stronger crystals, DOGI ×3, **heals +4** | **cures** (heals +8 and cures poison) |
 | Mmrnmhrm X-Wing / Y-Wing | X-Wing lasers **backstab**; stronger torpedoes ×3 | lasers ×5 / heavy torpedoes, **self-repair** |
-| Yehat Terminator | pulse cannons ×6, rail cannons ×5 | **first strike** |
+| Yehat Terminator | Attack with Shields ×6, Attack Only ×5 | **first strike** |
 | Syreen Penetrator | song gets a 2nd shot, hum ×3 | stronger song, hum ×5, dagger ×4 |
 | Arilou Skiff | new **ranged** laser; close laser **backstab**; **ambush** | ambush, laser ×4 |
 | Shofixti Scout | stronger darts, 10–20 damage Glory | **skirmisher**, darts **backstab**, 12–24 damage Glory |
@@ -214,10 +214,10 @@ panel (hover it for details):
 
 | Trait | Bonus |
 |---|---|
-| +drive | +1 movement |
-| +crew | +6 max HP |
+| +drive | +1 movement, and +10% defense on every terrain |
+| +crew | +8 max HP |
 | +battery | +1 strike on every attack |
-| +recharge | +1 damage on every attack |
+| +recharge | +2 damage on every attack |
 
 **Right-click actions** (click your own ship, then pick the top menu entry):
 
