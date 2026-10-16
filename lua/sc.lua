@@ -681,24 +681,39 @@ function sc.syreen_captured()
 			wesnoth.interface.add_hex_overlay(u.x, u.y, { name = SYREEN_CAPTURE_ANIM,
 				halo = SYREEN_CAPTURE_HALO[u.y <= 2 and "below" or "above"] })
 		end
-		-- and, like an artifact find, a label on the planet until the Syreen
-		-- side's next turn (hidden from players who have it under fog)
+		-- and a label on the planet for the rest of the Syreen side's turn
+		-- (hidden from players who have it under fog)
 		wesnoth.map.add_label { x = u.x, y = u.y, color = "255,128,208", immutable = true,
 			visible_in_fog = false, visible_in_shroud = false,
 			text = tostring(_ "Syreen gains full crew.") }
-		local anims = wml.array_access.get("sc_syreen_capture_anims")
-		anims[#anims + 1] = { x = u.x, y = u.y, side = u.side }
-		wml.array_access.set("sc_syreen_capture_anims", anims)
+		for _, list in ipairs { "sc_syreen_capture_labels", "sc_syreen_capture_anims" } do
+			local l = wml.array_access.get(list)
+			l[#l + 1] = { x = u.x, y = u.y, side = u.side }
+			wml.array_access.set(list, l)
+		end
 	end
 end
 
--- Start of a side's turn: take off the capture animations and labels it put
--- up last turn.
+-- End of a side's turn: take down the capture labels it put up this turn.
+function sc.expire_syreen_capture_labels()
+	local keep = {}
+	for _, a in ipairs(wml.array_access.get("sc_syreen_capture_labels")) do
+		if a.side == wesnoth.current.side then
+			wesnoth.map.add_label { x = a.x, y = a.y, text = "" }
+		else
+			keep[#keep + 1] = a
+		end
+	end
+	wml.array_access.set("sc_syreen_capture_labels", keep)
+end
+
+-- Start of a side's turn: take off the capture animations it played last
+-- turn (left until now so a capture just before ending the turn still plays
+-- out in full).
 function sc.expire_syreen_capture_anims()
 	local keep = {}
 	for _, a in ipairs(wml.array_access.get("sc_syreen_capture_anims")) do
 		if a.side == wesnoth.current.side then
-			wesnoth.map.add_label { x = a.x, y = a.y, text = "" }
 			wesnoth.interface.remove_hex_overlay(a.x, a.y, SYREEN_CAPTURE_ANIM)
 		else
 			keep[#keep + 1] = a
