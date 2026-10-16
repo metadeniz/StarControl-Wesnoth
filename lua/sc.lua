@@ -654,14 +654,14 @@ end
 
 -- The captain watching her ship fill up with the planet's colonists, on the
 -- hex above the planet (below on the top edge, like the artifact device).
--- Frames made by tools/make_syreen_capture_anim.py: 59 frames at 15 fps, the
--- last held, 4 frames fading it out, then nothing until the halo is taken
--- off at the Syreen side's next turn.
+-- Frames made by tools/make_syreen_capture_anim.py: 96 frames of the 15 fps
+-- clip played at 1.2x (55 ms each), the last held, 4 frames fading it out,
+-- then nothing until the halo is taken off at the Syreen side's next turn.
 local SYREEN_CAPTURE_ANIM = "sc_syreen_capture_anim"
 local function syreen_capture_halo(where)
 	local f = {}
-	for i = 1, 63 do
-		f[i] = string.format("halo/sc/syreen-capture-%s-%03d.png:%d", where, i, i == 59 and 1000 or 66)
+	for i = 1, 100 do
+		f[i] = string.format("halo/sc/syreen-capture-%s-%03d.png:%d", where, i, i == 96 and 1000 or 55)
 	end
 	f[#f + 1] = "misc/blank-hex.png:3600000"
 	return table.concat(f, ",")

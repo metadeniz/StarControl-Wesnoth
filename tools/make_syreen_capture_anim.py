@@ -3,9 +3,10 @@
 Takes a short clip (120x82, 30 fps) of the Star Control scene, with a grey
 bevelled frame around it, and cuts it down to the scene itself: the frame is
 cropped off (a 106x70 picture is left), and only clip frames START..END are
-kept, at 15 fps, from the captain standing hands on hips, through her folding
-her arms, to the end of one full loop of the crew walking aboard. The last
-picture is held, then faded out over a few frames.
+kept, at 15 fps: the whole clip, from the captain standing hands on hips,
+through her folding her arms, up to the elevator's fifth return into the ship
+with its doorway empty. sc.syreen_captured plays them at 1.2x speed; the
+last picture is held, then faded out over a few frames.
 
 sc.syreen_captured in lua/sc.lua plays them as a halo when a Syreen takes an
 enemy planet and refills its crew. A halo is drawn centred on its hex, so
@@ -30,7 +31,7 @@ from PIL import Image
 OUT = "images/halo/sc/syreen-capture-{}-{:03d}.png"
 HEX = 72                    # picture centre this far above / below the planet's
 CROP = (6, 6, 112, 76)      # left, top, right, bottom: inside the grey frame
-START, END = 1, 117         # clip frames kept (1-based, inclusive)
+START, END = 1, 191         # clip frames kept (1-based, inclusive)
 STEP = 2                    # keep every 2nd frame: 30 fps -> 15 fps
 FADE = (0.8, 0.6, 0.4, 0.2)
 
