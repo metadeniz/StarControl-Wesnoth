@@ -20,6 +20,8 @@ Usage: make_understanding_power.py <add-on dir>
 import os
 import sys
 
+from assign_planet_types import assign_file
+
 W, H = 38, 28            # playable hexes; Wesnoth adds a one-hex border
 
 T = {".": "Ys", "s": "Yis", "n": "Yn", "d": "Yd", "r": "Yd", "B": "Yi", "l": "Yis", "f": "Yif",
@@ -206,6 +208,7 @@ def write(grid, path, table=T, base_only=("Yk", "Ys^Vyp"), start=(5, 3)):
         rows.append(", ".join(row))
     with open(path, "w") as f:
         f.write("\n".join(rows) + "\n")
+    assign_file(path, quiet=True)          # life, mineral and dead worlds
 
 
 if __name__ == "__main__":

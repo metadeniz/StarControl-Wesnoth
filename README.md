@@ -286,6 +286,11 @@ Broodhome also crosses nebulae, dust clouds and badlands for 1 move.
   Year 501, an original team map, west vs east, mirrored west to east; both
   print each start's planet distances as
   a balance check.
+- `tools/assign_planet_types.py <map> ...` makes each untyped planet a life,
+  mineral or dead world, following the map's symmetry so every player gets
+  the same mix. The map scripts above and `convert_map.py` run it on the maps
+  they write. `tools/make_planet_types.py` draws the planet art (three looks
+  per type; an untyped planet picks any of the nine).
 - `tools/grid_overlay.py <map> <render.png> <out.png>` draws a hex grid with
   each hex's in-game coordinates over a `wesnoth --screenshot` render of the
   map, so changes can be asked for by hex.

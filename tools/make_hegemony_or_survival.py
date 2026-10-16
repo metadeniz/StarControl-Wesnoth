@@ -46,6 +46,8 @@ import math
 import os
 import sys
 
+from assign_planet_types import assign_file
+
 R = 18                        # the hexagon's radius in hexes, centre to corner
 W = H = 2 * R + 1             # playable hexes; Wesnoth adds a one-hex border
 CX, CY = R, R                 # the centre hex (an even column)
@@ -372,6 +374,7 @@ def write(m, path_, ks):
         rows.append(", ".join(row))
     with open(path_, "w") as f:
         f.write("\n".join(rows) + "\n")
+    assign_file(path_, quiet=True)          # life, mineral and dead worlds
 
 
 def report(m, ks):

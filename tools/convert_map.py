@@ -39,6 +39,8 @@ import collections
 import re
 import sys
 
+from assign_planet_types import assign_file
+
 
 def convert(code):
     if code.startswith("_off"):
@@ -119,6 +121,7 @@ def main():
         counts.update(code for _, code in row)
     with open(dst, "w") as f:
         f.write("\n".join(rows) + "\n")
+    assign_file(dst, quiet=True)          # life, mineral and dead worlds
     for code, n in counts.most_common():
         print(f"  {code:12s} {n}")
 

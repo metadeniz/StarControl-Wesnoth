@@ -514,7 +514,7 @@ end
 function sc.place_artifacts()
 	local map = wesnoth.current.map
 	local planets = wesnoth.map.find {
-		terrain = "*^Vyp,*^Vys",
+		terrain = "*^Vy*",
 		T["not"] { T.filter_adjacent_location { terrain = "Yk,Yc,Yci" } },
 		T["not"] { terrain = "Yk,Yc,Yci" },
 	}

@@ -39,6 +39,8 @@ import math
 import os
 import sys
 
+from assign_planet_types import assign_file
+
 W, H = 35, 31                 # playable hexes; Wesnoth adds a one-hex border
 CX, CY = 17, 15               # the centre hex
 SX, SY = 547, 539             # the screenshot's centre of rotation
@@ -414,6 +416,7 @@ def write(grid, keeps, path, table=T, base_only=("Yk", "Ys^Vyp")):
         rows.append(", ".join(row))
     with open(path, "w") as f:
         f.write("\n".join(rows) + "\n")
+    assign_file(path, quiet=True)          # life, mineral and dead worlds
 
 
 if __name__ == "__main__":

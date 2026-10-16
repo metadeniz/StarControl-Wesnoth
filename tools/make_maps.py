@@ -16,6 +16,8 @@ Usage: make_maps.py <add-on dir>
 import os
 import sys
 
+from assign_planet_types import assign_file
+
 TERRAIN = {
     ".": "Ys", "n": "Yn", "a": "Ys^Ya", "A": "Yn^Ya",
     "p": "Ys^Vyp", "P": "Yn^Vyp", "*": "Ys^Yx", "K": "Yk",
@@ -129,6 +131,7 @@ def main():
         data, w, h = build(text)
         with open(os.path.join(out, name + ".map"), "w") as f:
             f.write(data)
+        assign_file(os.path.join(out, name + ".map"), quiet=True)   # life, mineral and dead worlds
         planets = data.count("^Vyp")
         print(f"{name}: {w - 2}x{h - 2} playable, {planets} planets")
 
