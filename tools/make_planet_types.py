@@ -8,22 +8,24 @@ made from a make_art.py planet:
 and drawn fresh:
 
     planet-life1.png     planet.png redrawn: green land, blue seas, cloud, haze
-    planet-mineral1.png  planet5.png redrawn: black crust and glowing lava seas
     planet-dead1.png     planet6.png redrawn: grey regolith, plains, old craters
 
     planet-life2.png     continents of forest, savanna and desert in teal
                          seas, small polar caps
-    planet-mineral2.png  dark-red world with glowing veins
     planet-life3.png     ocean world: scattered islands under swirling cloud
-    planet-mineral3.png  dark red crust in plates, some rich in copper ore,
-                         with craters
     planet-dead3.png     dusty brown-grey world with dark basins and a rayed crater
     planet-life4.png     jungle: emerald forest, small lakes and rivers
     planet-life5.png     archipelago: turquoise seas, small sandy islands
     planet-life6.png     green continents, brown uplands, small deserts
-    planet-mineral4.png  iron world: rusty plains glittering with ore
-    planet-mineral5.png  pool world: dark rock pocked with small lava pools
-    planet-mineral6.png  volcanic world: grey-brown basalt, calderas, lava flows
+
+and six mineral worlds, all on the same rusty, Mars-like surface:
+
+    planet-mineral1.png  lava seas in the lowlands
+    planet-mineral2.png  thin lava rivers
+    planet-mineral3.png  plates split by wandering lava cracks
+    planet-mineral4.png  one long rift canyon with lava on its floor, ore, craters
+    planet-mineral5.png  many small lava pools
+    planet-mineral6.png  volcanoes: glowing calderas and lava flows
 
     tools/make_planet_types.py [--out ADDON_DIR]
 
@@ -126,25 +128,6 @@ def craters(src, rng, count=34, basins=0):
     return Image.fromarray(img.clip(0, 255).astype(np.uint8), "RGBA")
 
 
-def mineral_world(rng):
-    """Dark red rock cut by rivers of orange-red lava, in planet5's red glow."""
-    nx, ny, nz, inside = sphere_coords()
-    n = HEX * SS
-    rock = ramp(noise(rng, n, base=3), [(30, 9, 8), (56, 16, 12), (84, 24, 16), (104, 32, 20)])
-    # rivers: ridges of two noise fields, wide channels with a hot core
-    river = np.zeros((n, n), np.float32)
-    for b, wdt in ((4, 0.075), (7, 0.05)):
-        r = noise(rng, n, base=b, octaves=4)
-        river = np.maximum(river, np.clip(1 - np.abs(r - 0.5) / wdt, 0, 1))
-    river *= np.clip((noise(rng, n, base=3) - 0.12) * 3, 0, 1)   # a few breaks
-    lava = ramp(river, [(110, 20, 8), (170, 40, 10), (215, 70, 16), (240, 110, 30)])
-    s = shade(nx, ny, nz)
-    # keep the lava off the limb so the planet has a clean dark outline
-    m = np.clip(river * 2.2, 0, 1) * limb_fade(nx, ny)
-    m = m[..., None]
-    # lava glows on its own, a little dimmer on the night side
-    rgb = rock * s[..., None] * (1 - m) + lava * (0.6 + 0.4 * s)[..., None] * m
-    return textured_sphere(rgb, glow=(220, 60, 40), lit=True)
 
 
 def textured_sphere(rgb, glow=None, lift=None, atmo=None, lit=False):
@@ -223,44 +206,6 @@ def limb_fade(nx, ny, start=0.82):
     return np.clip((1 - np.sqrt(nx ** 2 + ny ** 2)) / (1 - start), 0, 1)
 
 
-def mineral_world3(rng):
-    """A few huge dark continents of rock, split here and there by thin
-    orange cracks of lava."""
-    nx, ny, nz, inside = sphere_coords()
-    n = HEX * SS
-    # wobble the normals so the cracks wander instead of running straight
-    w = 0.10
-    wx, wy, wz = (noise(rng, n, base=5, octaves=5) - 0.5 for _ in range(3))
-    v = np.stack([nx + w * wx, ny + w * wy, nz + w * wz], -1).reshape(-1, 3)
-    v /= np.linalg.norm(v, axis=1, keepdims=True)
-    pts = rng.normal(size=(14, 3))
-    pts /= np.linalg.norm(pts, axis=1, keepdims=True)
-    ang = np.arccos(np.clip(v @ pts.T, -1, 1))
-    order = np.argsort(ang, axis=1)
-    first, second = order[:, 0], order[:, 1]
-    gap = (np.take_along_axis(ang, order[:, 1:2], 1) - np.take_along_axis(ang, order[:, :1], 1))[:, 0]
-    # only some borders crack open; the rest are solid rock
-    k = len(pts)
-    opened = rng.random((k, k)) < 0.6
-    opened = opened | opened.T
-    crack = opened[first, second] * np.clip(1 - gap / 0.02, 0, 1)
-    crack = crack.reshape(n, n) * limb_fade(nx, ny)
-    warm = (opened[first, second] * np.clip(1 - gap / 0.07, 0, 1)).reshape(n, n) * limb_fade(nx, ny)
-    tone = rng.random(k)[first].reshape(n, n)
-    grain = noise(rng, n, base=6, octaves=6)
-    rock = ramp(np.clip(0.45 * tone + 0.55 * grain, 0, 1),
-                [(48, 15, 13), (76, 24, 17), (108, 36, 22), (138, 52, 30)])
-    fine = noise(rng, n, base=14, octaves=3)
-    rock *= (0.72 + 0.56 * fine)[..., None]                # rough, mottled rock
-    low = np.clip((0.42 - noise(rng, n, base=4, octaves=4)) * 4, 0, 0.5)[..., None]
-    rock = rock * (1 - low) + np.array([34, 11, 10], np.float32) * low   # dark lowlands
-    # the rock beside a crack is heated a dull red
-    rock = rock * (1 - 0.5 * warm[..., None]) + np.array([150, 40, 16], np.float32) * 0.5 * warm[..., None]
-    s = shade(nx, ny, nz)
-    hot = np.array([250, 120, 30], np.float32) * (0.7 + 0.3 * s)[..., None]
-    c = crack[..., None]
-    rgb = rock * s[..., None] * (1 - c) + hot * c
-    return textured_sphere(rgb, glow=(220, 60, 40), lit=True)
 
 
 def spend(rng, *bases):
@@ -308,20 +253,6 @@ def life_world1(rng):
     return textured_sphere(rgb, glow=(120, 170, 255), atmo=(140, 190, 255))
 
 
-def mineral_world1(rng):
-    """planet5.png's molten world, redrawn: a black crust split by seas of
-    lava that glow yellow at their hearts and on the night side too."""
-    nx, ny, nz, inside = sphere_coords()
-    n = HEX * SS
-    melt = 0.6 * noise(rng, n, base=8, octaves=5) + 0.4 * noise(rng, n, base=3)
-    shore = np.quantile(melt[inside], 0.6)      # lava covers about 40%
-    crust = ramp(noise(rng, n, base=8), [(34, 14, 12), (60, 24, 16), (86, 36, 22)])
-    heat = np.clip((melt - shore) / 0.25, 0, 1)
-    lava = ramp(heat, [(150, 30, 8), (225, 80, 12), (255, 150, 30), (255, 220, 110)])
-    m = np.clip((melt - shore) * 30, 0, 1)
-    s = shade(nx, ny, nz)
-    rgb = crust * s[..., None] * (1 - m[..., None]) + lava * (0.55 + 0.45 * s)[..., None] * m[..., None]
-    return textured_sphere(rgb, glow=(255, 110, 50), lit=True)
 
 
 def dead_world1(rng):
@@ -394,72 +325,143 @@ def life_world6(rng):
     return textured_sphere(rgb, glow=(120, 180, 255), atmo=(150, 200, 255))
 
 
-def mineral_world4(rng):
-    """Iron world: rusty oxide plains and darker iron highlands, glittering
-    with flecks of copper and gold ore."""
-    nx, ny, nz, inside = sphere_coords()
-    n = HEX * SS
-    rgb = ramp(noise(rng, n, base=4, octaves=6), [(60, 22, 14), (110, 44, 22), (150, 66, 30), (176, 92, 46)])
-    high = np.clip((noise(rng, n, base=3, octaves=5) - 0.55) * 4, 0, 0.6)[..., None]
-    rgb = rgb * (1 - high) + np.array([46, 34, 32], np.float32) * high
-    fl = (rng.random((n, n)) < 0.004).astype(np.float32)
-    fl = np.asarray(Image.fromarray((fl * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(5)), np.float32) / 255
-    fl *= np.clip((noise(rng, n, base=5) - 0.35) * 3, 0, 1)
-    gold = np.where(rng.random((n, n)) < 0.5, 1.0, 0.0)[..., None]
-    ore = np.array([240, 200, 90], np.float32) * gold + np.array([230, 130, 70], np.float32) * (1 - gold)
-    rgb = rgb * (1 - fl[..., None]) + ore * fl[..., None]
-    return craters(textured_sphere(rgb, glow=(210, 90, 50)), rng, count=8)
 
+
+
+
+
+
+# The mineral worlds all share a Mars-like rusty surface (mars()), each with
+# its own kind of lava on it.
+MARS_GLOW = (210, 90, 50)
+
+def mars(rng):
+    n = HEX * SS
+    """Mineral v4's rusty base: oxide plains, dark iron highlands, pale dust."""
+    rgb = ramp(noise(rng, n, base=4, octaves=6), [(70, 26, 16), (118, 48, 24), (156, 70, 32), (182, 98, 50)])
+    high = np.clip((noise(rng, n, base=3, octaves=5) - 0.55) * 4, 0, 0.6)[..., None]
+    rgb = rgb * (1 - high) + np.array([52, 34, 30], np.float32) * high
+    dust = np.clip((noise(rng, n, base=5, octaves=4) - 0.62) * 3, 0, 0.35)[..., None]
+    rgb = rgb * (1 - dust) + np.array([200, 130, 80], np.float32) * dust
+    return rgb
+
+def lava_blend(rgb, heat, s, nx, ny, pal=None, k=1.8):
+    """Lava over rgb where heat > 0, faded off the limb, glowing at night too."""
+    heat = heat * limb_fade(nx, ny)
+    pal = pal or [(120, 24, 8), (195, 56, 12), (236, 100, 22), (252, 160, 46)]
+    lava = ramp(heat, pal)
+    h = np.clip(heat * k, 0, 1)[..., None]
+    return rgb * (1 - h) + lava * (0.7 + 0.3 * s)[..., None] * h
+
+def mineral_world1(rng):
+    """Mars with a few lava seas in its lowlands (v1)."""
+    n = HEX * SS
+    nx, ny, nz, inside = sphere_coords()
+    s = shade(nx, ny, nz)
+    rgb = mars(rng) * s[..., None]
+    melt = 0.6 * noise(rng, n, base=6, octaves=5) + 0.4 * noise(rng, n, base=3)
+    shore = np.quantile(melt[inside], 0.78)
+    heat = np.clip((melt - shore) / 0.18, 0, 1)
+    rgb = lava_blend(rgb, np.clip(heat * 0.85 + (melt > shore) * 0.15, 0, 1), s, nx, ny, k=6)
+    return craters(textured_sphere(rgb, glow=MARS_GLOW, lit=True), rng, count=6)
+
+def mineral_world2(rng):
+    """Mars cut by thin orange-red lava rivers (v2)."""
+    n = HEX * SS
+    nx, ny, nz, inside = sphere_coords()
+    s = shade(nx, ny, nz)
+    rgb = mars(rng) * s[..., None]
+    river = np.zeros((n, n), np.float32)
+    for b, w in ((4, 0.04), (7, 0.028)):
+        r = noise(rng, n, base=b, octaves=4)
+        river = np.maximum(river, np.clip(1 - np.abs(r - 0.5) / w, 0, 1))
+    river *= np.clip((noise(rng, n, base=3) - 0.2) * 3, 0, 1)
+    return textured_sphere(lava_blend(rgb, river, s, nx, ny, k=2.2), glow=MARS_GLOW, lit=True)
+
+def mineral_world3(rng):
+    """Mars in huge plates split by thin glowing cracks (v3)."""
+    n = HEX * SS
+    nx, ny, nz, inside = sphere_coords()
+    s = shade(nx, ny, nz)
+    w = 0.26
+    wx, wy, wz = (noise(rng, n, base=4, octaves=6) - 0.5 for _ in range(3))
+    v = np.stack([nx + w * wx, ny + w * wy, nz + w * wz], -1).reshape(-1, 3)
+    v /= np.linalg.norm(v, axis=1, keepdims=True)
+    pts = rng.normal(size=(30, 3)); pts /= np.linalg.norm(pts, axis=1, keepdims=True)
+    ang = np.arccos(np.clip(v @ pts.T, -1, 1)); order = np.argsort(ang, axis=1)
+    gap = (np.take_along_axis(ang, order[:, 1:2], 1) - np.take_along_axis(ang, order[:, :1], 1))[:, 0]
+    k = len(pts); opened = rng.random((k, k)) < 0.75; opened = opened | opened.T
+    op = opened[order[:, 0], order[:, 1]]
+    crack = (op * np.clip(1 - gap / 0.025, 0, 1)).reshape(n, n)
+    warm = (op * np.clip(1 - gap / 0.07, 0, 1)).reshape(n, n)
+    tone = (rng.random(k)[order[:, 0]].reshape(n, n) - 0.5) * 0.12 + 0.95
+    rgb = mars(rng) * tone[..., None]
+    rgb = rgb * (1 - 0.4 * warm[..., None]) + np.array([150, 44, 18], np.float32) * 0.4 * warm[..., None]
+    rgb = rgb * s[..., None]
+    return textured_sphere(lava_blend(rgb, crack, s, nx, ny, pal=[(230, 80, 18), (255, 135, 36)], k=3),
+                           glow=MARS_GLOW, lit=True)
 
 def mineral_world5(rng):
-    """Pool world: dark red rock pocked with many small pools of lava."""
-    nx, ny, nz, inside = sphere_coords()
+    """Mars pocked with small lava pools (v5)."""
     n = HEX * SS
-    rgb = ramp(noise(rng, n, base=6, octaves=6), [(30, 10, 12), (52, 16, 18), (74, 24, 24), (92, 32, 28)])
+    nx, ny, nz, inside = sphere_coords()
     s = shade(nx, ny, nz)
-    rgb = rgb * s[..., None]
-    pools = noise(rng, n, base=22, octaves=2)
-    edge = np.quantile(pools[inside], 0.84)
-    glow = np.clip((pools - edge) / 0.08, 0, 1)        # many small lava pools
-    glow *= limb_fade(nx, ny)
-    crystal = ramp(glow, [(130, 26, 8), (210, 66, 14), (245, 120, 30)])
-    g = glow[..., None]
-    rgb = rgb * (1 - g) + crystal * (0.7 + 0.3 * s)[..., None] * g
-    return textured_sphere(rgb, glow=(220, 60, 40), lit=True)
-
+    rgb = mars(rng) * s[..., None]
+    pools = noise(rng, n, base=20, octaves=2)
+    edge = np.quantile(pools[inside], 0.88)
+    heat = np.clip((pools - edge) / 0.08, 0, 1)
+    return craters(textured_sphere(lava_blend(rgb, heat, s, nx, ny, k=3), glow=MARS_GLOW, lit=True), rng, count=5)
 
 def mineral_world6(rng):
-    """Volcanic world: grey-brown basalt with a few glowing calderas, each
-    spilling short orange-red lava flows."""
-    nx, ny, nz, inside = sphere_coords()
+    """Mars with a few big volcanoes, glowing calderas and lava flows (v6)."""
     n = HEX * SS
-    rgb = ramp(noise(rng, n, base=6, octaves=6), [(56, 44, 40), (84, 64, 56), (112, 86, 72), (136, 106, 88)])
+    nx, ny, nz, inside = sphere_coords()
     s = shade(nx, ny, nz)
-    rgb = rgb * s[..., None]
+    rgb = mars(rng)
     yy, xx = np.mgrid[0:n, 0:n].astype(np.float32)
-    heat = np.zeros((n, n), np.float32)
+    heat = np.zeros((n, n), np.float32); cone = np.zeros((n, n), np.float32)
     wob = noise(rng, n, base=12, octaves=3)
-    for _ in range(5):
+    for _ in range(4):
         while True:
             u, v = rng.uniform(-0.75, 0.75, 2)
-            if u * u + v * v < 0.55:
-                break
+            if u * u + v * v < 0.55: break
         cx, cy = (CX + u * R) * SS, (CY + v * R) * SS
         d = np.hypot(xx - cx, yy - cy)
-        heat = np.maximum(heat, np.clip(1 - d / rng.uniform(7, 11), 0, 1))   # caldera
-        for _ in range(int(rng.integers(3, 6))):                            # flows
-            a = rng.uniform(0, 2 * np.pi)
-            ln = rng.uniform(18, 34)
+        cone = np.maximum(cone, np.clip(1 - d / 26, 0, 1))
+        heat = np.maximum(heat, np.clip(1 - d / rng.uniform(6, 9), 0, 1))
+        for _ in range(int(rng.integers(3, 6))):
+            a = rng.uniform(0, 2 * np.pi); ln = rng.uniform(16, 30)
             dx, dy = xx - cx, yy - cy
             along = dx * np.cos(a) + dy * np.sin(a)
             across = -dx * np.sin(a) + dy * np.cos(a) + 6 * (wob - 0.5)
-            flow = np.clip(1 - np.abs(across) / 2.4, 0, 1) * np.clip(1 - along / ln, 0, 1) * (along > 0)
-            heat = np.maximum(heat, flow * 0.8)
-    heat *= limb_fade(nx, ny)
-    lava = ramp(heat, [(120, 20, 8), (190, 46, 12), (230, 90, 20), (250, 150, 40)])
-    h = np.clip(heat * 1.8, 0, 1)[..., None]
-    rgb = rgb * (1 - h) + lava * (0.7 + 0.3 * s)[..., None] * h
-    return textured_sphere(rgb, glow=(200, 60, 40), lit=True)
+            heat = np.maximum(heat, 0.75 * np.clip(1 - np.abs(across) / 2.2, 0, 1) * np.clip(1 - along / ln, 0, 1) * (along > 0))
+    rgb = rgb * 1.3
+    rgb = rgb * (1 - 0.2 * cone[..., None]) + np.array([150, 84, 56], np.float32) * 0.2 * cone[..., None]
+    rgb = rgb * (0.25 + 0.75 * s)[..., None]
+    return textured_sphere(lava_blend(rgb, np.clip(heat * 1.2, 0, 1), s, nx, ny,
+                                      pal=[(170, 40, 10), (230, 80, 18), (252, 130, 34), (255, 190, 70)]),
+                           glow=(230, 110, 60), lit=True)
+
+def mineral_world4(rng):
+    """Mars split by one great glowing rift canyon, with ore flecks and craters (v4)."""
+    n = HEX * SS
+    nx, ny, nz, inside = sphere_coords()
+    s = shade(nx, ny, nz)
+    rgb = mars(rng)
+    wob = noise(rng, n, base=6, octaves=4) - 0.5
+    a = rng.uniform(-0.5, 0.5)
+    across = (-nx * np.sin(a) + ny * np.cos(a)) - 0.12 + 0.18 * wob
+    along = nx * np.cos(a) + ny * np.sin(a)
+    span = np.clip(1 - np.abs(along + 0.05) / 0.85, 0, 1) ** 0.3
+    canyon = np.clip(1 - np.abs(across) / 0.13, 0, 1) ** 0.7 * span
+    rgb = rgb * (1 - 0.8 * canyon[..., None]) + np.array([30, 12, 10], np.float32) * 0.8 * canyon[..., None]
+    floor = np.clip(1 - np.abs(across) / 0.04, 0, 1) * span
+    fl = (rng.random((n, n)) < 0.003).astype(np.float32)
+    fl = np.asarray(Image.fromarray((fl * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(5)), np.float32) / 255
+    fl *= np.clip((noise(rng, n, base=5) - 0.4) * 3, 0, 1)
+    rgb = rgb * (1 - fl[..., None]) + np.array([235, 160, 80], np.float32) * fl[..., None]
+    rgb = rgb * s[..., None]
+    return craters(textured_sphere(lava_blend(rgb, floor, s, nx, ny, k=1.6), glow=MARS_GLOW, lit=True), rng, count=7)
 
 
 def main():
@@ -471,20 +473,23 @@ def main():
     rng = np.random.default_rng(args.seed)
     life_world2(np.random.default_rng(args.seed + 1)).save(os.path.join(d, "planet-life2.png"))
     spend(rng, 6)                         # the first life world v2
-    mineral_world(rng).save(os.path.join(d, "planet-mineral2.png"))
+    spend(rng, 3)                         # the old mineral world v2
+    for b in (4, 7):
+        noise(rng, HEX * SS, base=b, octaves=4)
+    spend(rng, 3)
     craters(Image.open(os.path.join(d, "planet6.png")).convert("RGBA"), rng).save(
         os.path.join(d, "planet-dead2.png"))
     life_world3(rng).save(os.path.join(d, "planet-life3.png"))
-    mineral_world3(np.random.default_rng(args.seed + 2)).save(os.path.join(d, "planet-mineral3.png"))
     spend(rng, 3, 6, None, 4)             # the first mineral world v3
     dead_world3(rng).save(os.path.join(d, "planet-dead3.png"))
     life_world1(np.random.default_rng(args.seed + 3)).save(os.path.join(d, "planet-life1.png"))
-    mineral_world1(np.random.default_rng(args.seed + 4)).save(os.path.join(d, "planet-mineral1.png"))
     dead_world1(np.random.default_rng(args.seed + 5)).save(os.path.join(d, "planet-dead1.png"))
-    for k, make in enumerate((life_world4, life_world5, life_world6,
-                              mineral_world4, mineral_world5, mineral_world6)):
+    for k, make in enumerate((life_world4, life_world5, life_world6)):
         kind, v = make.__name__.split("_world")
         make(np.random.default_rng(args.seed + 10 + k)).save(os.path.join(d, f"planet-{kind}{v}.png"))
+    for k, make in enumerate((mineral_world1, mineral_world2, mineral_world3,
+                              mineral_world4, mineral_world5, mineral_world6)):
+        make(np.random.default_rng(3030 + k)).save(os.path.join(d, f"planet-mineral{k + 1}.png"))
 
 
 if __name__ == "__main__":
