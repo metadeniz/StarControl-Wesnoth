@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-"""Second looks for the three planet types, made from the planets that
-make_art.py draws:
+"""Extra looks for the three planet types (life, mineral and dead worlds),
+next to planet.png, planet5.png and planet6.png from make_art.py. One is
+made from a make_art.py planet:
 
-    life world     planet.png  -> planet-life2.png     (small polar caps)
-    mineral world  planet5.png -> planet-mineral2.png  (new dark-red world
-                                                        with glowing veins)
     dead world     planet6.png -> planet-dead2.png     (cratered)
 
-and a third look for each, drawn fresh:
+and drawn fresh:
 
+    planet-life2.png     continents of forest, savanna and desert in teal
+                         seas, small polar caps
+    planet-mineral2.png  dark-red world with glowing veins
     planet-life3.png     ocean world: scattered islands under swirling cloud
-    planet-mineral3.png  crimson world banded in rust strata, flecked with ore
+    planet-mineral3.png  dark red crust in plates, some rich in copper ore,
+                         with craters
     planet-dead3.png     dusty brown-grey world with dark basins and a rayed crater
 
     tools/make_planet_types.py [--out ADDON_DIR]
@@ -66,25 +68,6 @@ def noise(rng, n, base=4, octaves=5):
 def shade(nx, ny, nz):
     lam = np.clip(nx * LIGHT[0] + ny * LIGHT[1] + nz * LIGHT[2], 0, 1)
     return 0.12 + 0.88 * lam
-
-
-def polar_caps(src, rng):
-    nx, ny, nz, inside = sphere_coords()
-    wob = noise(rng, HEX * SS, base=6) - 0.5
-    # latitude along a slightly tilted axis; caps reach about 30 degrees
-    tilt = np.radians(12)
-    lat = ny * np.cos(tilt) + nx * np.sin(tilt)
-    north = np.clip((-lat - 0.80 - 0.14 * wob) * 16, 0, 1)
-    south = np.clip((lat - 0.80 - 0.14 * wob) * 16, 0, 1)
-    cap = np.where(inside, np.maximum(north, south), 0)
-    s = shade(nx, ny, nz)
-    ice = np.array([236, 244, 255], np.float32)
-    cap_rgb = ice[None, None, :] * (0.22 + 0.78 * s)[..., None]   # ice shows a little on the night side
-    a = down(cap)[..., None]
-    rgb = down_rgb(cap_rgb * cap[..., None]) / np.maximum(a, 1e-6)
-    img = np.asarray(src, np.float32).copy()
-    img[..., :3] = img[..., :3] * (1 - a) + rgb * a
-    return Image.fromarray(img.clip(0, 255).astype(np.uint8), "RGBA")
 
 
 def down_rgb(arr):
@@ -168,10 +151,14 @@ def mineral_world(rng):
     return canvas
 
 
-def textured_sphere(rgb, glow=None):
-    """4x rgb on the sphere, lit, scaled down, on a hex canvas with an optional glow."""
+def textured_sphere(rgb, glow=None, lift=None):
+    """4x rgb on the sphere, lit, scaled down, on a hex canvas with an optional
+    glow. `lift` (0..1) keeps bright parts like ice faintly visible at night."""
     nx, ny, nz, inside = sphere_coords()
-    rgb = rgb * shade(nx, ny, nz)[..., None]
+    s = shade(nx, ny, nz)
+    if lift is not None:
+        s = s + (1 - s) * 0.22 * lift
+    rgb = rgb * s[..., None]
     alpha = down(inside.astype(np.float32)) * 255
     sphere = Image.fromarray(np.dstack([down_rgb(rgb), alpha]).clip(0, 255).astype(np.uint8), "RGBA")
     canvas = Image.new("RGBA", (HEX, HEX), (0, 0, 0, 0))
@@ -209,20 +196,58 @@ def life_world3(rng):
     return textured_sphere(rgb, glow=(130, 190, 255))
 
 
-def mineral_world3(rng):
-    """Crimson world in tilted rust strata, flecked with bright ore."""
+def life_world2(rng):
+    """Continents of forest, savanna and desert in teal seas, with small
+    polar caps square to the axis."""
     nx, ny, nz, inside = sphere_coords()
     n = HEX * SS
-    t = noise(rng, n, base=3)
-    lat = ny * 0.8 + nx * 0.6 + 0.45 * (t - 0.5)
-    bands = np.sin(lat * 13) * 0.5 + 0.5
-    rgb = ramp(0.6 * bands + 0.4 * noise(rng, n, base=6),
-               [(40, 10, 12), (78, 18, 20), (128, 40, 26), (150, 62, 34), (92, 24, 22)])
-    flecks = (rng.random((n, n)) < 0.0025).astype(np.float32)
-    flecks = np.asarray(Image.fromarray((flecks * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(5)), np.float32) / 255
-    flecks *= np.clip((noise(rng, n, base=4) - 0.2) * 3, 0, 1)
-    rgb = rgb * (1 - flecks[..., None]) + np.array([255, 170, 90], np.float32) * flecks[..., None]
-    return textured_sphere(rgb, glow=(200, 50, 40))
+    land = noise(rng, n, base=3)
+    coast = 0.56
+    sea = ramp(np.clip((coast - land) / 0.25, 0, 1), [(40, 150, 150), (22, 105, 130), (14, 60, 105)])
+    biome = noise(rng, n, base=5)
+    # drier towards the equator, greener towards the poles
+    dry = np.clip(biome * 0.75 + (1 - np.abs(ny)) * 0.35 - 0.38, 0, 1)
+    ground = ramp(dry, [(38, 82, 40), (72, 112, 50), (128, 132, 64), (176, 150, 88), (198, 172, 118)])
+    m = np.clip((land - coast) * 30, 0, 1)[..., None]
+    rgb = sea * (1 - m) + ground * m
+    wob = noise(rng, n, base=7) - 0.5
+    cap = np.clip((np.abs(ny) - 0.84 - 0.10 * wob) * 18, 0, 1)[..., None]
+    rgb = rgb * (1 - cap) + np.array([238, 244, 252], np.float32) * cap
+    return textured_sphere(rgb, glow=(120, 200, 215), lift=cap[..., 0])
+
+
+def mineral_world3(rng):
+    """Dark red crust broken into plates, a few of them rich with copper ore,
+    pocked by craters."""
+    nx, ny, nz, inside = sphere_coords()
+    n = HEX * SS
+    pts = rng.normal(size=(70, 3))
+    pts /= np.linalg.norm(pts, axis=1, keepdims=True)
+    normals = np.stack([nx, ny, nz], -1).reshape(-1, 3)
+    ang = np.arccos(np.clip(normals @ pts.T, -1, 1))
+    order = np.argsort(ang, axis=1)
+    first = order[:, 0]
+    a1 = np.take_along_axis(ang, order[:, :1], 1)[:, 0]
+    a2 = np.take_along_axis(ang, order[:, 1:2], 1)[:, 0]
+    tone = rng.random(len(pts))[first].reshape(n, n)
+    ore = (rng.random(len(pts)) < 0.3)[first].reshape(n, n).astype(np.float32)
+    grain = noise(rng, n, base=8, octaves=4)
+    rgb = ramp(np.clip(0.65 * tone + 0.35 * grain, 0, 1),
+               [(44, 12, 12), (70, 18, 16), (98, 28, 20), (124, 40, 26)])
+    crack = np.clip(1 - (a2 - a1).reshape(n, n) / 0.045, 0, 1)
+    rgb *= (1 - 0.75 * crack)[..., None]
+    speck = np.clip((noise(rng, n, base=40, octaves=2) - 0.58) * 6, 0, 0.8) * ore
+    rgb = rgb * (1 - speck[..., None]) + np.array([215, 120, 60], np.float32) * speck[..., None]
+    return craters(textured_sphere(rgb, glow=(200, 50, 40)), rng, count=10)
+
+
+def spend(rng, *bases):
+    """Make the draws an earlier look made, so the looks after it stay the same."""
+    for b in bases:
+        if b is None:
+            rng.random((HEX * SS, HEX * SS))
+        else:
+            noise(rng, HEX * SS, base=b)
 
 
 def dead_world3(rng):
@@ -252,13 +277,14 @@ def main():
     args = ap.parse_args()
     d = os.path.join(args.out, "images/terrain/sc")
     rng = np.random.default_rng(args.seed)
-    polar_caps(Image.open(os.path.join(d, "planet.png")).convert("RGBA"), rng).save(
-        os.path.join(d, "planet-life2.png"))
+    life_world2(np.random.default_rng(args.seed + 1)).save(os.path.join(d, "planet-life2.png"))
+    spend(rng, 6)                         # the first life world v2
     mineral_world(rng).save(os.path.join(d, "planet-mineral2.png"))
     craters(Image.open(os.path.join(d, "planet6.png")).convert("RGBA"), rng).save(
         os.path.join(d, "planet-dead2.png"))
     life_world3(rng).save(os.path.join(d, "planet-life3.png"))
-    mineral_world3(rng).save(os.path.join(d, "planet-mineral3.png"))
+    mineral_world3(np.random.default_rng(args.seed + 2)).save(os.path.join(d, "planet-mineral3.png"))
+    spend(rng, 3, 6, None, 4)             # the first mineral world v3
     dead_world3(rng).save(os.path.join(d, "planet-dead3.png"))
 
 
