@@ -7,6 +7,10 @@ made from a make_art.py planet:
 
 and drawn fresh:
 
+    planet-life1.png     planet.png redrawn: green land, blue seas, cloud, haze
+    planet-mineral1.png  planet5.png redrawn: black crust and glowing lava seas
+    planet-dead1.png     planet6.png redrawn: grey regolith, plains, old craters
+
     planet-life2.png     continents of forest, savanna and desert in teal
                          seas, small polar caps
     planet-mineral2.png  dark-red world with glowing veins
@@ -151,14 +155,20 @@ def mineral_world(rng):
     return canvas
 
 
-def textured_sphere(rgb, glow=None, lift=None):
+def textured_sphere(rgb, glow=None, lift=None, atmo=None, lit=False):
     """4x rgb on the sphere, lit, scaled down, on a hex canvas with an optional
     glow. `lift` (0..1) keeps bright parts like ice faintly visible at night."""
     nx, ny, nz, inside = sphere_coords()
     s = shade(nx, ny, nz)
     if lift is not None:
         s = s + (1 - s) * 0.22 * lift
-    rgb = rgb * s[..., None]
+    if not lit:                  # `lit`: rgb is already shaded
+        rgb = rgb * s[..., None]
+    if atmo is not None:         # a thin haze on the sunlit limb
+        edge = np.clip((np.sqrt(nx ** 2 + ny ** 2) - 0.8) / 0.2, 0, 1) ** 2
+        lam = np.clip(nx * LIGHT[0] + ny * LIGHT[1] + 0.3, 0, 1)
+        h = (edge * lam * 0.75)[..., None]
+        rgb = rgb * (1 - h) + np.array(atmo, np.float32) * h
     alpha = down(inside.astype(np.float32)) * 255
     sphere = Image.fromarray(np.dstack([down_rgb(rgb), alpha]).clip(0, 255).astype(np.uint8), "RGBA")
     canvas = Image.new("RGBA", (HEX, HEX), (0, 0, 0, 0))
@@ -270,6 +280,52 @@ def dead_world3(rng):
     return craters(sphere, rng, count=14)
 
 
+def life_world1(rng):
+    """planet.png's green-and-blue world, redrawn: seas and green land with
+    crisp coasts, darker forest, wisps of cloud and a hazy blue rim."""
+    nx, ny, nz, inside = sphere_coords()
+    n = HEX * SS
+    land = noise(rng, n, base=4, octaves=6)
+    coast = np.quantile(land[inside], 0.5)      # half land, half sea
+    sea = ramp(np.clip((coast - land) / 0.3, 0, 1), [(36, 96, 170), (24, 70, 150), (16, 46, 120)])
+    ground = ramp(noise(rng, n, base=7), [(40, 96, 46), (62, 124, 56), (96, 146, 70), (128, 150, 84)])
+    m = np.clip((land - coast) * 40, 0, 1)[..., None]
+    rgb = sea * (1 - m) + ground * m
+    cloud = np.clip((noise(rng, n, base=6, octaves=6) - 0.62) * 3.2, 0, 0.7)[..., None]
+    rgb = rgb * (1 - cloud) + np.array([232, 238, 246], np.float32) * cloud
+    return textured_sphere(rgb, glow=(120, 170, 255), atmo=(140, 190, 255))
+
+
+def mineral_world1(rng):
+    """planet5.png's molten world, redrawn: a black crust split by seas of
+    lava that glow yellow at their hearts and on the night side too."""
+    nx, ny, nz, inside = sphere_coords()
+    n = HEX * SS
+    melt = 0.6 * noise(rng, n, base=8, octaves=5) + 0.4 * noise(rng, n, base=3)
+    shore = np.quantile(melt[inside], 0.6)      # lava covers about 40%
+    crust = ramp(noise(rng, n, base=8), [(34, 14, 12), (60, 24, 16), (86, 36, 22)])
+    heat = np.clip((melt - shore) / 0.25, 0, 1)
+    lava = ramp(heat, [(150, 30, 8), (225, 80, 12), (255, 150, 30), (255, 220, 110)])
+    m = np.clip((melt - shore) * 30, 0, 1)
+    s = shade(nx, ny, nz)
+    rgb = crust * s[..., None] * (1 - m[..., None]) + lava * (0.55 + 0.45 * s)[..., None] * m[..., None]
+    return textured_sphere(rgb, glow=(255, 110, 50), lit=True)
+
+
+def dead_world1(rng):
+    """planet6.png's grey world, redrawn: fine dusty regolith, pale highlands
+    and darker plains, a few soft old craters."""
+    nx, ny, nz, inside = sphere_coords()
+    n = HEX * SS
+    high = noise(rng, n, base=3, octaves=6)
+    rgb = ramp(high, [(104, 104, 108), (136, 134, 132), (166, 164, 160), (198, 196, 192)])
+    grain = noise(rng, n, base=32, octaves=3) - 0.5
+    rgb *= (1 + 0.12 * grain)[..., None]
+    plain = np.clip((0.45 - noise(rng, n, base=3, octaves=4)) * 4, 0, 0.5)[..., None]
+    rgb = rgb * (1 - plain) + np.array([78, 78, 82], np.float32) * plain
+    return craters(textured_sphere(rgb), rng, count=6)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=os.path.join(os.path.dirname(__file__), ".."))
@@ -286,6 +342,9 @@ def main():
     mineral_world3(np.random.default_rng(args.seed + 2)).save(os.path.join(d, "planet-mineral3.png"))
     spend(rng, 3, 6, None, 4)             # the first mineral world v3
     dead_world3(rng).save(os.path.join(d, "planet-dead3.png"))
+    life_world1(np.random.default_rng(args.seed + 3)).save(os.path.join(d, "planet-life1.png"))
+    mineral_world1(np.random.default_rng(args.seed + 4)).save(os.path.join(d, "planet-mineral1.png"))
+    dead_world1(np.random.default_rng(args.seed + 5)).save(os.path.join(d, "planet-dead1.png"))
 
 
 if __name__ == "__main__":
