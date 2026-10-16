@@ -475,8 +475,8 @@ local ARTIFACTS = {
 
 local function artifact_key(x, y) return "sc_artifact_" .. x .. "_" .. y end
 
--- The Precursor device's screen booting up on the hex above the planet (on
--- the hex below for planets on the top edge, where above would be off the
+-- The Precursor device's screen booting up on the hex below the planet (on
+-- the hex above for planets on the bottom edge, where below would be off the
 -- map). Frames made by tools/make_artifact_anim.py: 100 frames at 15 fps, the
 -- finished screen held, 4 frames fading it out, then nothing until the halo
 -- is taken off at the finder's next turn. A halo animation loops, so the
@@ -563,7 +563,7 @@ function sc.check_artifact()
 	-- see the planet.
 	if locally_visible(x, y) then
 		wesnoth.audio.play("sc/artifact.wav")
-		wesnoth.interface.add_hex_overlay(x, y, { name = ARTIFACT_ANIM, halo = ARTIFACT_ANIM_HALO[y <= 2 and "below" or "above"] })
+		wesnoth.interface.add_hex_overlay(x, y, { name = ARTIFACT_ANIM, halo = ARTIFACT_ANIM_HALO[y >= wesnoth.current.map.playable_height - 1 and "above" or "below"] })
 		wesnoth.interface.add_hex_overlay(x, y, { name = ARTIFACT_TEXT, halo = ARTIFACT_TEXT_HALO })
 	end
 	-- The floating text fades within a few seconds, so a label naming the
@@ -665,7 +665,7 @@ function sc.syreen_after_healing()
 end
 
 -- The captain watching her ship fill up with the planet's colonists, on the
--- hex above the planet (below on the top edge, like the artifact device).
+-- hex above the planet (below on the top edge).
 -- Frames made by tools/make_syreen_capture_anim.py: 96 frames of the 15 fps
 -- clip played at 1.2x (55 ms each), the last held, 4 frames fading it out,
 -- then nothing until the halo is taken off at the Syreen side's next turn.

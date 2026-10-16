@@ -6,8 +6,8 @@ its display filling with Precursor glyphs) out of their background, at
 in lua/sc.lua plays them as a halo on the planet where the artifact was
 found. A halo is drawn centred on its hex, so the frames are baked twice
 onto a taller canvas with the device one hex (72 px) off centre:
-images/halo/sc/artifact-above-NNN.png shows it on the hex above the planet,
-artifact-below-NNN.png on the hex below (for planets on the top edge).
+images/halo/sc/artifact-below-NNN.png shows it on the hex below the planet,
+artifact-above-NNN.png on the hex above (for planets on the bottom edge).
 
 The device never moves, so one alpha mask serves every frame: the part of
 the clip's median frame that is not dark background connected to the
