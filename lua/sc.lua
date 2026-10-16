@@ -986,3 +986,58 @@ function sc.update_planet_income()
 		end
 	end
 end
+
+-- Taking planets -------------------------------------------------------------
+-- A ship that lands on a planet doesn't take it straight away. An enemy's
+-- planet is destroyed (it goes to nobody), and a free planet gets a colony,
+-- mine or outpost built on it, which is the ship's side's once its next turn
+-- starts, if the ship is still there. Until then the planet is labelled.
+local CLAIMS = "sc_planet_claims"
+local BUILD = {
+	Vyl = _ "Colony next turn", Vysl = _ "Colony next turn",
+	Vym = _ "Mine next turn", Vysm = _ "Mine next turn",
+}
+
+local function claim_label(x, y, text)
+	wesnoth.map.add_label { x = x, y = y, color = "160,224,255", immutable = true,
+		visible_in_fog = false, visible_in_shroud = false, text = text }
+end
+
+function sc.planet_captured()
+	local c = wesnoth.current.event_context
+	local u = wesnoth.units.get(c.x1, c.y1)
+	local owner = wml.variables["owner_side"] or 0
+	wesnoth.map.set_owner(c.x1, c.y1, 0, false)
+	if owner > 0 and locally_visible(c.x1, c.y1) then
+		wesnoth.interface.float_label(c.x1, c.y1,
+			"<span color='#ff8060'>" .. tostring(_ "Planet destroyed") .. "</span>")
+	end
+	if not u then return end
+	local claims = wml.array_access.get(CLAIMS)
+	claims[#claims + 1] = { x = c.x1, y = c.y1, side = u.side, id = u.id }
+	wml.array_access.set(CLAIMS, claims)
+	local overlay = wesnoth.current.map[{ c.x1, c.y1 }]:match("%^(.+)$")
+	claim_label(c.x1, c.y1, tostring(BUILD[overlay] or _ "Outpost next turn"))
+end
+
+-- Drop the claims whose ship has left or been destroyed; at the start of a
+-- side's turn (side = that side), its ships still in place take their planets.
+-- dying: the hex of a ship being destroyed (still on the map in "die").
+function sc.check_planet_claims(side, dying)
+	local keep = {}
+	for _, a in ipairs(wml.array_access.get(CLAIMS)) do
+		local u = wesnoth.units.get(a.x, a.y)
+		local here = u and u.id == a.id and u.side == a.side
+			and not (dying and dying.x == a.x and dying.y == a.y)
+		if here and a.side == side then
+			wesnoth.map.set_owner(a.x, a.y, a.side, false)
+			claim_label(a.x, a.y, "")
+		elseif here then
+			keep[#keep + 1] = a
+		else
+			claim_label(a.x, a.y, "")
+		end
+	end
+	wml.array_access.set(CLAIMS, keep)
+	sc.update_planet_income()
+end
