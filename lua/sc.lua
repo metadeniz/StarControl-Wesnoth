@@ -478,7 +478,7 @@ local function artifact_key(x, y) return "sc_artifact_" .. x .. "_" .. y end
 -- Planet animations: Star Control's scenes from the status panel, played as
 -- a halo below a planet, clear of its label (above near the bottom edge),
 -- to this client alone, so only if its player can see the planet.
--- The last picture is held, then faded out over 4 frames, then nothing until
+-- The last picture is held (or not), then faded out over 4 frames, then nothing until
 -- the halo is taken off at the side's next turn (left until then so one
 -- played just before ending the turn plays out in full; a halo animation
 -- loops, so the blank last frame lasts far longer than anyone waits). Frames
@@ -680,9 +680,10 @@ end
 -- frames at 15 fps.
 local SYREEN_CAPTURE_ANIM = "sc_syreen_capture_anim"
 local SYREEN_CAPTURE_HALO = planet_anim_halo("syreen-capture", 107, 67, 1000)
--- The colony's domes blown apart and left burning: 104 frames at 15 fps.
+-- The colony's domes blown apart and left burning: 104 frames at 15 fps,
+-- fading out straight after.
 local COLONY_DESTROYED_ANIM = "sc_colony_destroyed_anim"
-local COLONY_DESTROYED_HALO = planet_anim_halo("colony-destroyed", 108, 67, 1000)
+local COLONY_DESTROYED_HALO = planet_anim_halo("colony-destroyed", 108, 67, 67)
 -- The mining vehicle on the planet, the blast, and the screen whiting out:
 -- 68 frames at 15 fps, fading out as soon as it is all white.
 local MINE_DESTROYED_ANIM = "sc_mine_destroyed_anim"
