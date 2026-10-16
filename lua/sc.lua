@@ -288,6 +288,24 @@ function sc.victory_theme()
 	local side = local_human_side()
 	local theme = side and VICTORY_THEME[side.__cfg.faction]
 	if theme then wesnoth.audio.play(theme) end
+	if side and side.__cfg.faction == "SC_Alliance" then sc.alliance_victory() end
+end
+
+-- Star Control 1's Alliance victory screen, shown like a campaign's story
+-- screen while the victory theme plays: Earth ringed by the Alliance races
+-- (picture made by tools/make_alliance_victory.py), over the game's caption.
+function sc.alliance_victory()
+	gui.show_story({
+		T.part {
+			show_title = false,
+			story = _ "The Alliance humbles the Hierarchy",
+			T.background_layer {
+				image = "story/sc/alliance-victory.png",
+				base_layer = true,
+				keep_aspect_ratio = true,
+			},
+		},
+	}, _ "Victory")
 end
 
 -- Wesnoth 1.16 and 1.18 never move past a track marked shuffle=no: when it
@@ -606,6 +624,41 @@ function sc.expire_artifact_labels()
 		end
 	end
 	wml.array_access.set("sc_artifact_labels", keep)
+end
+
+--------------------------------------------------------- Starbase destroyed
+
+-- When the leader of an Alliance or Hierarchy side is destroyed, Star
+-- Control's "starbase destroyed" scene plays on its hex once the death
+-- explosion is over (the "die" event comes after the death animation): the
+-- starbase blown apart, then its embers dying out. Frames made by
+-- tools/make_starbase_destroyed_anim.py: 46 frames at 15 fps, the last held
+-- half a second, 4 fading. The game waits for it, so it plays out in full
+-- even when that leader's death ends the game. Only for players who can
+-- see the hex.
+local STARBASE_FACTIONS = { SC_Alliance = true, SC_Hierarchy = true }
+local STARBASE_DESTROYED_ANIM = "sc_starbase_destroyed_anim"
+local STARBASE_DESTROYED_FRAMES, STARBASE_DESTROYED_MS, STARBASE_DESTROYED_HOLD = 50, 67, 500
+local STARBASE_DESTROYED_HALO = (function()
+	local f = {}
+	for i = 1, STARBASE_DESTROYED_FRAMES do
+		f[i] = string.format("halo/sc/starbase-destroyed-%03d.png:%d", i,
+			i == STARBASE_DESTROYED_FRAMES - 4 and STARBASE_DESTROYED_HOLD or STARBASE_DESTROYED_MS)
+	end
+	f[#f + 1] = "misc/blank-hex.png:3600000"
+	return table.concat(f, ",")
+end)()
+local STARBASE_DESTROYED_TIME = (STARBASE_DESTROYED_FRAMES - 1) * STARBASE_DESTROYED_MS
+	+ STARBASE_DESTROYED_HOLD
+
+function sc.starbase_destroyed()
+	local c = wesnoth.current.event_context
+	local u = wesnoth.units.get(c.x1, c.y1)
+	if not u or not u.canrecruit or not STARBASE_FACTIONS[wesnoth.sides[u.side].__cfg.faction] then return end
+	if not locally_visible(c.x1, c.y1) then return end
+	wesnoth.interface.add_hex_overlay(c.x1, c.y1, { name = STARBASE_DESTROYED_ANIM, halo = STARBASE_DESTROYED_HALO })
+	wesnoth.interface.delay(STARBASE_DESTROYED_TIME)
+	wesnoth.interface.remove_hex_overlay(c.x1, c.y1, STARBASE_DESTROYED_ANIM)
 end
 
 --------------------------------------------------------------- Syreen crew

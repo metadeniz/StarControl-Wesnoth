@@ -114,13 +114,18 @@ The New Alliance and the Agents of Chaos have one playlist each:
 When you win, the old Alliance and the Hierarchy hear Star Control 1's
 victory theme for their side, the New Alliance hears Star Control II's
 victory fanfare, and the Agents of Chaos the opening of Chopin's Funeral
-March. When a ship destroys
+March. An Alliance win also shows Star Control 1's victory picture, Earth
+ringed by the Alliance races, as a story screen while its theme plays. When a ship destroys
 another, its race's victory ditty plays over the music (the Sa-Matra, which has
 none in Star Control II, plays the Precursors' remix of the Kohr-Ah ditty), which keeps going at
 full volume. A Pkunk that is reborn gets Star Control II's "hallelujah"
 instead of its killer's ditty. The victory themes and ditties are sound effects, so they
 follow the Sound volume, not the Music volume: turning the music down
 leaves them as loud as before.
+
+When the leader of an old Alliance or Hierarchy side is destroyed, Star
+Control's "starbase destroyed" scene plays on its hex after the death
+explosion, and the game waits for it to finish.
 
 ## The ships
 
@@ -262,8 +267,8 @@ Terrain, by hull size (moves to enter / defense):
 | Dense asteroids | 4 / 60% | 3 / 70% | 3 / 70% | 2 / 70% |
 
 **Badlands runners** cross the badlands more easily: Arilou, Shofixti and
-Zoq-Fot-Pik need 1 move there (50% defense); Mycon, Androsynth, Slylandro
-and Thraddash need 2 (with their hull's light-badlands defense), and light
+Zoq-Fot-Pik need 1 move there (50% defense); Umgah, Androsynth, Supox,
+Slylandro and Thraddash need 2 (with their hull's light-badlands defense), and light
 badlands cost all of them 1 move.
 
 Badlands come in two looks that play exactly the same: a flowing blue
