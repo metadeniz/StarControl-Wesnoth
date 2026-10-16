@@ -122,6 +122,10 @@ instead of its killer's ditty. The victory themes and ditties are sound effects,
 follow the Sound volume, not the Music volume: turning the music down
 leaves them as loud as before.
 
+When the leader of an old Alliance or Hierarchy side is destroyed, Star
+Control's "starbase destroyed" scene plays on its hex after the death
+explosion, and the game waits for it to finish.
+
 ## The ships
 
 | Alliance of Free Stars | | Ur-Quan Hierarchy | |
