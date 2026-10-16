@@ -684,9 +684,9 @@ local SYREEN_CAPTURE_HALO = planet_anim_halo("syreen-capture", 107, 67, 1000)
 local COLONY_DESTROYED_ANIM = "sc_colony_destroyed_anim"
 local COLONY_DESTROYED_HALO = planet_anim_halo("colony-destroyed", 108, 67, 1000)
 -- The mining vehicle on the planet, the blast, and the screen whiting out:
--- 104 frames at 15 fps.
+-- 68 frames at 15 fps, fading out as soon as it is all white.
 local MINE_DESTROYED_ANIM = "sc_mine_destroyed_anim"
-local MINE_DESTROYED_HALO = planet_anim_halo("mine-destroyed", 108, 67, 1000)
+local MINE_DESTROYED_HALO = planet_anim_halo("mine-destroyed", 72, 67, 67)
 -- Each animation's list of { x, y, side } still showing, to take off.
 local PLANET_ANIMS = {
 	[SYREEN_CAPTURE_ANIM] = "sc_syreen_capture_anims",

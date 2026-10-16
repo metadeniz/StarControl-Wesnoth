@@ -7,7 +7,7 @@ kept, at 15 fps. The last picture is held, then faded out over a few frames.
   colony-destroyed  the domes on a life world blown apart and left burning,
                     up to just before the panel switches back to the menu
   mine-destroyed    the mining vehicle on a mineral world, the blast, and
-                    the screen whiting out, up to the menu
+                    the screen whiting out, up to the moment it is all white
   syreen-capture    the captain watching her ship fill up with the planet's
                     colonists, from the cut to the planet up to the cut away
   artifact          the Precursor device's screen filling with glyphs
@@ -39,7 +39,7 @@ CROP = (523, 302, 631, 376)    # left, top, right, bottom: the panel's picture b
 # recording frames kept (1-based, inclusive): START, END
 SCENES = {
     "colony-destroyed": (5, 212),
-    "mine-destroyed": (54, 261),
+    "mine-destroyed": (54, 188),
     "syreen-capture": (139, 344),
     "artifact": (3, 207),
 }
