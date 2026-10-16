@@ -17,9 +17,12 @@ enemy's colony (life world, unless it's a Syreen filling its crew there) or
 mine (mineral world), sc.syreen_captured when a Syreen fills its crew, and
 sc.check_artifact when a ship finds an artifact. A halo is drawn centred on
 its hex, so the frames are baked twice onto a taller canvas with the picture
-one hex (72 px) off centre: images/halo/sc/SCENE-below-NNN.png shows it on
-the hex below the planet, under its label, SCENE-above-NNN.png on the hex
-above (for planets near the bottom edge).
+a little over a hex (84 px) off centre, clear of the label at the bottom of
+the planet's hex: images/halo/sc/SCENE-below-NNN.png shows it below the
+planet, SCENE-above-NNN.png above it (for planets near the bottom edge).
+The colony and mine scenes also carry their text ("Colony destroyed",
+"Mine destroyed") where Wesnoth puts a map label, at the bottom of the
+planet's hex, so it fades out and goes with the scene.
 
 Needs ffmpeg. Run from the repository root:
     python3 tools/make_planet_anims.py SCENE path/to/recording.mp4
@@ -31,10 +34,10 @@ import subprocess
 import sys
 import tempfile
 
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 OUT = "images/halo/sc/{}-{}-{:03d}.png"
-HEX = 72                       # picture centre this far above / below the planet's
+HEX = 84                       # picture centre this far above / below the planet's
 CROP = (523, 302, 630, 374)    # left, top, right, bottom: inside the box's grey rim
 # recording frames kept (1-based, inclusive): START, END
 SCENES = {
@@ -43,8 +46,22 @@ SCENES = {
     "syreen-capture": (139, 344),
     "artifact": (3, 207),
 }
+TEXT = {"colony-destroyed": "Colony destroyed", "mine-destroyed": "Mine destroyed"}
+FONT = "/usr/share/games/wesnoth/1.16/fonts/Lato-Regular.ttf"   # Wesnoth's own
+SIZE = 15
+COLOR = (255, 128, 96)         # as "Planet destroyed"
+TEXT_TOP = 22                  # px below the hex centre, as a map label
 STEP = 2                       # keep every 2nd frame: 30 fps -> 15 fps
 FADE = (0.8, 0.6, 0.4, 0.2)
+
+
+def text_image(text):
+    font = ImageFont.truetype(FONT, SIZE)
+    l, t, r, b = font.getbbox(text)
+    im = Image.new("RGBA", (r - l + 4, b + 4))
+    ImageDraw.Draw(im).text((2 - l, 2), text, font=font, fill=COLOR + (255,),
+                            stroke_width=1, stroke_fill=(0, 0, 0, 160))
+    return im
 
 
 def main(scene, clip):
@@ -57,13 +74,19 @@ def main(scene, clip):
         os.remove(old)
     kept = frames[::STEP]
     w, h = kept[0].size
+    text = text_image(TEXT[scene]) if scene in TEXT else None
+    cw = max(w, text.width) if text else w
     shown = [(f, 1.0) for f in kept] + [(kept[-1], a) for a in FADE]
     for n, (rgb, a) in enumerate(shown, 1):
         pic = rgb.convert("RGBA")
         pic.putalpha(int(round(a * 255)))
         for where, top in (("above", 0), ("below", 2 * HEX)):
-            canvas = Image.new("RGBA", (w, h + 2 * HEX))
-            canvas.paste(pic, (0, top))
+            canvas = Image.new("RGBA", (cw, h + 2 * HEX))
+            canvas.paste(pic, ((cw - w) // 2, top))
+            if text:
+                faded = text.copy()
+                faded.putalpha(faded.getchannel("A").point(lambda v: round(v * a)))
+                canvas.alpha_composite(faded, ((cw - text.width) // 2, canvas.height // 2 + TEXT_TOP))
             canvas.save(OUT.format(scene, where, n))
     print(f"{len(shown)} frames ({len(kept)} + {len(FADE)} fading) of {w}x{h}, above and below")
 

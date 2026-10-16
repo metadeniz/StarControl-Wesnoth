@@ -240,9 +240,10 @@ the ship starts building a colony (life world), mine (mineral world) or
 outpost (dead world). If the ship is still there when its
 side's next turn starts, the planet is that side's and pays that turn.
 An enemy's colony (life world) blown up this way plays the colony destroyed
-scene below the planet and is labelled "Colony destroyed", unless the ship is
-a Syreen, which takes the colonists as crew instead; an enemy's mine (mineral
-world) plays the mine destroyed scene and is labelled "Mine destroyed". These scenes, like the Syreen's and the Precursor
+scene below the planet, with "Colony destroyed" under the ship until it fades,
+unless the ship is a Syreen, which takes the colonists as crew instead; an
+enemy's mine (mineral world) plays the mine destroyed scene, with "Mine
+destroyed". These scenes, like the Syreen's and the Precursor
 artifact's, are cut from Star Control's own and play below the planet, or
 above it near the bottom of the map.
 

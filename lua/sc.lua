@@ -476,8 +476,8 @@ local ARTIFACTS = {
 local function artifact_key(x, y) return "sc_artifact_" .. x .. "_" .. y end
 
 -- Planet animations: Star Control's scenes from the status panel, played as
--- a halo on the hex below a planet, under its label (above near the bottom
--- edge), to this client alone, so only if its player can see the planet.
+-- a halo below a planet, clear of its label (above near the bottom edge),
+-- to this client alone, so only if its player can see the planet.
 -- The last picture is held, then faded out over 4 frames, then nothing until
 -- the halo is taken off at the side's next turn (left until then so one
 -- played just before ending the turn plays out in full; a halo animation
@@ -1030,14 +1030,8 @@ end
 -- A ship that lands on a planet doesn't take it straight away. An enemy's
 -- planet is destroyed (it goes to nobody), and a free planet gets a colony,
 -- mine or outpost built on it, which is the ship's side's once its next turn
--- starts, if the ship is still there. A destroyed colony or mine is labelled
--- so until then.
+-- starts, if the ship is still there.
 local CLAIMS = "sc_planet_claims"
-
-local function claim_label(x, y, text)
-	wesnoth.map.add_label { x = x, y = y, color = "160,224,255", immutable = true,
-		visible_in_fog = false, visible_in_shroud = false, text = text }
-end
 
 function sc.planet_captured()
 	local c = wesnoth.current.event_context
@@ -1053,14 +1047,13 @@ function sc.planet_captured()
 	claims[#claims + 1] = { x = c.x1, y = c.y1, side = u.side, id = u.id }
 	wml.array_access.set(CLAIMS, claims)
 	-- an enemy's colony blown up, unless a Syreen is taking its colonists,
-	-- or an enemy's mine: its scene, and a label until the claim is settled
+	-- or an enemy's mine: its scene (with "Colony destroyed" or "Mine
+	-- destroyed" in it, gone when the scene is)
 	if owner > 0 and wesnoth.sides.is_enemy(u.side, owner) then
 		if is_life_world(c.x1, c.y1) and not syreen_fills_crew(u, owner) then
 			play_planet_anim(c.x1, c.y1, u.side, COLONY_DESTROYED_ANIM, COLONY_DESTROYED_HALO)
-			claim_label(c.x1, c.y1, tostring(_ "Colony destroyed"))
 		elseif is_mineral_world(c.x1, c.y1) then
 			play_planet_anim(c.x1, c.y1, u.side, MINE_DESTROYED_ANIM, MINE_DESTROYED_HALO)
-			claim_label(c.x1, c.y1, tostring(_ "Mine destroyed"))
 		end
 	end
 end
@@ -1076,11 +1069,8 @@ function sc.check_planet_claims(side, dying)
 			and not (dying and dying.x == a.x and dying.y == a.y)
 		if here and a.side == side then
 			wesnoth.map.set_owner(a.x, a.y, a.side, false)
-			claim_label(a.x, a.y, "")
 		elseif here then
 			keep[#keep + 1] = a
-		else
-			claim_label(a.x, a.y, "")
 		end
 	end
 	wml.array_access.set(CLAIMS, keep)
