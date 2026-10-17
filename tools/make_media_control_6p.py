@@ -381,7 +381,8 @@ def moves(g, start):
 
 
 # ------------------------------------------------------------- the 4p cut
-PLANET_MOVE = [((14, 4), (18, 3))]
+EXTRA_ROWS = 2       # rows kept beyond that line, on request
+PLANET_MOVE = [((14, 9), (15, 10)), ((18, 4), (18, 5))]
 
 
 def cut(g, starts):
@@ -393,7 +394,7 @@ def cut(g, starts):
     across the centre; the sides are renumbered 1 to 4 clockwise from the
     northeast."""
     g = [row[:] for row in g]
-    edge = abs(MA[1]) + 1e-6
+    edge = abs(MA[1]) + EXTRA_ROWS * math.sqrt(3) + 1e-6
     rows = [y for y in range(H) for x in range(W)
             if inside(x, y) and abs(pixel(x, y)[1]) <= edge]
     for y in range(H):
@@ -401,12 +402,18 @@ def cut(g, starts):
             if abs(pixel(x, y)[1]) > edge:
                 g[y][x] = VOID
     top = min(rows)
-    # the north sixth's outer planet would be 14 moves from the northwest
-    # start, when the sea planet the northeast gets is 18 from it: moved so
-    # it is 18 from the northwest too (in-game x,y on the 4p map), and its
-    # half-turned twin with it
+    # docking rings left without their starbase go too
+    for y in range(H):
+        for x in range(W):
+            if g[y][x] == "Yc" and not any(
+                    inside(*h) and g[h[1]][h[0]].endswith("Yk")
+                    for h in neighbours(x, y)):
+                g[y][x] = "Ys"
+    # two planets left from the north sixth are a move nearer the
+    # northwest start than their counterparts are to the northeast: each
+    # moved a hex (in-game x,y on the 6p map), and its half-turned twin
     for (X0, Y0), (X1, Y1) in PLANET_MOVE:
-        a, b = (X0 - 1, Y0 - 1 + top), (X1 - 1, Y1 - 1 + top)
+        a, b = (X0 - 1, Y0 - 1), (X1 - 1, Y1 - 1)
         for k in (0, 3):
             (ax, ay), (bx, by) = turn(*a, k), turn(*b, k)
             g[by][bx], g[ay][ax] = g[ay][ax], "Ys"
