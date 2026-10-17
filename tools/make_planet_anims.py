@@ -10,7 +10,8 @@ kept, at 15 fps, then the last picture fades out over a few frames.
                     the first shot, the blast, and the screen whiting out,
                     up to the moment it is all white
   syreen-capture    the captain watching her ship fill up with the planet's
-                    colonists, from the cut to the planet up to the cut away
+                    colonists, from the cut to the planet until the lift is down
+                    on its fifth trip
   artifact          the Precursor device's screen filling with glyphs, cut
                     out of its starfield (see cutout_mask)
 
@@ -47,7 +48,7 @@ CROP = (523, 302, 630, 374)    # left, top, right, bottom: inside the box's grey
 SCENES = {
     "colony-destroyed": (5, 109),
     "mine-destroyed": (82, 188),
-    "syreen-capture": (139, 344),
+    "syreen-capture": (139, 311),
     "artifact": (3, 207),
 }
 CUTOUT = {"artifact"}           # scenes cut out of a dark background
