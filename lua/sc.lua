@@ -1158,9 +1158,11 @@ end
 -- Taking planets -------------------------------------------------------------
 -- A ship that lands on a planet doesn't take it straight away. An enemy's
 -- planet is destroyed (it goes to nobody), and a free planet gets a colony,
--- mine or outpost built on it, which is the ship's side's once its next turn
--- starts, if the ship is still there.
+-- mine or outpost built on it, which takes CLAIM_TURNS of the ship's side's
+-- turns: the planet is that side's when the last of them starts, if the
+-- ship has stayed there all along.
 local CLAIMS = "sc_planet_claims"
+local CLAIM_TURNS = 2
 
 function sc.planet_captured()
 	local c = wesnoth.current.event_context
@@ -1173,7 +1175,7 @@ function sc.planet_captured()
 	end
 	if not u then return end
 	local claims = wml.array_access.get(CLAIMS)
-	claims[#claims + 1] = { x = c.x1, y = c.y1, side = u.side, id = u.id }
+	claims[#claims + 1] = { x = c.x1, y = c.y1, side = u.side, id = u.id, wait = CLAIM_TURNS }
 	wml.array_access.set(CLAIMS, claims)
 	-- an enemy's colony blown up, unless a Syreen is taking its colonists,
 	-- or an enemy's mine: its scene (with "Colony destroyed" or "Mine
@@ -1188,7 +1190,8 @@ function sc.planet_captured()
 end
 
 -- Drop the claims whose ship has left or been destroyed; at the start of a
--- side's turn (side = that side), its ships still in place take their planets.
+-- side's turn (side = that side), its ships still in place count down, and
+-- take their planets once the count is done.
 -- dying: the hex of a ship being destroyed (still on the map in "die").
 function sc.check_planet_claims(side, dying)
 	local keep = {}
@@ -1197,6 +1200,9 @@ function sc.check_planet_claims(side, dying)
 		local here = u and u.id == a.id and u.side == a.side
 			and not (dying and dying.x == a.x and dying.y == a.y)
 		if here and a.side == side then
+			a.wait = (a.wait or 1) - 1
+		end
+		if here and (a.wait or 1) <= 0 then
 			wesnoth.map.set_owner(a.x, a.y, a.side, false)
 		elseif here then
 			keep[#keep + 1] = a
@@ -1204,4 +1210,16 @@ function sc.check_planet_claims(side, dying)
 	end
 	wml.array_access.set(CLAIMS, keep)
 	sc.update_planet_income()
+end
+
+-- The AI doesn't know about building on planets and would fly its ships
+-- off before they finish, so an AI side's ships that are building stay put
+-- (they can still attack from there).
+function sc.hold_ai_builders()
+	local side = wesnoth.current.side
+	if not is_ai(side) then return end
+	for _, a in ipairs(wml.array_access.get(CLAIMS)) do
+		local u = wesnoth.units.get(a.x, a.y)
+		if a.side == side and u and u.id == a.id then u.moves = 0 end
+	end
 end
