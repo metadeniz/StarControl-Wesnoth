@@ -796,11 +796,11 @@ function sc.syreen_after_healing()
 	end
 end
 
--- The captain watching her ship fill up with the planet's colonists: 68
--- frames at 15 fps, ending with the lift at the bottom on its fourth trip,
+-- The captain watching her ship fill up with the planet's colonists: 87
+-- frames at 15 fps, ending with the lift at the bottom on its fifth trip,
 -- held half a second before fading out.
 local SYREEN_CAPTURE_ANIM = "sc_syreen_capture_anim"
-local SYREEN_CAPTURE_HALO = planet_anim_halo("syreen-capture", 72, 67, 500)
+local SYREEN_CAPTURE_HALO = planet_anim_halo("syreen-capture", 91, 67, 500)
 -- The colony's domes blown apart and left burning: 53 frames at 15 fps,
 -- fading out straight after (a little shorter than the mine's, with its hold).
 local COLONY_DESTROYED_ANIM = "sc_colony_destroyed_anim"
