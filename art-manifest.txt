@@ -598,6 +598,15 @@ images/halo/sc/mine-destroyed-below-069.png
 images/halo/sc/mine-destroyed-below-070.png
 images/halo/sc/mine-destroyed-below-071.png
 images/halo/sc/mine-destroyed-below-072.png
+images/halo/sc/nuke-boom-1.png
+images/halo/sc/nuke-boom-2.png
+images/halo/sc/nuke-boom-3.png
+images/halo/sc/nuke-boom-4.png
+images/halo/sc/nuke-boom-5.png
+images/halo/sc/nuke-boom-6.png
+images/halo/sc/nuke-boom-7.png
+images/halo/sc/nuke-boom-8.png
+images/halo/sc/nuke-boom-9.png
 images/halo/sc/starbase-destroyed-001.png
 images/halo/sc/starbase-destroyed-002.png
 images/halo/sc/starbase-destroyed-003.png

@@ -376,6 +376,13 @@ def build_effects(uqm, out):
     for i in range(8):
         img = Image.open(os.path.join(battle, f"blast-big-{i:03d}.png")).convert("RGBA")
         save(img, out, f"images/halo/sc/blast-{i + 1}.png", True)
+    # Earthling nuke: the missile sprite's own explosion frames (16 on; the
+    # first 16 are its facings), at the missile's scale.
+    ndir = os.path.join(uqm, "addons/mm-hd/ships/human")
+    for i in range(9):
+        img = Image.open(os.path.join(ndir, f"saturn-big-{i + 16:03d}.png")).convert("RGBA")
+        save(img.resize((round(img.width * 0.5), round(img.height * 0.5)), Image.LANCZOS), out,
+             f"images/halo/sc/nuke-boom-{i + 1}.png", True)
     # Shofixti Glory Device: blown up to cover the scout's neighbours.
     ddir = os.path.join(uqm, "addons/mm-hd/ships/shofixti")
     frames = sorted(f for f in os.listdir(ddir) if f.startswith("destruct-big-") and f.endswith(".png"))
