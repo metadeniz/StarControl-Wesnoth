@@ -8,9 +8,9 @@ starfield, through the blasts tearing it apart, to the last embers dying
 out on the empty starfield. The last picture is held briefly, then faded
 out over a few frames.
 
-sc.starbase_destroyed in lua/sc.lua plays them as a halo on the hex where
-the leader of an Alliance or Hierarchy side was destroyed, once its death
-explosion is over: images/halo/sc/starbase-destroyed-NNN.png.
+sc.starbase_destroyed in lua/sc.lua plays them in the sidebar box above End
+Turn when a side's leader is destroyed, once its death explosion is over:
+images/halo/sc/starbase-destroyed-NNN.png.
 
 Needs ffmpeg. Run from the repository root:
     python3 tools/make_starbase_destroyed_anim.py path/to/recording.mp4
