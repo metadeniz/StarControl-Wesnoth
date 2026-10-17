@@ -293,12 +293,14 @@ end
 
 -- Star Control 1's Alliance victory screen, shown like a campaign's story
 -- screen while the victory theme plays: Earth ringed by the Alliance races
--- (picture made by tools/make_alliance_victory.py), over the game's caption.
+-- (picture made by tools/make_alliance_victory.py), captioned only by the
+-- story screen's small title box in the corner: with no story text the
+-- engine leaves out the big text panel, which would cover the picture.
 function sc.alliance_victory()
 	gui.show_story({
 		T.part {
-			show_title = false,
-			story = _ "The Alliance humbles the Hierarchy",
+			show_title = true,
+			title = _ "Alliance Victory",
 			T.background_layer {
 				image = "story/sc/alliance-victory.png",
 				base_layer = true,
