@@ -345,13 +345,14 @@ def build(src):
 
 
 # ------------------------------------------------------------ write, check
-def write(g, path):
+def write(g, path, top=0, bottom=H - 1):
+    """Write rows top to bottom of the grid."""
     rows = []
-    for Y in range(H + 2):
+    for Y in range(bottom - top + 3):
         row = []
         for X in range(W + 2):
-            x, y = X - 1, Y - 1
-            row.append(g[y][x] if 0 <= x < W and 0 <= y < H else VOID)
+            x, y = X - 1, Y - 1 + top
+            row.append(g[y][x] if 0 <= x < W and top <= y <= bottom else VOID)
         rows.append(", ".join(row))
     with open(path, "w") as f:
         f.write("\n".join(rows) + "\n")
@@ -379,7 +380,43 @@ def moves(g, start):
     return best
 
 
-def report(g, starts):
+# ------------------------------------------------------------- the 4p cut
+PLANET_MOVE = [((14, 4), (18, 3))]
+
+
+def cut(g, starts):
+    """Shave off the north and south corners: everything beyond the line
+    between the middles of the two edges either side of each goes, start
+    and all. The other four sixths stay whole, and so does the inner half
+    of the north and south sixths (its supergiant, star and planets now
+    shared). The map keeps its half turn, so the starts are alike in pairs
+    across the centre; the sides are renumbered 1 to 4 clockwise from the
+    northeast."""
+    g = [row[:] for row in g]
+    edge = abs(MA[1]) + 1e-6
+    rows = [y for y in range(H) for x in range(W)
+            if inside(x, y) and abs(pixel(x, y)[1]) <= edge]
+    for y in range(H):
+        for x in range(W):
+            if abs(pixel(x, y)[1]) > edge:
+                g[y][x] = VOID
+    top = min(rows)
+    # the north sixth's outer planet would be 14 moves from the northwest
+    # start, when the sea planet the northeast gets is 18 from it: moved so
+    # it is 18 from the northwest too (in-game x,y on the 4p map), and its
+    # half-turned twin with it
+    for (X0, Y0), (X1, Y1) in PLANET_MOVE:
+        a, b = (X0 - 1, Y0 - 1 + top), (X1 - 1, Y1 - 1 + top)
+        for k in (0, 3):
+            (ax, ay), (bx, by) = turn(*a, k), turn(*b, k)
+            g[by][bx], g[ay][ax] = g[ay][ax], "Ys"
+    kept = [starts[k] for k in (1, 2, 4, 5)]
+    for n, (x, y) in enumerate(kept, 1):
+        g[y][x] = f"{n} Yk"
+    return g, kept, top, max(rows)
+
+
+def report(g, starts, top=0):
     planets = [(x, y) for y in range(H) for x in range(W) if "^V" in g[y][x]]
     keeps = [(x, y) for y in range(H) for x in range(W)
              if g[y][x] == "Yk"]
@@ -387,11 +424,11 @@ def report(g, starts):
     ds = [moves(g, s) for s in starts]
     open_hexes = {(x, y) for y in range(H) for x in range(W)
                   if inside(x, y) and cost(g[y][x])}
-    print("unreachable:", sorted((x + 1, y + 1) for x, y in open_hexes - set(ds[0])) or "none")
+    print("unreachable:", sorted((x + 1, y + 1 - top) for x, y in open_hexes - set(ds[0])) or "none")
     for s, d in zip(starts, ds):
         own = sorted(d.get(p, 99) for p in planets
                      if d.get(p, 99) < min(e.get(p, 99) for e in ds if e is not d))
-        print(f"start {s[0] + 1},{s[1] + 1}: own planets {own}, centre "
+        print(f"start {s[0] + 1},{s[1] + 1 - top}: own planets {own}, centre "
               f"{d.get((CX, CY))}, others {[d.get(o) for o in starts]}, "
               f"small starbases {sorted(d.get(b) for b in keeps)[:4]}")
 
@@ -401,6 +438,10 @@ def main(argv):
     write(g, os.path.join(argv[1], "maps/6p_Media_Control.map"))
     if "-v" in argv:
         report(g, starts)
+    g, starts, top, bottom = cut(g, starts)
+    write(g, os.path.join(argv[1], "maps/4p_Media_Control_Hexagon.map"), top, bottom)
+    if "-v" in argv:
+        report(g, starts, top)
 
 
 if __name__ == "__main__":
