@@ -800,14 +800,14 @@ end
 -- frames at 15 fps.
 local SYREEN_CAPTURE_ANIM = "sc_syreen_capture_anim"
 local SYREEN_CAPTURE_HALO = planet_anim_halo("syreen-capture", 107, 67, 1000)
--- The colony's domes blown apart and left burning: 83 frames at 15 fps,
--- fading out straight after (about as long as the mine's, with its hold).
+-- The colony's domes blown apart and left burning: 53 frames at 15 fps,
+-- fading out straight after (a little shorter than the mine's, with its hold).
 local COLONY_DESTROYED_ANIM = "sc_colony_destroyed_anim"
-local COLONY_DESTROYED_HALO = planet_anim_halo("colony-destroyed", 87, 67, 67)
+local COLONY_DESTROYED_HALO = planet_anim_halo("colony-destroyed", 57, 67, 67)
 -- The mining vehicle on the planet, the blast, and the screen whiting out:
--- 68 frames at 15 fps, the white held for a second before fading out.
+-- 54 frames at 15 fps, the white held for half a second before fading out.
 local MINE_DESTROYED_ANIM = "sc_mine_destroyed_anim"
-local MINE_DESTROYED_HALO = planet_anim_halo("mine-destroyed", 72, 67, 1000)
+local MINE_DESTROYED_HALO = planet_anim_halo("mine-destroyed", 58, 67, 500)
 -- Each animation's list of { x, y, side } still showing, to take off.
 local PLANET_ANIMS = {
 	[SYREEN_CAPTURE_ANIM] = "sc_syreen_capture_anims",
