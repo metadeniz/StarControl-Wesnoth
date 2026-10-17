@@ -695,37 +695,44 @@ end
 
 --------------------------------------------------------- Starbase destroyed
 
--- When the leader of an Alliance or Hierarchy side is destroyed, Star
--- Control's "starbase destroyed" scene plays on its hex once the death
--- explosion is over (the "die" event comes after the death animation): the
--- starbase blown apart, then its embers dying out. Frames made by
+-- When a side's leader is destroyed, Star Control's "starbase destroyed"
+-- scene plays in the sidebar box above End Turn (lua/panel.lua) once the
+-- death explosion is over (the "die" event comes after the death
+-- animation): the starbase blown apart, then its embers dying out, with
+-- "... destroyed!" under it, on two lines to fit the box. Frames made by
 -- tools/make_starbase_destroyed_anim.py: 46 frames at 15 fps, the last held
 -- half a second, 4 fading. The game waits for it, so it plays out in full
--- even when that leader's death ends the game. Only for players who can
--- see the hex.
-local STARBASE_FACTIONS = { SC_Alliance = true, SC_Hierarchy = true }
-local STARBASE_DESTROYED_ANIM = "sc_starbase_destroyed_anim"
+-- even when that leader's death ends the game. Every player sees it.
+local STARBASE_CAPTIONS = {
+	SC_Alliance = _ "Alliance starbase\ndestroyed!",
+	SC_Hierarchy = _ "Hierarchy starbase\ndestroyed!",
+}
 local STARBASE_DESTROYED_FRAMES, STARBASE_DESTROYED_MS, STARBASE_DESTROYED_HOLD = 50, 67, 500
-local STARBASE_DESTROYED_HALO = (function()
+local STARBASE_DESTROYED_SCENE = (function()
 	local f = {}
 	for i = 1, STARBASE_DESTROYED_FRAMES do
-		f[i] = string.format("halo/sc/starbase-destroyed-%03d.png:%d", i,
-			i == STARBASE_DESTROYED_FRAMES - 4 and STARBASE_DESTROYED_HOLD or STARBASE_DESTROYED_MS)
+		f[i] = { string.format("halo/sc/starbase-destroyed-%03d.png", i),
+			i == STARBASE_DESTROYED_FRAMES - 4 and STARBASE_DESTROYED_HOLD or STARBASE_DESTROYED_MS }
 	end
-	f[#f + 1] = "misc/blank-hex.png:3600000"
-	return table.concat(f, ",")
+	return f
 end)()
-local STARBASE_DESTROYED_TIME = (STARBASE_DESTROYED_FRAMES - 1) * STARBASE_DESTROYED_MS
-	+ STARBASE_DESTROYED_HOLD
+
+-- The Alliance and the Hierarchy lose their starbase; the New Alliance's
+-- leaders go by their captains' names (the Vindicator), and the Agents of
+-- Chaos' by their ship (the Sa-Matra).
+local function leader_caption(u)
+	local faction = wesnoth.sides[u.side].__cfg.faction
+	if STARBASE_CAPTIONS[faction] then return STARBASE_CAPTIONS[faction] end
+	local name = faction == "SC_NewAlliance" and tostring(u.name) ~= "" and u.name
+		or wesnoth.unit_types[u.type].name
+	return stringx.vformat(_ "$name\ndestroyed!", { name = name })
+end
 
 function sc.starbase_destroyed()
 	local c = wesnoth.current.event_context
 	local u = wesnoth.units.get(c.x1, c.y1)
-	if not u or not u.canrecruit or not STARBASE_FACTIONS[wesnoth.sides[u.side].__cfg.faction] then return end
-	if not locally_visible(c.x1, c.y1) then return end
-	wesnoth.interface.add_hex_overlay(c.x1, c.y1, { name = STARBASE_DESTROYED_ANIM, halo = STARBASE_DESTROYED_HALO })
-	wesnoth.interface.delay(STARBASE_DESTROYED_TIME)
-	wesnoth.interface.remove_hex_overlay(c.x1, c.y1, STARBASE_DESTROYED_ANIM)
+	if not u or not u.canrecruit then return end
+	sc.panel_play(STARBASE_DESTROYED_SCENE, leader_caption(u))
 end
 
 --------------------------------------------------------------- Syreen crew
