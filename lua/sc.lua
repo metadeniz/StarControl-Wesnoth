@@ -326,6 +326,71 @@ local function shuffled(list)
 	return deck
 end
 
+-- A scenario's "Starts" option (the sc_starts variable): which corner each
+-- side starts in. The teams stay as chosen in the lobby; in prestart, before
+-- anyone sees the map, the leaders swap starting locations.
+--   adjacent: teammates in neighbouring corners, north vs. south or west
+--             vs. east (the default)
+--   diagonal: teammates in opposite corners
+--   random:   any side in any corner
+--   lobby:    each side in its own numbered corner
+-- The corners are the starting locations of sides 1 to 4, in order round the
+-- map. For anything but two teams of two, diagonal and adjacent are random.
+local START_MODES = { random = true, diagonal = true, adjacent = true, lobby = true }
+
+local function corner_name(loc)
+	local map = wesnoth.current.map
+	local ns = loc[2] * 2 < map.playable_height + 1 and _ "north" or _ "south"
+	local ew = loc[1] * 2 < map.playable_width + 1 and _ "west" or _ "east"
+	return ns .. ew
+end
+
+function sc.shuffle_starts()
+	local mode = wml.variables["sc_starts"]
+	if not START_MODES[mode] then mode = "adjacent" end
+	if mode == "lobby" then return end
+	local corners = {}
+	for i, side in ipairs(wesnoth.sides) do corners[i] = side.starting_location end
+	if #corners ~= 4 then return end
+
+	local to = shuffled { 1, 2, 3, 4 }       -- side i starts in corner to[i]
+	local teams, names = {}, {}
+	for i, side in ipairs(wesnoth.sides) do
+		if not teams[side.team_name] then
+			teams[side.team_name] = {}
+			table.insert(names, side.team_name)
+		end
+		table.insert(teams[side.team_name], i)
+	end
+	if mode ~= "random" and #names == 2 and #teams[names[1]] == 2 then
+		local slots
+		if mode == "diagonal" then slots = { { 1, 3 }, { 2, 4 } }
+		elseif mathx.random(2) == 1 then slots = { { 1, 2 }, { 3, 4 } }
+		else slots = { { 2, 3 }, { 4, 1 } } end
+		if mathx.random(2) == 1 then slots[1], slots[2] = slots[2], slots[1] end
+		for t, name in ipairs(names) do
+			local a, b = teams[name][1], teams[name][2]
+			if mathx.random(2) == 1 then a, b = b, a end
+			to[a], to[b] = slots[t][1], slots[t][2]
+		end
+	end
+
+	local leaders = {}
+	for i = 1, 4 do
+		leaders[i] = wesnoth.units.find_on_map { side = i, canrecruit = true }
+		for _, u in ipairs(leaders[i]) do u:extract() end
+	end
+	local map = wesnoth.current.map
+	local lines = {}
+	for i = 1, 4 do
+		local c = corners[to[i]]
+		map.special_locations[tostring(i)] = c
+		for _, u in ipairs(leaders[i]) do u:to_map(c[1], c[2]) end
+		table.insert(lines, tostring(_ "Side") .. " " .. i .. ": " .. tostring(corner_name(c)))
+	end
+	wesnoth.interface.add_chat_message(_ "Starts", table.concat(lines, ", "))
+end
+
 local function play(list)
 	for i, track in ipairs(list) do
 		wesnoth.wml_actions.music {

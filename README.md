@@ -46,7 +46,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | 2p — Understanding Power (Small) | 1 vs 1 |
 | 4p — Isar’s Cross (Deep Space) | 2 vs 2 (players 1 & 4 vs 2 & 3) |
 | 4p — Manufacturing Consent | 2 vs 2 (west, players 1 & 3, vs east, players 2 & 4) |
-| 4p — Media Control | 2 vs 2, one player in each corner (players 1 & 3, northwest and southeast, vs 2 & 4, northeast and southwest) |
+| 4p — Media Control | 2 vs 2, one player in each corner (players 1 & 3 vs 2 & 4); the Starts option puts teammates side by side, north vs south or west vs east (default), in opposite corners, in random corners, or each side in its numbered corner clockwise from the northwest |
 | 6p — Hegemony or Survival | 2 vs 2 or 3 vs 3 on a hexagon, a player in each corner, numbered clockwise from the north: odd vs even; for 2 vs 2 leave one odd and one even side empty |
 | 4p — Hegemony or Survival | 2 vs 2: the 6p hexagon with the northeast and southwest corners cut away behind their bends of light badlands; players clockwise from the north: north (players 1 & 4, north and northwest) vs south (2 & 3, southeast and south) |
 | 6p — Year 501 | 2 vs 2 or 3 vs 3, west (players 1, 3 & 5) vs east (2, 4 & 6); for 2 vs 2 leave a mirrored pair empty: 1 & 2 north, 3 & 4 middle, 5 & 6 south |
@@ -302,7 +302,11 @@ Broodhome also crosses nebulae, dust clouds and badlands for 1 move.
   (4p, west vs east), and `maps/default-terrain/4p_Manufacturing_Consent.map`,
   the same map in default Wesnoth terrain.
 - `tools/make_media_control.py .` regenerates Media Control (4p, 2 vs 2, one
-  player per corner, turned four ways about the centre), and
+  player per corner): it traces the north-west quarter, and
+  `tools/make_media_control_4x.py` turns it four ways about the centre of a
+  37×37 map, as nearly as hexes allow, with every corner as many moves from
+  the centre, its neighbours and its planets as the others (the balance
+  comes from `tools/balance_media_control.py`). Also writes
   `maps/default-terrain/4p_Media_Control.map`, the same map in default
   Wesnoth terrain.
 - `tools/make_hegemony_or_survival.py .` regenerates Hegemony or Survival, an
