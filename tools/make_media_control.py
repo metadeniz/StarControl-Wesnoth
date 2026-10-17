@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Write maps/4p_Media_Control.map.
 
+The map itself is now built by make_media_control_4x.py, which this runs:
+it takes the north-west quarter traced here and turns it four ways on a
+37 x 37 map, as nearly as hexes allow. What follows describes the trace
+(and the first, 35 x 31 version of the map, which build() still makes).
+
 Traced from a screenshot (1093x1080 px) of a 4-player ground map with
 four-way rotational symmetry: a start in each corner, each one boxed in by
 a river, and a ringed objective in the centre. Only its north-west quarter
@@ -419,13 +424,18 @@ def write(grid, keeps, path, table=T, base_only=("Yk", "Ys^Vyp")):
     assign_file(path, quiet=True)          # life, mineral and dead worlds
 
 
-if __name__ == "__main__":
+def main_first_version(argv):
     grid, keeps = build()
     grid = number_dark_stars(number_black_holes(grid))
-    write(grid, keeps, os.path.join(sys.argv[1], "maps/4p_Media_Control.map"))
+    write(grid, keeps, os.path.join(argv[1], "maps/4p_Media_Control.map"))
     write(grid, keeps, os.path.join(
-        sys.argv[1], "maps/default-terrain/4p_Media_Control.map"),
+        argv[1], "maps/default-terrain/4p_Media_Control.map"),
           WESNOTH, ("Kh", "Gg^Vh"))
-    if "-v" in sys.argv:
+    if "-v" in argv:
         for row in grid:
             print("".join(row))
+
+
+if __name__ == "__main__":
+    import make_media_control_4x
+    make_media_control_4x.main(sys.argv)
