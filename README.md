@@ -308,7 +308,11 @@ Broodhome also crosses nebulae, dust clouds and badlands for 1 move.
   the centre, its neighbours and its planets as the others (the balance
   comes from `tools/balance_media_control.py`). Also writes
   `maps/default-terrain/4p_Media_Control.map`, the same map in default
-  Wesnoth terrain.
+  Wesnoth terrain. `tools/make_media_control_6p.py .` then writes the 6p
+  Media Control: that map's north-west quarter stretched onto each sixth of
+  a hexagon, turned six ways hex for hex (`-v` prints each start's moves), and its 4p cut,
+  `maps/4p_Media_Control_Hexagon.map`, with the north and south corners
+  shaved off.
 - `tools/make_hegemony_or_survival.py .` regenerates Hegemony or Survival, an
   original 6-player map on a hexagon, the same in all six corners (turned
   and mirrored hex for hex), and its 4-player cut without the northeast and
