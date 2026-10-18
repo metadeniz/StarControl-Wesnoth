@@ -289,6 +289,7 @@ function sc.victory_theme()
 	local theme = side and VICTORY_THEME[side.__cfg.faction]
 	if theme then wesnoth.audio.play(theme) end
 	if side and side.__cfg.faction == "SC_Alliance" then sc.alliance_victory() end
+	if side and side.__cfg.faction == "SC_Hierarchy" then sc.hierarchy_victory() end
 end
 
 -- Star Control 1's Alliance victory screen, shown like a campaign's story
@@ -303,6 +304,22 @@ function sc.alliance_victory()
 			title = _ "Alliance Victory",
 			T.background_layer {
 				image = "story/sc/alliance-victory.png",
+				base_layer = true,
+				keep_aspect_ratio = true,
+			},
+		},
+	}, _ "Victory")
+end
+
+-- Star Control 1's Hierarchy victory screen, shown the same way: an Ur-Quan
+-- reaching out its tentacles (picture made by tools/make_hierarchy_victory.py).
+function sc.hierarchy_victory()
+	gui.show_story({
+		T.part {
+			show_title = true,
+			title = _ "Hierarchy Victory",
+			T.background_layer {
+				image = "story/sc/hierarchy-victory.png",
 				base_layer = true,
 				keep_aspect_ratio = true,
 			},
