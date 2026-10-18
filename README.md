@@ -137,7 +137,7 @@ explosion, and the game waits for it to finish.
 | Mmrnmhrm X-Wing / Y-Wing | recruit either; lasers or torpedoes, transforms; X-Wing cures (heals +8 and cures poison), Y-Wing cures +4 | Spathi Eluder | howitzer, B.U.T.T. |
 | Yehat Terminator | Attack with Shields (pulse cannons), Attack Only (rail cannons, pierce); armored hull (resists blade 40%, pierce 30%, impact 20%, arcane 10%); force shield (+40% with Attack with Shields, attacking or defending; +50% against ranged; down with Attack Only; no help against fighters or the Syreen song) | Umgah Drone | antimatter cone, skirmisher |
 | Syreen Penetrator | crew capacity as big as the Ur-Quan's (max HP 64 / 80 / 96) but always starts low (28 / 36 / 44 HP); promotion adds +8 HP instead of a full heal, or raises it to the new level's 36 / 44 if still below; planets, healers and resting only repair it up to that starting HP: only stolen crew (the song's drain, or capturing an enemy's life world, which fills it to max) takes it higher; ranged particle dagger; close range: one-shot Syreen song (**lures crew**: heals the full damage dealt; **backstab**: one extra strike when flanking) and an entrancing hum (**slows**; **backstab**: double damage and one extra strike when flanking); neither works on the unmanned Slylandro Probe | VUX Intruder | close-range laser (**first strike**); long-range limpets (slow) |
-| Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison), Blazer ram |
+| Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison, **backstab**), Blazer ram (**charge**, **backstab**) |
 | Shofixti Scout | dart gun; **Glory Device**: one unavoidable fire strike of 8–16 / 10–20 / 12–24 by level on one ship, destroying the Scout | Ilwrath Avenger | Hellfire, cloaking device |
 
 | New Alliance of Free Stars | | Agents of Chaos | |
@@ -168,7 +168,7 @@ Ur-Quan, Kohr-Ah and Chmmr Elite at 100).
 these further.) Each promotion adds HP and some mix of stronger or more
 frequent attacks, new attacks and new abilities. **Backstab** (double
 damage with an ally behind the target) comes with promotion, except the
-Syreen dagger, Androsynth acid and both Thraddash attacks, which have it
+Syreen dagger, both Androsynth attacks and both Thraddash attacks, which have it
 from the start (and the Spathi and Shofixti, which only get it as Elites):
 
 | Ship | Veteran | Elite |
