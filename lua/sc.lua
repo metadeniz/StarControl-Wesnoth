@@ -57,6 +57,44 @@ function sc.glory_roll()
 	end
 end
 
+-- A Scout destroyed by a ship that attacked it with a close-range weapon
+-- may set off its Glory Device as it dies (50%), for half the usual damage
+-- (12 -> 4-8 before resistances). Leaders carry no Device, so never do.
+local GLORY_REVENGE_CHANCE = 50
+local attacker_id   -- the ship that started the current fight
+
+function sc.note_attacker()
+	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
+	attacker_id = u and u.id
+end
+
+function sc.glory_revenge()
+	local c = wesnoth.current.event_context
+	local u = wesnoth.units.get(c.x1, c.y1)
+	local killer = c.x2 and wesnoth.units.get(c.x2, c.y2)
+	if not is_a(u, "SC_Shofixti_Scout") or not killer or killer.id ~= attacker_id
+		or wml.variables["second_weapon.range"] ~= "melee" then return end
+	local glory
+	for _, a in ipairs(u.attacks) do if a.name == "glory_device" then glory = a end end
+	if not glory or mathx.random(100) > GLORY_REVENGE_CHANCE then return end
+	count("glory_revenge")
+	local damage = mathx.random(math.floor(glory.damage * 2 / 3 + 0.5), math.floor(glory.damage * 4 / 3 + 0.5))
+	damage = math.floor(damage / 2 + 0.5)
+	-- The Glory Device's own blast (see SC_GLORY_ANIM), over the killer.
+	wesnoth.audio.play("sc/shofixti-glory.wav")
+	for i = 1, 8 do
+		local halo = "halo/sc/glory-" .. i .. ".png"
+		wesnoth.wml_actions.item { x = killer.x, y = killer.y, halo = halo }
+		wesnoth.interface.delay(70)
+		wesnoth.wml_actions.remove_item { x = killer.x, y = killer.y, image = halo }
+	end
+	wesnoth.wml_actions.harm_unit {
+		T.filter { x = killer.x, y = killer.y },
+		amount = damage, damage_type = "fire",
+		animate = true, kill = true, fire_event = true, experience = false,
+	}
+end
+
 -- Fire scout s's Glory Device at enemy e, as a normal attack.
 local function fire_glory(s, e)
 	for i, a in ipairs(s.attacks) do
