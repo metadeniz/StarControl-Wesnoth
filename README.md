@@ -46,7 +46,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | 2p — Understanding Power (Small) | 1 vs 1 |
 | 4p — Isar’s Cross (Deep Space) | 2 vs 2 (players 1 & 4 vs 2 & 3) |
 | 4p — Manufacturing Consent | 2 vs 2 (west, players 1 & 3, vs east, players 2 & 4) |
-| 4p — Media Control | 2 vs 2, one player in each corner (players 1 & 3, northwest and southeast, vs 2 & 4, northeast and southwest) |
+| 4p — Media Control | 2 vs 2, one player in each corner (players 1 & 3 vs 2 & 4); the Starts option puts teammates side by side, north vs south or west vs east (default), in opposite corners, in random corners, or each side in its numbered corner clockwise from the northwest |
 | 6p — Hegemony or Survival | 2 vs 2 or 3 vs 3 on a hexagon, a player in each corner, numbered clockwise from the north: odd vs even; for 2 vs 2 leave one odd and one even side empty |
 | 4p — Hegemony or Survival | 2 vs 2: the 6p hexagon with the northeast and southwest corners cut away behind their bends of light badlands; players clockwise from the north: north (players 1 & 4, north and northwest) vs south (2 & 3, southeast and south) |
 | 6p — Year 501 | 2 vs 2 or 3 vs 3, west (players 1, 3 & 5) vs east (2, 4 & 6); for 2 vs 2 leave a mirrored pair empty: 1 & 2 north, 3 & 4 middle, 5 & 6 south |
@@ -135,7 +135,7 @@ explosion, and the game waits for it to finish.
 | Earthling Cruiser | homing nukes, point-defense (fighters hit it at most 50%) | Ur-Quan Dreadnought | close-range fusion blast; fighters at any range (**swarm**: fewer as crew is lost) |
 | Chenjesu Broodhome | photon crystal (ranged; lighter shards close up), DOGI (slows) | Mycon Podship | homing plasmoids at range, heavier plasmoids close up (both half damage against Yehat and Utwig shields); regrows crew |
 | Mmrnmhrm X-Wing / Y-Wing | recruit either; lasers or torpedoes, transforms; X-Wing cures (heals +8 and cures poison), Y-Wing cures +4 | Spathi Eluder | howitzer, B.U.T.T. |
-| Yehat Terminator | Attack with Shields (pulse cannons), Attack Only (rail cannons, pierce); armored hull (resists blade 40%, pierce 30%, impact 20%, arcane 10%); force shield (+40% with Attack with Shields, attacking or defending; +50% against ranged; down with Attack Only) | Umgah Drone | antimatter cone, skirmisher |
+| Yehat Terminator | Attack with Shields (pulse cannons), Attack Only (rail cannons, pierce); armored hull (resists blade 40%, pierce 30%, impact 20%, arcane 10%); force shield (+40% with Attack with Shields, attacking or defending; +50% against ranged; down with Attack Only; no help against fighters or the Syreen song) | Umgah Drone | antimatter cone, skirmisher |
 | Syreen Penetrator | crew capacity as big as the Ur-Quan's (max HP 64 / 80 / 96) but always starts low (28 / 36 / 44 HP); promotion adds +8 HP instead of a full heal, or raises it to the new level's 36 / 44 if still below; planets, healers and resting only repair it up to that starting HP: only stolen crew (the song's drain, or capturing an enemy's life world, which fills it to max) takes it higher; ranged particle dagger; close range: one-shot Syreen song (**lures crew**: heals the full damage dealt; **backstab**: one extra strike when flanking) and an entrancing hum (**slows**; **backstab**: double damage and one extra strike when flanking); neither works on the unmanned Slylandro Probe | VUX Intruder | close-range laser (**first strike**); long-range limpets (slow) |
 | Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison), Blazer ram |
 | Shofixti Scout | dart gun; **Glory Device**: one unavoidable fire strike of 8–16 / 10–20 / 12–24 by level on one ship, destroying the Scout | Ilwrath Avenger | Hellfire, cloaking device |
@@ -239,11 +239,19 @@ which replace the game's village gold and support settings:
 | Life world | 1 | 2 | 40% |
 | Dead world | 0 | 1 | 20% |
 
+The era's "Planets" option can deal the kinds out afresh when the game
+starts, keeping the map's count of each kind. *Randomized, mirrored*
+follows the map's symmetry, so every player gets the same mix; on maps
+where the starts aren't alike to begin with (Isar's Cross, Year 501,
+where some starts have more planets near them than others) it is every
+team that gets the same mix. *Randomized* deals them with no mirroring.
+
 A ship doesn't take a planet the moment it lands. Landing on an enemy's
 planet destroys it (it belongs to nobody); then, as on any free planet,
 the ship starts building a colony (life world), mine (mineral world) or
-outpost (dead world). If the ship is still there when its
-side's next turn starts, the planet is that side's and pays that turn.
+outpost (dead world). Building takes a whole turn: the ship has to stay
+on the planet through its side's next turn, and when the turn after that
+starts, the planet is that side's and pays that turn.
 An enemy's colony (life world) blown up this way plays the colony destroyed
 scene below the planet, with "Colony destroyed" under the ship until it fades,
 unless the ship is a Syreen, which takes the colonists as crew instead; an
@@ -302,9 +310,17 @@ Broodhome and the Sa-Matra also cross nebulae, dust clouds and badlands for 1 mo
   (4p, west vs east), and `maps/default-terrain/4p_Manufacturing_Consent.map`,
   the same map in default Wesnoth terrain.
 - `tools/make_media_control.py .` regenerates Media Control (4p, 2 vs 2, one
-  player per corner, turned four ways about the centre), and
+  player per corner): it traces the north-west quarter, and
+  `tools/make_media_control_4x.py` turns it four ways about the centre of a
+  37×37 map, as nearly as hexes allow, with every corner as many moves from
+  the centre, its neighbours and its planets as the others (the balance
+  comes from `tools/balance_media_control.py`). Also writes
   `maps/default-terrain/4p_Media_Control.map`, the same map in default
-  Wesnoth terrain.
+  Wesnoth terrain. `tools/make_media_control_6p.py .` then writes the 6p
+  Media Control: that map's north-west quarter stretched onto each sixth of
+  a hexagon, turned six ways hex for hex (`-v` prints each start's moves), and its 4p cut,
+  `maps/4p_Media_Control_Hexagon.map`, with the north and south corners
+  shaved off.
 - `tools/make_hegemony_or_survival.py .` regenerates Hegemony or Survival, an
   original 6-player map on a hexagon, the same in all six corners (turned
   and mirrored hex for hex), and its 4-player cut without the northeast and

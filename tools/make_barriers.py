@@ -755,6 +755,11 @@ ROCKY_SUPERGIANTS = [
                    glow_rgb=(200, 212, 245), rim=((232, 238, 255), (200, 202, 218)), body=((22, 22, 30), (80, 80, 92)))),
 ]
 
+# and a green one (^Ytd6), added later for Media Control, drawn last with
+# its own seed so the art before it stays the same
+ROCKY_SUPERGIANT_GREEN = dict(cols=[(8, 55, 18), (25, 130, 45), (70, 200, 90), (150, 240, 155), (225, 255, 225)],
+                              glow_rgb=(60, 210, 95), rim=((170, 255, 185), (120, 190, 135)), body=((14, 28, 18), (60, 88, 66)))
+
 
 def red_supergiant(rng, n_rocks=420, d=GIANT_D, canvas=BIG, rock=1.0, cols=((45, 4, 4), (120, 16, 10), (190, 40, 18), (235, 90, 35), (255, 165, 90)),
                    glow_rgb=(200, 35, 20), reach=7, cells=4, grain=14, limb=0.8, boost=1.15, mottle=0.6, smooth=0.2,
@@ -1165,3 +1170,5 @@ def build_small_objects(rng, out, save, apply_mask, starfield, mask):
         put(img, f"dark-star-small{'' if i == 0 else i + 1}")
         if i == 0:
             tile(img, "dark-star-small")
+    grng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 13)
+    put(red_supergiant(grng, **ROCKY_SUPERGIANT_GREEN), "rocky-supergiant-small6")

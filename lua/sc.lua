@@ -293,12 +293,14 @@ end
 
 -- Star Control 1's Alliance victory screen, shown like a campaign's story
 -- screen while the victory theme plays: Earth ringed by the Alliance races
--- (picture made by tools/make_alliance_victory.py), over the game's caption.
+-- (picture made by tools/make_alliance_victory.py), captioned only by the
+-- story screen's small title box in the corner: with no story text the
+-- engine leaves out the big text panel, which would cover the picture.
 function sc.alliance_victory()
 	gui.show_story({
 		T.part {
-			show_title = false,
-			story = _ "The Alliance humbles the Hierarchy",
+			show_title = true,
+			title = _ "Alliance Victory",
 			T.background_layer {
 				image = "story/sc/alliance-victory.png",
 				base_layer = true,
@@ -324,6 +326,71 @@ local function shuffled(list)
 		deck[i], deck[j] = deck[j], deck[i]
 	end
 	return deck
+end
+
+-- A scenario's "Starts" option (the sc_starts variable): which corner each
+-- side starts in. The teams stay as chosen in the lobby; in prestart, before
+-- anyone sees the map, the leaders swap starting locations.
+--   adjacent: teammates in neighbouring corners, north vs. south or west
+--             vs. east (the default)
+--   diagonal: teammates in opposite corners
+--   random:   any side in any corner
+--   lobby:    each side in its own numbered corner
+-- The corners are the starting locations of sides 1 to 4, in order round the
+-- map. For anything but two teams of two, diagonal and adjacent are random.
+local START_MODES = { random = true, diagonal = true, adjacent = true, lobby = true }
+
+local function corner_name(loc)
+	local map = wesnoth.current.map
+	local ns = loc[2] * 2 < map.playable_height + 1 and _ "north" or _ "south"
+	local ew = loc[1] * 2 < map.playable_width + 1 and _ "west" or _ "east"
+	return ns .. ew
+end
+
+function sc.shuffle_starts()
+	local mode = wml.variables["sc_starts"]
+	if not START_MODES[mode] then mode = "adjacent" end
+	if mode == "lobby" then return end
+	local corners = {}
+	for i, side in ipairs(wesnoth.sides) do corners[i] = side.starting_location end
+	if #corners ~= 4 then return end
+
+	local to = shuffled { 1, 2, 3, 4 }       -- side i starts in corner to[i]
+	local teams, names = {}, {}
+	for i, side in ipairs(wesnoth.sides) do
+		if not teams[side.team_name] then
+			teams[side.team_name] = {}
+			table.insert(names, side.team_name)
+		end
+		table.insert(teams[side.team_name], i)
+	end
+	if mode ~= "random" and #names == 2 and #teams[names[1]] == 2 then
+		local slots
+		if mode == "diagonal" then slots = { { 1, 3 }, { 2, 4 } }
+		elseif mathx.random(2) == 1 then slots = { { 1, 2 }, { 3, 4 } }
+		else slots = { { 2, 3 }, { 4, 1 } } end
+		if mathx.random(2) == 1 then slots[1], slots[2] = slots[2], slots[1] end
+		for t, name in ipairs(names) do
+			local a, b = teams[name][1], teams[name][2]
+			if mathx.random(2) == 1 then a, b = b, a end
+			to[a], to[b] = slots[t][1], slots[t][2]
+		end
+	end
+
+	local leaders = {}
+	for i = 1, 4 do
+		leaders[i] = wesnoth.units.find_on_map { side = i, canrecruit = true }
+		for _, u in ipairs(leaders[i]) do u:extract() end
+	end
+	local map = wesnoth.current.map
+	local lines = {}
+	for i = 1, 4 do
+		local c = corners[to[i]]
+		map.special_locations[tostring(i)] = c
+		for _, u in ipairs(leaders[i]) do u:to_map(c[1], c[2]) end
+		table.insert(lines, tostring(_ "Side") .. " " .. i .. ": " .. tostring(corner_name(c)))
+	end
+	wesnoth.interface.add_chat_message(_ "Starts", table.concat(lines, ", "))
 end
 
 local function play(list)
@@ -628,37 +695,44 @@ end
 
 --------------------------------------------------------- Starbase destroyed
 
--- When the leader of an Alliance or Hierarchy side is destroyed, Star
--- Control's "starbase destroyed" scene plays on its hex once the death
--- explosion is over (the "die" event comes after the death animation): the
--- starbase blown apart, then its embers dying out. Frames made by
+-- When a side's leader is destroyed, Star Control's "starbase destroyed"
+-- scene plays in the sidebar box above End Turn (lua/panel.lua) once the
+-- death explosion is over (the "die" event comes after the death
+-- animation): the starbase blown apart, then its embers dying out, with
+-- "... destroyed!" under it, on two lines to fit the box. Frames made by
 -- tools/make_starbase_destroyed_anim.py: 46 frames at 15 fps, the last held
 -- half a second, 4 fading. The game waits for it, so it plays out in full
--- even when that leader's death ends the game. Only for players who can
--- see the hex.
-local STARBASE_FACTIONS = { SC_Alliance = true, SC_Hierarchy = true }
-local STARBASE_DESTROYED_ANIM = "sc_starbase_destroyed_anim"
+-- even when that leader's death ends the game. Every player sees it.
+local STARBASE_CAPTIONS = {
+	SC_Alliance = _ "Alliance starbase\ndestroyed!",
+	SC_Hierarchy = _ "Hierarchy starbase\ndestroyed!",
+}
 local STARBASE_DESTROYED_FRAMES, STARBASE_DESTROYED_MS, STARBASE_DESTROYED_HOLD = 50, 67, 500
-local STARBASE_DESTROYED_HALO = (function()
+local STARBASE_DESTROYED_SCENE = (function()
 	local f = {}
 	for i = 1, STARBASE_DESTROYED_FRAMES do
-		f[i] = string.format("halo/sc/starbase-destroyed-%03d.png:%d", i,
-			i == STARBASE_DESTROYED_FRAMES - 4 and STARBASE_DESTROYED_HOLD or STARBASE_DESTROYED_MS)
+		f[i] = { string.format("halo/sc/starbase-destroyed-%03d.png", i),
+			i == STARBASE_DESTROYED_FRAMES - 4 and STARBASE_DESTROYED_HOLD or STARBASE_DESTROYED_MS }
 	end
-	f[#f + 1] = "misc/blank-hex.png:3600000"
-	return table.concat(f, ",")
+	return f
 end)()
-local STARBASE_DESTROYED_TIME = (STARBASE_DESTROYED_FRAMES - 1) * STARBASE_DESTROYED_MS
-	+ STARBASE_DESTROYED_HOLD
+
+-- The Alliance and the Hierarchy lose their starbase; the New Alliance's
+-- leaders go by their captains' names (the Vindicator), and the Agents of
+-- Chaos' by their ship (the Sa-Matra).
+local function leader_caption(u)
+	local faction = wesnoth.sides[u.side].__cfg.faction
+	if STARBASE_CAPTIONS[faction] then return STARBASE_CAPTIONS[faction] end
+	local name = faction == "SC_NewAlliance" and tostring(u.name) ~= "" and u.name
+		or wesnoth.unit_types[u.type].name
+	return stringx.vformat(_ "$name\ndestroyed!", { name = name })
+end
 
 function sc.starbase_destroyed()
 	local c = wesnoth.current.event_context
 	local u = wesnoth.units.get(c.x1, c.y1)
-	if not u or not u.canrecruit or not STARBASE_FACTIONS[wesnoth.sides[u.side].__cfg.faction] then return end
-	if not locally_visible(c.x1, c.y1) then return end
-	wesnoth.interface.add_hex_overlay(c.x1, c.y1, { name = STARBASE_DESTROYED_ANIM, halo = STARBASE_DESTROYED_HALO })
-	wesnoth.interface.delay(STARBASE_DESTROYED_TIME)
-	wesnoth.interface.remove_hex_overlay(c.x1, c.y1, STARBASE_DESTROYED_ANIM)
+	if not u or not u.canrecruit then return end
+	sc.panel_play(STARBASE_DESTROYED_SCENE, leader_caption(u))
 end
 
 --------------------------------------------------------------- Syreen crew
@@ -729,18 +803,19 @@ function sc.syreen_after_healing()
 	end
 end
 
--- The captain watching her ship fill up with the planet's colonists: 103
--- frames at 15 fps.
+-- The captain watching her ship fill up with the planet's colonists: 87
+-- frames at 15 fps, ending with the lift at the bottom on its fifth trip,
+-- held half a second before fading out.
 local SYREEN_CAPTURE_ANIM = "sc_syreen_capture_anim"
-local SYREEN_CAPTURE_HALO = planet_anim_halo("syreen-capture", 107, 67, 1000)
--- The colony's domes blown apart and left burning: 83 frames at 15 fps,
--- fading out straight after (about as long as the mine's, with its hold).
+local SYREEN_CAPTURE_HALO = planet_anim_halo("syreen-capture", 91, 67, 500)
+-- The colony's domes blown apart and left burning: 53 frames at 15 fps,
+-- fading out straight after (a little shorter than the mine's, with its hold).
 local COLONY_DESTROYED_ANIM = "sc_colony_destroyed_anim"
-local COLONY_DESTROYED_HALO = planet_anim_halo("colony-destroyed", 87, 67, 67)
+local COLONY_DESTROYED_HALO = planet_anim_halo("colony-destroyed", 57, 67, 67)
 -- The mining vehicle on the planet, the blast, and the screen whiting out:
--- 68 frames at 15 fps, the white held for a second before fading out.
+-- 54 frames at 15 fps, the white held for half a second before fading out.
 local MINE_DESTROYED_ANIM = "sc_mine_destroyed_anim"
-local MINE_DESTROYED_HALO = planet_anim_halo("mine-destroyed", 72, 67, 1000)
+local MINE_DESTROYED_HALO = planet_anim_halo("mine-destroyed", 58, 67, 500)
 -- Each animation's list of { x, y, side } still showing, to take off.
 local PLANET_ANIMS = {
 	[SYREEN_CAPTURE_ANIM] = "sc_syreen_capture_anims",
@@ -1083,9 +1158,11 @@ end
 -- Taking planets -------------------------------------------------------------
 -- A ship that lands on a planet doesn't take it straight away. An enemy's
 -- planet is destroyed (it goes to nobody), and a free planet gets a colony,
--- mine or outpost built on it, which is the ship's side's once its next turn
--- starts, if the ship is still there.
+-- mine or outpost built on it, which takes CLAIM_TURNS of the ship's side's
+-- turns: the planet is that side's when the last of them starts, if the
+-- ship has stayed there all along.
 local CLAIMS = "sc_planet_claims"
+local CLAIM_TURNS = 2
 
 function sc.planet_captured()
 	local c = wesnoth.current.event_context
@@ -1098,7 +1175,7 @@ function sc.planet_captured()
 	end
 	if not u then return end
 	local claims = wml.array_access.get(CLAIMS)
-	claims[#claims + 1] = { x = c.x1, y = c.y1, side = u.side, id = u.id }
+	claims[#claims + 1] = { x = c.x1, y = c.y1, side = u.side, id = u.id, wait = CLAIM_TURNS }
 	wml.array_access.set(CLAIMS, claims)
 	-- an enemy's colony blown up, unless a Syreen is taking its colonists,
 	-- or an enemy's mine: its scene (with "Colony destroyed" or "Mine
@@ -1113,7 +1190,8 @@ function sc.planet_captured()
 end
 
 -- Drop the claims whose ship has left or been destroyed; at the start of a
--- side's turn (side = that side), its ships still in place take their planets.
+-- side's turn (side = that side), its ships still in place count down, and
+-- take their planets once the count is done.
 -- dying: the hex of a ship being destroyed (still on the map in "die").
 function sc.check_planet_claims(side, dying)
 	local keep = {}
@@ -1122,6 +1200,9 @@ function sc.check_planet_claims(side, dying)
 		local here = u and u.id == a.id and u.side == a.side
 			and not (dying and dying.x == a.x and dying.y == a.y)
 		if here and a.side == side then
+			a.wait = (a.wait or 1) - 1
+		end
+		if here and (a.wait or 1) <= 0 then
 			wesnoth.map.set_owner(a.x, a.y, a.side, false)
 		elseif here then
 			keep[#keep + 1] = a
@@ -1129,4 +1210,16 @@ function sc.check_planet_claims(side, dying)
 	end
 	wml.array_access.set(CLAIMS, keep)
 	sc.update_planet_income()
+end
+
+-- The AI doesn't know about building on planets and would fly its ships
+-- off before they finish, so an AI side's ships that are building stay put
+-- (they can still attack from there).
+function sc.hold_ai_builders()
+	local side = wesnoth.current.side
+	if not is_ai(side) then return end
+	for _, a in ipairs(wml.array_access.get(CLAIMS)) do
+		local u = wesnoth.units.get(a.x, a.y)
+		if a.side == side and u and u.id == a.id then u.moves = 0 end
+	end
 end
