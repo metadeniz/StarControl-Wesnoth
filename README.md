@@ -239,6 +239,13 @@ which replace the game's village gold and support settings:
 | Life world | 1 | 2 | 40% |
 | Dead world | 0 | 1 | 20% |
 
+The era's "Planets" option can deal the kinds out afresh when the game
+starts, keeping the map's count of each kind. *Randomized, mirrored*
+follows the map's symmetry, so every player gets the same mix; on maps
+where the starts aren't alike to begin with (Isar's Cross, Year 501,
+where some starts have more planets near them than others) it is every
+team that gets the same mix. *Randomized* deals them with no mirroring.
+
 A ship doesn't take a planet the moment it lands. Landing on an enemy's
 planet destroys it (it belongs to nobody); then, as on any free planet,
 the ship starts building a colony (life world), mine (mineral world) or
