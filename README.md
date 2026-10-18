@@ -138,7 +138,7 @@ explosion, and the game waits for it to finish.
 | Yehat Terminator | Attack with Shields (pulse cannons), Attack Only (rail cannons, pierce); armored hull (resists blade 40%, pierce 30%, impact 20%, arcane 10%); force shield (+40% with Attack with Shields, attacking or defending; +50% against ranged; down with Attack Only; no help against fighters or the Syreen song) | Umgah Drone | antimatter cone, skirmisher |
 | Syreen Penetrator | crew capacity as big as the Ur-Quan's (max HP 64 / 80 / 96) but always starts low (28 / 36 / 44 HP); promotion adds +8 HP instead of a full heal, or raises it to the new level's 36 / 44 if still below; planets, healers and resting only repair it up to that starting HP: only stolen crew (the song's drain, or capturing an enemy's life world, which fills it to max) takes it higher; ranged particle dagger; close range: one-shot Syreen song (**lures crew**: heals the full damage dealt; **backstab**: one extra strike when flanking) and an entrancing hum (**slows**; **backstab**: double damage and one extra strike when flanking); neither works on the unmanned Slylandro Probe | VUX Intruder | close-range laser (**first strike**); long-range limpets (slow) |
 | Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison, **backstab**), Blazer ram (**charge**, **backstab**) |
-| Shofixti Scout | dart gun; **Glory Device**: one unavoidable fire strike of 8–16 / 10–20 / 12–24 by level on one ship, destroying the Scout | Ilwrath Avenger | Hellfire, cloaking device |
+| Shofixti Scout | dart gun; **Glory Device**: one unavoidable fire strike of 8–16 / 10–20 / 12–24 by level on one ship, destroying the Scout; a Scout destroyed by a close-range attack has a 50% chance to set it off as it dies, hitting its attacker for half that | Ilwrath Avenger | Hellfire, cloaking device |
 
 | New Alliance of Free Stars | | Agents of Chaos | |
 |---|---|---|---|
@@ -252,6 +252,9 @@ the ship starts building a colony (life world), mine (mineral world) or
 outpost (dead world). Building takes a whole turn: the ship has to stay
 on the planet through its side's next turn, and when the turn after that
 starts, the planet is that side's and pays that turn.
+Only a side's own and its allies' planets repair its ships, so a ship
+that is still building gets no repair from the planet (healers next to it
+and resting still work, and poison isn't cured).
 An enemy's colony (life world) blown up this way plays the colony destroyed
 scene below the planet, with "Colony destroyed" under the ship until it fades,
 unless the ship is a Syreen, which takes the colonists as crew instead; an
