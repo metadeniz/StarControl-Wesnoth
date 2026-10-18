@@ -1081,15 +1081,22 @@ end
 
 local function hold(weapon, x1, y1, x2, y2)
 	if not weapon or weapon.name ~= CONE_WEAPON then return end
-	local halo = "halo/sc/umgah-cone-" .. facing(x1, y1, x2, y2) .. ".png"
+	local stem = "halo/sc/umgah-cone-" .. facing(x1, y1, x2, y2)
+	local frames = {}
+	for i = 1, 4 do frames[i] = stem .. "-" .. i .. ".png:70" end
+	local halo = table.concat(frames, ",")
 	wesnoth.wml_actions.item { x = x1, y = y1, halo = halo }
 	table.insert(held_cones, { x = x1, y = y1, halo = halo })
 end
 
 function sc.cone_hold()
 	local c = wesnoth.current.event_context
-	hold(c.weapon, c.x1, c.y1, c.x2, c.y2)
-	hold(c.second_weapon, c.x2, c.y2, c.x1, c.y1)
+	-- Wesnoth 1.16 hands the weapons over as [weapon] and [second_weapon]
+	-- children of the context, not as fields.
+	local weapon = c.weapon or wml.get_child(c, "weapon")
+	local second = c.second_weapon or wml.get_child(c, "second_weapon")
+	hold(weapon, c.x1, c.y1, c.x2, c.y2)
+	hold(second, c.x2, c.y2, c.x1, c.y1)
 end
 
 function sc.cone_release()
