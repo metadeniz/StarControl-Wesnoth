@@ -1278,3 +1278,80 @@ function sc.hold_ai_builders()
 		if a.side == side and u and u.id == a.id then u.moves = 0 end
 	end
 end
+
+-- Only a side's own or an ally's planets repair its ships. Wesnoth heals a
+-- ship on any village whoever owns it, so a ship still building on a planet
+-- (or one just landed on an enemy's) is marked unhealable before its side
+-- heals ("side turn") and repaired by hand afterwards ("turn refresh") with
+-- the same rules minus the planet: healers next to it, its own regeneration,
+-- resting, and poison.
+local function planet_repairs(u)
+	local map = wesnoth.current.map
+	if (wesnoth.terrain_types[map[{ u.x, u.y }]].healing or 0) <= 0 then return true end
+	local owner = wesnoth.map.get_owner(u.x, u.y) or 0
+	return owner == u.side or (owner > 0 and not wesnoth.sides.is_enemy(u.side, owner))
+end
+
+function sc.block_unowned_planet_repair()
+	for _, u in ipairs(wesnoth.units.find_on_map { side = wesnoth.current.side }) do
+		if not planet_repairs(u) and not u.status.unhealable then
+			u.variables.sc_planet_repair = { hp = u.hitpoints, resting = u.resting }
+			u.status.unhealable = true
+		end
+	end
+end
+
+-- The best value and poison handling of the [heals] / [regenerate]
+-- abilities in unit u's WML that reach the patient p.
+local function repair_from(u, tag, p)
+	local value, poison = 0, nil
+	local abilities = wml.get_child(u.__cfg, "abilities")
+	if not abilities then return value, poison end
+	for a in wml.child_range(abilities, tag) do
+		local reaches = tag == "regenerate" and a.id ~= "sc_asteroid_harvest"
+			or (tag == "heals" and u.id ~= p.id
+				and (u.side == p.side or a.affect_allies == true or a.affect_allies == "yes"))
+		if reaches then
+			value = math.max(value, tonumber(a.value) or 0)
+			if a.poison == "cured" then poison = "cured"
+			elseif a.poison == "slowed" and poison ~= "cured" then poison = "slowed" end
+		end
+	end
+	return value, poison
+end
+
+function sc.unowned_planet_repair()
+	for _, u in ipairs(wesnoth.units.find_on_map { side = wesnoth.current.side }) do
+		local saved = u.variables.sc_planet_repair
+		if saved then
+			u.variables.sc_planet_repair = nil
+			u.status.unhealable = false
+			local healing, poison = repair_from(u, "regenerate", u)
+			for _, h in ipairs(wesnoth.units.find_on_map { T.filter_adjacent { id = u.id } }) do
+				if not wesnoth.sides.is_enemy(u.side, h.side) and not h.status.petrified then
+					local v, p = repair_from(h, "heals", u)
+					healing = math.max(healing, v)
+					if p == "cured" or (p == "slowed" and poison ~= "cured") then poison = p end
+				end
+			end
+			local rest = saved.resting and wesnoth.game_config.rest_heal_amount or 0
+			local change = healing + rest
+			if u.status.poisoned then
+				change = rest
+				if poison == "cured" then
+					u.status.poisoned = false
+				elseif poison ~= "slowed" then
+					change = rest - wesnoth.game_config.poison_amount
+				end
+			end
+			local hp = math.max(1, math.min(u.max_hitpoints, saved.hp + change))
+			if hp ~= u.hitpoints and locally_visible(u.x, u.y) then
+				local d = hp - u.hitpoints
+				wesnoth.interface.float_label(u.x, u.y, d > 0
+					and "<span color='#60ff60'>" .. d .. "</span>"
+					or "<span color='#ff6060'>" .. -d .. "</span>")
+			end
+			u.hitpoints = hp
+		end
+	end
+end
