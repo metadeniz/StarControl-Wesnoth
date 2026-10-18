@@ -75,6 +75,9 @@ function sc1.setup(mission_id)
 	local mission = sc1.missions[mission_id]
 	local name = mission.maps[mathx.random(#mission.maps)]
 	local data = filesystem.read_file("~add-ons/Star_Control_TC/maps/" .. name .. ".map")
+	-- park the starbases in the corner first: a smaller map would drop
+	-- units that end up off it
+	for i, u in ipairs(wesnoth.units.find_on_map {}) do u:to_map(i, 1) end
 	wesnoth.wml_actions.replace_map { map = data, expand = true, shrink = true }
 
 	-- the starbases: north for the Hierarchy, south for the Alliance
