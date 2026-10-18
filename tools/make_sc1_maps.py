@@ -20,7 +20,8 @@ cluster from tools/sc1_cluster.py on hexes, cropped to a rectangle round it:
     two forward starbases, one each side of the middle, each with 3;
   - between the forward starbases, a third of the band made impassable
     dark nebula, furthest from the lanes first, to narrow the waist;
-  - the map trimmed to 2 rows behind each end's starbase.
+  - the map cropped to 2 hexes beyond the outermost planet, starbase or
+    docking ring on every side (lanes running further are cut off).
 
 The planet types drawn are First Encounter's (a colony and a mine nearest
 each starbase, the rest of each half half life, half mineral); at the
@@ -42,7 +43,7 @@ LANE = 1.8      # lane half-width in hexes (about 4 across)
 POCKET = 2.2    # open radius round planets
 FORWARD = 95    # how far from the centre (cluster units) the forward keeps sit
 WAIST = 1 / 3   # share of the middle band (between the forward keeps) made impassable
-BEHIND = 2      # rows kept behind each end's starbase
+MARGIN = 2      # hexes kept beyond the outermost planet or starbase
 PAD = 3         # hexes of rough terrain beyond the outermost open hex
 
 
@@ -256,16 +257,19 @@ def build(seed):
     walls.sort(key=lambda h: (-dist.get(h, 99), -abs(centre(*h)[0] - mid), h))
     for x, y in walls[:round(len(band) * WAIST)]:
         grid[y][x] = 'Yqd'
-    # trim the map behind the starbases: BEHIND rows beyond each keep, or
-    # just past the furthest open hex if that reaches further
-    # (the open space round a starbase itself may be cut)
-    k1, k2 = hexes[ends['H']][1], hexes[ends['A']][1]
-    kc = [centre(*hexes[ends[e]]) for e in 'HA']
-    lanes = [h for h in open_ if all(math.dist(centre(*h), c) > POCKET for c in kc)]
-    top = max(1, min(k1 - BEHIND, min(y for _, y in lanes) - 1))
-    bottom = min(H, max(k2 + BEHIND, max(y for _, y in lanes) + 1))
-    grid = [grid[0]] + grid[top:bottom + 1] + [grid[H + 1]]
-    H = bottom - top + 1
+    # crop to MARGIN hexes beyond the outermost planet, starbase or docking
+    # ring on every side; columns go in even numbers on the left so the
+    # hexes keep their places (even columns sit half a hex lower)
+    things = [(x, y) for y in range(1, H + 1) for x in range(1, W + 1)
+              if any(k in grid[y][x] for k in ('Vy', 'Yk', 'Yc'))]
+    top = max(1, min(y for _, y in things) - MARGIN)
+    bottom = min(H, max(y for _, y in things) + MARGIN)
+    left = max(1, min(x for x, _ in things) - MARGIN)
+    left -= (left - 1) % 2
+    right = min(W, max(x for x, _ in things) + MARGIN)
+    rows = [grid[0]] + grid[top:bottom + 1] + [grid[H + 1]]
+    grid = [[r[0]] + r[left:right + 1] + [r[W + 1]] for r in rows]
+    W, H = right - left + 1, bottom - top + 1
     return W, H, "\n".join(", ".join(r) for r in grid) + "\n"
 
 
