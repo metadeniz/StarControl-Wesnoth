@@ -236,8 +236,8 @@ which replace the game's village gold and support settings:
 | Planet | Gold per turn | Upkeep supported | Share of planets |
 |---|---|---|---|
 | Mineral world | 2 | 2 | 40% |
-| Life world | 1 | 2 | 40% |
-| Dead world | 0 | 1 | 20% |
+| Life world | 0 | 2 | 40% |
+| Dead world | 0 | 0 | 20% |
 
 The era's "Planets" option can deal the kinds out afresh when the game
 starts, keeping the map's count of each kind. *Randomized, mirrored*
