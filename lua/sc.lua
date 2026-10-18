@@ -1065,8 +1065,8 @@ end
 
 -- The Umgah antimatter cone stays lit for a whole fight: it is an item halo
 -- on the Drone's hex, pointing at its opponent, from the attack event until
--- the fight ends or a ship is destroyed. The images are baked per facing by
--- tools/make_umgah_cone_halos.py.
+-- the fight ends or a ship is destroyed. The images are baked per Drone
+-- level and facing by tools/make_umgah_cone_halos.py.
 local CONE_WEAPON = "antimatter_cone"
 local held_cones = {}
 
@@ -1081,10 +1081,10 @@ end
 
 local function hold(weapon, x1, y1, x2, y2)
 	if not weapon or weapon.name ~= CONE_WEAPON then return end
-	local stem = "halo/sc/umgah-cone-" .. facing(x1, y1, x2, y2)
-	local frames = {}
-	for i = 1, 4 do frames[i] = stem .. "-" .. i .. ".png:70" end
-	local halo = table.concat(frames, ",")
+	-- the cone starts at the ship's nose, which sits further out on bigger hulls
+	local u = wesnoth.units.get(x1, y1)
+	local level = math.max(1, math.min(3, u and u.level or 1))
+	local halo = "halo/sc/umgah-cone-l" .. level .. "-" .. facing(x1, y1, x2, y2) .. ".png"
 	wesnoth.wml_actions.item { x = x1, y = y1, halo = halo }
 	table.insert(held_cones, { x = x1, y = y1, halo = halo })
 end
