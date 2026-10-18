@@ -17,7 +17,9 @@ cluster from tools/sc1_cluster.py on hexes, cropped to a rectangle round it:
     badlands, asteroids or red nebula, clear of planets and starbases;
   - the Hierarchy's starbase (start 1) beyond the north end, the
     Alliance's (start 2) beyond the south, each with 3 docking rings, and
-    two forward starbases, one each side of the middle, each with 3.
+    two forward starbases, one each side of the middle, each with 3;
+  - between the forward starbases, a third of the band made impassable
+    dark nebula, furthest from the lanes first, to narrow the waist.
 
 The planet types drawn are First Encounter's (a colony and a mine nearest
 each starbase, the rest of each half half life, half mineral); at the
@@ -38,6 +40,7 @@ S = 13          # cluster units per hex
 LANE = 1.8      # lane half-width in hexes (about 4 across)
 POCKET = 2.2    # open radius round planets
 FORWARD = 95    # how far from the centre (cluster units) the forward keeps sit
+WAIST = 1 / 3   # share of the middle band (between the forward keeps) made impassable
 PAD = 3         # hexes of rough terrain beyond the outermost open hex
 
 
@@ -186,6 +189,7 @@ def build(seed):
     planet_hex = set(hexes[:n])
     near_planet = {nb for h in planet_hex for nb in neighbours(*h)} | planet_hex
     used = set()
+    forward_y = []
     for sy in (-1, 1):
         target = (ox, oy + sy * FORWARD / S)
         best = None
@@ -204,6 +208,7 @@ def build(seed):
         for rx, ry in ring:
             grid[ry][rx] = 'Yc'
         used |= {(x, y)} | set(ring) | set(neighbours(x, y))
+        forward_y.append(y)
     # cover in the lanes: small patches (1-4 hexes) to hide in or fight from,
     # clear of planets, starbases and docking rings
     def busy(h):
@@ -232,6 +237,23 @@ def build(seed):
             q += neighbours(*a)
         for x, y in patch:
             grid[y][x] = kind
+    # the hourglass's waist: between the forward keeps, the third of the
+    # hexes furthest from any lane becomes impassable dark nebula
+    top, bottom = min(forward_y), max(forward_y)
+    band = [(x, y) for x in range(1, W + 1) for y in range(top, bottom + 1)]
+    dist = {h: 0 for h in open_}
+    q = list(open_)
+    for a in q:
+        for nb in neighbours(*a):
+            if in_map(nb) and nb not in dist:
+                dist[nb] = dist[a] + 1
+                q.append(nb)
+    walls = [h for h in band if h not in open_ and '^Y' not in grid[h[1]][h[0]]
+             and not any(k in grid[h[1]][h[0]] for k in ('Vy', 'Yk', 'Yc'))]
+    mid = 0.75 * (W + 1) / 2
+    walls.sort(key=lambda h: (-dist.get(h, 99), -abs(centre(*h)[0] - mid), h))
+    for x, y in walls[:round(len(band) * WAIST)]:
+        grid[y][x] = 'Yqd'
     return W, H, "\n".join(", ".join(r) for r in grid) + "\n"
 
 
