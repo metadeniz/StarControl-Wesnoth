@@ -816,6 +816,14 @@ local COLONY_DESTROYED_HALO = planet_anim_halo("colony-destroyed", 57, 67, 67)
 -- 54 frames at 15 fps, the white held for half a second before fading out.
 local MINE_DESTROYED_ANIM = "sc_mine_destroyed_anim"
 local MINE_DESTROYED_HALO = planet_anim_halo("mine-destroyed", 58, 67, 500)
+-- A Syreen taking an enemy's colony: her captain's scene, then the colony,
+-- emptied of its colonists, blown up (one halo, so they play one after the
+-- other in the same place).
+local SYREEN_CAPTURE_DESTROYED_HALO = {}
+for where, halo in pairs(SYREEN_CAPTURE_HALO) do
+	SYREEN_CAPTURE_DESTROYED_HALO[where] = halo:gsub(",misc/blank%-hex%.png:%d+$", "")
+		.. "," .. COLONY_DESTROYED_HALO[where]
+end
 -- Each animation's list of { x, y, side } still showing, to take off.
 local PLANET_ANIMS = {
 	[SYREEN_CAPTURE_ANIM] = "sc_syreen_capture_anims",
@@ -855,13 +863,14 @@ local function syreen_fills_crew(u, owner)
 		and wesnoth.sides.is_enemy(u.side, owner) and is_life_world(u.x, u.y)
 end
 
--- Capturing an enemy's life world: its colonists join the Syreen (full HP).
+-- Capturing an enemy's life world: its colonists join the Syreen (full HP),
+-- and the colony is destroyed, as any enemy colony is (see "Taking planets").
 function sc.syreen_captured()
 	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
 	local owner = wml.variables["owner_side"] or 0
 	if syreen_fills_crew(u, owner) then
 		u.hitpoints = u.max_hitpoints
-		play_planet_anim(u.x, u.y, u.side, SYREEN_CAPTURE_ANIM, SYREEN_CAPTURE_HALO)
+		play_planet_anim(u.x, u.y, u.side, SYREEN_CAPTURE_ANIM, SYREEN_CAPTURE_DESTROYED_HALO)
 		-- and a label on the planet for the rest of the Syreen side's turn
 		-- (hidden from players who have it under fog)
 		wesnoth.map.add_label { x = u.x, y = u.y, color = "255,128,208", immutable = true,
@@ -1177,8 +1186,8 @@ function sc.planet_captured()
 	local claims = wml.array_access.get(CLAIMS)
 	claims[#claims + 1] = { x = c.x1, y = c.y1, side = u.side, id = u.id, wait = CLAIM_TURNS }
 	wml.array_access.set(CLAIMS, claims)
-	-- an enemy's colony blown up, unless a Syreen is taking its colonists,
-	-- or an enemy's mine: its scene (with "Colony destroyed" or "Mine
+	-- an enemy's colony blown up (after her own scene, if a Syreen is taking
+	-- its colonists: see sc.syreen_captured), or an enemy's mine: its scene (with "Colony destroyed" or "Mine
 	-- destroyed" in it, gone when the scene is)
 	if owner > 0 and wesnoth.sides.is_enemy(u.side, owner) then
 		if is_life_world(c.x1, c.y1) and not syreen_fills_crew(u, owner) then
