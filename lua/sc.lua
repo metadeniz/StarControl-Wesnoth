@@ -332,19 +332,31 @@ end
 -- Star Control 1's victory pictures, shown in a narrator's message window
 -- like a scripted scenario event while the victory theme plays: Earth ringed
 -- by the Alliance races, or an Ur-Quan reaching out its tentacles. The
--- pictures are made by tools/make_victory_portraits.py; the message is
--- Star Control 1's own caption.
+-- pictures are made by tools/make_victory_portraits.py.
 local VICTORY_PICTURE = {
 	SC_Alliance = {
 		caption = _ "Alliance Victory",
 		image = "portraits/sc/alliance-victory.png",
-		message = _ "The Alliance humbles the Hierarchy.",
+		winner = _ "Alliance",
+		loser = _ "Hierarchy",
 	},
 	SC_Hierarchy = {
 		caption = _ "Hierarchy Victory",
 		image = "portraits/sc/hierarchy-victory.png",
-		message = _ "The Hierarchy creams the Alliance.",
+		winner = _ "Hierarchy",
+		loser = _ "Alliance",
 	},
+}
+
+-- Star Control 1's caption picks one of these at random each time, for
+-- either side: "The Hierarchy creams the Alliance". The list is the game's
+-- own, from its string table in TACTICS.PKG.
+local VICTORY_VERBS = {
+	_ "destroys", _ "squashes", _ "defeats", _ "demolishes", _ "humbles",
+	_ "annihilates", _ "vanquishes", _ "roasts 'n' toasts", _ "crushes",
+	_ "decimates", _ "repulses", _ "overthrows", _ "tramples", _ "beats",
+	_ "wallops", _ "thrashes", _ "devastates", _ "quashes", _ "squelches",
+	_ "terminates", _ "creams", _ "overruns", _ "pastes", _ "blitzes",
 }
 
 function sc.victory_picture(faction)
@@ -354,7 +366,11 @@ function sc.victory_picture(faction)
 		speaker = "narrator",
 		caption = picture.caption,
 		image = picture.image,
-		message = picture.message,
+		message = stringx.vformat(_ "The $winner $verb the $loser", {
+			winner = picture.winner,
+			verb = VICTORY_VERBS[mathx.random(#VICTORY_VERBS)],
+			loser = picture.loser,
+		}),
 	}
 end
 
