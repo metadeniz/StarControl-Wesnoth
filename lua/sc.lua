@@ -326,43 +326,36 @@ function sc.victory_theme()
 	local side = local_human_side()
 	local theme = side and VICTORY_THEME[side.__cfg.faction]
 	if theme then wesnoth.audio.play(theme) end
-	if side and side.__cfg.faction == "SC_Alliance" then sc.alliance_victory() end
-	if side and side.__cfg.faction == "SC_Hierarchy" then sc.hierarchy_victory() end
+	if side then sc.victory_picture(side.__cfg.faction) end
 end
 
--- Star Control 1's Alliance victory screen, shown like a campaign's story
--- screen while the victory theme plays: Earth ringed by the Alliance races
--- (picture made by tools/make_alliance_victory.py), captioned only by the
--- story screen's small title box in the corner: with no story text the
--- engine leaves out the big text panel, which would cover the picture.
-function sc.alliance_victory()
-	gui.show_story({
-		T.part {
-			show_title = true,
-			title = _ "Alliance Victory",
-			T.background_layer {
-				image = "story/sc/alliance-victory.png",
-				base_layer = true,
-				keep_aspect_ratio = true,
-			},
-		},
-	}, _ "Victory")
-end
+-- Star Control 1's victory pictures, shown in a narrator's message window
+-- like a scripted scenario event while the victory theme plays: Earth ringed
+-- by the Alliance races, or an Ur-Quan reaching out its tentacles. The
+-- pictures are made by tools/make_victory_portraits.py; the message is
+-- Star Control 1's own caption.
+local VICTORY_PICTURE = {
+	SC_Alliance = {
+		caption = _ "Alliance Victory",
+		image = "portraits/sc/alliance-victory.png",
+		message = _ "The Alliance humbles the Hierarchy.",
+	},
+	SC_Hierarchy = {
+		caption = _ "Hierarchy Victory",
+		image = "portraits/sc/hierarchy-victory.png",
+		message = _ "The Hierarchy creams the Alliance.",
+	},
+}
 
--- Star Control 1's Hierarchy victory screen, shown the same way: an Ur-Quan
--- reaching out its tentacles (picture made by tools/make_hierarchy_victory.py).
-function sc.hierarchy_victory()
-	gui.show_story({
-		T.part {
-			show_title = true,
-			title = _ "Hierarchy Victory",
-			T.background_layer {
-				image = "story/sc/hierarchy-victory.png",
-				base_layer = true,
-				keep_aspect_ratio = true,
-			},
-		},
-	}, _ "Victory")
+function sc.victory_picture(faction)
+	local picture = VICTORY_PICTURE[faction]
+	if not picture then return end
+	wesnoth.wml_actions.message {
+		speaker = "narrator",
+		caption = picture.caption,
+		image = picture.image,
+		message = picture.message,
+	}
 end
 
 -- Wesnoth 1.16 and 1.18 never move past a track marked shuffle=no: when it
