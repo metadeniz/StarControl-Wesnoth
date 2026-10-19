@@ -1,10 +1,11 @@
-"""Umgah antimatter cone, held for a whole attack.
+"""Umgah antimatter cone halos.
 
-The cone is shown as an item halo on the attacking Drone's hex for the
-whole fight (see sc.cone_hold in lua/sc.lua), so it stays lit between
-strikes instead of flashing once per strike. A halo is drawn centred on
-its hex and cannot be flipped, so this bakes one image per Drone level and
-facing, with the narrow end of the cone on the ship's nose. The nose is
+The cone is drawn as a halo on the attacking Drone's unit frames (see
+SC_UMGAH_CONE_ANIM in utils/anims.cfg): for the whole strike when it hits,
+for a moment when it misses. A halo is drawn centred on its hex, and
+Wesnoth mirrors a frame's halo left to right for a unit facing west, so
+this bakes one image per Drone level for each of the n, ne, se and s
+facings, with the narrow end of the cone on the ship's nose. The nose is
 found from the ship sprite of that level, since bigger hulls reach further.
 
 Run from the repository root: python3 tools/make_umgah_cone_halos.py
@@ -17,14 +18,12 @@ from PIL import Image
 
 SIZE = 180          # two and a half hexes wide, centred on the Drone's hex
 LEVELS = (1, 2, 3)
-# (direction, source image, flip horizontally, flip vertically, hex step)
+# (direction, source image, flip vertically, hex step)
 FACINGS = [
-    ("n", "n", False, False, (0, -72)),
-    ("ne", "ne", False, False, (54, -36)),
-    ("se", "ne", False, True, (54, 36)),
-    ("s", "n", False, True, (0, 72)),
-    ("sw", "ne", True, True, (-54, 36)),
-    ("nw", "ne", True, False, (-54, -36)),
+    ("n", "n", False, (0, -72)),
+    ("ne", "ne", False, (54, -36)),
+    ("se", "ne", True, (54, 36)),
+    ("s", "n", True, (0, 72)),
 ]
 
 
@@ -43,12 +42,10 @@ def nose_distance(level, facing, unit):
 
 def build_cones():
     for level in LEVELS:
-        for name, src, hflip, vflip, (dx, dy) in FACINGS:
+        for name, src, vflip, (dx, dy) in FACINGS:
             unit = (dx / math.hypot(dx, dy), dy / math.hypot(dx, dy))
             nose = nose_distance(level, name, unit)
             cone = Image.open(f"images/projectiles/sc/cone-{src}.png").convert("RGBA")
-            if hflip:
-                cone = cone.transpose(Image.FLIP_LEFT_RIGHT)
             if vflip:
                 cone = cone.transpose(Image.FLIP_TOP_BOTTOM)
             # the cone's narrow end: its pixels furthest back along the facing
