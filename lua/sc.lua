@@ -57,6 +57,44 @@ function sc.glory_roll()
 	end
 end
 
+-- A Scout destroyed by a ship that attacked it with a close-range weapon
+-- may set off its Glory Device as it dies (50%), for half the usual damage
+-- (12 -> 4-8 before resistances). Leaders carry no Device, so never do.
+local GLORY_REVENGE_CHANCE = 50
+local attacker_id   -- the ship that started the current fight
+
+function sc.note_attacker()
+	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
+	attacker_id = u and u.id
+end
+
+function sc.glory_revenge()
+	local c = wesnoth.current.event_context
+	local u = wesnoth.units.get(c.x1, c.y1)
+	local killer = c.x2 and wesnoth.units.get(c.x2, c.y2)
+	if not is_a(u, "SC_Shofixti_Scout") or not killer or killer.id ~= attacker_id
+		or wml.variables["second_weapon.range"] ~= "melee" then return end
+	local glory
+	for _, a in ipairs(u.attacks) do if a.name == "glory_device" then glory = a end end
+	if not glory or mathx.random(100) > GLORY_REVENGE_CHANCE then return end
+	count("glory_revenge")
+	local damage = mathx.random(math.floor(glory.damage * 2 / 3 + 0.5), math.floor(glory.damage * 4 / 3 + 0.5))
+	damage = math.floor(damage / 2 + 0.5)
+	-- The Glory Device's own blast (see SC_GLORY_ANIM), over the killer.
+	wesnoth.audio.play("sc/shofixti-glory.wav")
+	for i = 1, 8 do
+		local halo = "halo/sc/glory-" .. i .. ".png"
+		wesnoth.wml_actions.item { x = killer.x, y = killer.y, halo = halo }
+		wesnoth.interface.delay(70)
+		wesnoth.wml_actions.remove_item { x = killer.x, y = killer.y, image = halo }
+	end
+	wesnoth.wml_actions.harm_unit {
+		T.filter { x = killer.x, y = killer.y },
+		amount = damage, damage_type = "fire",
+		animate = true, kill = true, fire_event = true, experience = false,
+	}
+end
+
 -- Fire scout s's Glory Device at enemy e, as a normal attack.
 local function fire_glory(s, e)
 	for i, a in ipairs(s.attacks) do
@@ -288,26 +326,36 @@ function sc.victory_theme()
 	local side = local_human_side()
 	local theme = side and VICTORY_THEME[side.__cfg.faction]
 	if theme then wesnoth.audio.play(theme) end
-	if side and side.__cfg.faction == "SC_Alliance" then sc.alliance_victory() end
+	if side then sc.victory_picture(side.__cfg.faction) end
 end
 
--- Star Control 1's Alliance victory screen, shown like a campaign's story
--- screen while the victory theme plays: Earth ringed by the Alliance races
--- (picture made by tools/make_alliance_victory.py), captioned only by the
--- story screen's small title box in the corner: with no story text the
--- engine leaves out the big text panel, which would cover the picture.
-function sc.alliance_victory()
-	gui.show_story({
-		T.part {
-			show_title = true,
-			title = _ "Alliance Victory",
-			T.background_layer {
-				image = "story/sc/alliance-victory.png",
-				base_layer = true,
-				keep_aspect_ratio = true,
-			},
-		},
-	}, _ "Victory")
+-- Star Control 1's victory pictures, shown in a narrator's message window
+-- like a scripted scenario event while the victory theme plays: Earth ringed
+-- by the Alliance races, or an Ur-Quan reaching out its tentacles. The
+-- pictures are made by tools/make_victory_portraits.py; the message is
+-- Star Control 1's own caption.
+local VICTORY_PICTURE = {
+	SC_Alliance = {
+		caption = _ "Alliance Victory",
+		image = "portraits/sc/alliance-victory.png",
+		message = _ "The Alliance humbles the Hierarchy.",
+	},
+	SC_Hierarchy = {
+		caption = _ "Hierarchy Victory",
+		image = "portraits/sc/hierarchy-victory.png",
+		message = _ "The Hierarchy creams the Alliance.",
+	},
+}
+
+function sc.victory_picture(faction)
+	local picture = VICTORY_PICTURE[faction]
+	if not picture then return end
+	wesnoth.wml_actions.message {
+		speaker = "narrator",
+		caption = picture.caption,
+		image = picture.image,
+		message = picture.message,
+	}
 end
 
 -- Wesnoth 1.16 and 1.18 never move past a track marked shuffle=no: when it
@@ -816,6 +864,14 @@ local COLONY_DESTROYED_HALO = planet_anim_halo("colony-destroyed", 57, 67, 67)
 -- 54 frames at 15 fps, the white held for half a second before fading out.
 local MINE_DESTROYED_ANIM = "sc_mine_destroyed_anim"
 local MINE_DESTROYED_HALO = planet_anim_halo("mine-destroyed", 58, 67, 500)
+-- A Syreen taking an enemy's colony: her captain's scene, then the colony,
+-- emptied of its colonists, blown up (one halo, so they play one after the
+-- other in the same place).
+local SYREEN_CAPTURE_DESTROYED_HALO = {}
+for where, halo in pairs(SYREEN_CAPTURE_HALO) do
+	SYREEN_CAPTURE_DESTROYED_HALO[where] = halo:gsub(",misc/blank%-hex%.png:%d+$", "")
+		.. "," .. COLONY_DESTROYED_HALO[where]
+end
 -- Each animation's list of { x, y, side } still showing, to take off.
 local PLANET_ANIMS = {
 	[SYREEN_CAPTURE_ANIM] = "sc_syreen_capture_anims",
@@ -855,13 +911,14 @@ local function syreen_fills_crew(u, owner)
 		and wesnoth.sides.is_enemy(u.side, owner) and is_life_world(u.x, u.y)
 end
 
--- Capturing an enemy's life world: its colonists join the Syreen (full HP).
+-- Capturing an enemy's life world: its colonists join the Syreen (full HP),
+-- and the colony is destroyed, as any enemy colony is (see "Taking planets").
 function sc.syreen_captured()
 	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
 	local owner = wml.variables["owner_side"] or 0
 	if syreen_fills_crew(u, owner) then
 		u.hitpoints = u.max_hitpoints
-		play_planet_anim(u.x, u.y, u.side, SYREEN_CAPTURE_ANIM, SYREEN_CAPTURE_HALO)
+		play_planet_anim(u.x, u.y, u.side, SYREEN_CAPTURE_ANIM, SYREEN_CAPTURE_DESTROYED_HALO)
 		-- and a label on the planet for the rest of the Syreen side's turn
 		-- (hidden from players who have it under fog)
 		wesnoth.map.add_label { x = u.x, y = u.y, color = "255,128,208", immutable = true,
@@ -1139,8 +1196,8 @@ function sc.planet_captured()
 	local claims = wml.array_access.get(CLAIMS)
 	claims[#claims + 1] = { x = c.x1, y = c.y1, side = u.side, id = u.id, wait = CLAIM_TURNS }
 	wml.array_access.set(CLAIMS, claims)
-	-- an enemy's colony blown up, unless a Syreen is taking its colonists,
-	-- or an enemy's mine: its scene (with "Colony destroyed" or "Mine
+	-- an enemy's colony blown up (after her own scene, if a Syreen is taking
+	-- its colonists: see sc.syreen_captured), or an enemy's mine: its scene (with "Colony destroyed" or "Mine
 	-- destroyed" in it, gone when the scene is)
 	if owner > 0 and wesnoth.sides.is_enemy(u.side, owner) then
 		if is_life_world(c.x1, c.y1) and not syreen_fills_crew(u, owner) then
@@ -1183,5 +1240,82 @@ function sc.hold_ai_builders()
 	for _, a in ipairs(wml.array_access.get(CLAIMS)) do
 		local u = wesnoth.units.get(a.x, a.y)
 		if a.side == side and u and u.id == a.id then u.moves = 0 end
+	end
+end
+
+-- Only a side's own or an ally's planets repair its ships. Wesnoth heals a
+-- ship on any village whoever owns it, so a ship still building on a planet
+-- (or one just landed on an enemy's) is marked unhealable before its side
+-- heals ("side turn") and repaired by hand afterwards ("turn refresh") with
+-- the same rules minus the planet: healers next to it, its own regeneration,
+-- resting, and poison.
+local function planet_repairs(u)
+	local map = wesnoth.current.map
+	if (wesnoth.terrain_types[map[{ u.x, u.y }]].healing or 0) <= 0 then return true end
+	local owner = wesnoth.map.get_owner(u.x, u.y) or 0
+	return owner == u.side or (owner > 0 and not wesnoth.sides.is_enemy(u.side, owner))
+end
+
+function sc.block_unowned_planet_repair()
+	for _, u in ipairs(wesnoth.units.find_on_map { side = wesnoth.current.side }) do
+		if not planet_repairs(u) and not u.status.unhealable then
+			u.variables.sc_planet_repair = { hp = u.hitpoints, resting = u.resting }
+			u.status.unhealable = true
+		end
+	end
+end
+
+-- The best value and poison handling of the [heals] / [regenerate]
+-- abilities in unit u's WML that reach the patient p.
+local function repair_from(u, tag, p)
+	local value, poison = 0, nil
+	local abilities = wml.get_child(u.__cfg, "abilities")
+	if not abilities then return value, poison end
+	for a in wml.child_range(abilities, tag) do
+		local reaches = tag == "regenerate" and a.id ~= "sc_asteroid_harvest"
+			or (tag == "heals" and u.id ~= p.id
+				and (u.side == p.side or a.affect_allies == true or a.affect_allies == "yes"))
+		if reaches then
+			value = math.max(value, tonumber(a.value) or 0)
+			if a.poison == "cured" then poison = "cured"
+			elseif a.poison == "slowed" and poison ~= "cured" then poison = "slowed" end
+		end
+	end
+	return value, poison
+end
+
+function sc.unowned_planet_repair()
+	for _, u in ipairs(wesnoth.units.find_on_map { side = wesnoth.current.side }) do
+		local saved = u.variables.sc_planet_repair
+		if saved then
+			u.variables.sc_planet_repair = nil
+			u.status.unhealable = false
+			local healing, poison = repair_from(u, "regenerate", u)
+			for _, h in ipairs(wesnoth.units.find_on_map { T.filter_adjacent { id = u.id } }) do
+				if not wesnoth.sides.is_enemy(u.side, h.side) and not h.status.petrified then
+					local v, p = repair_from(h, "heals", u)
+					healing = math.max(healing, v)
+					if p == "cured" or (p == "slowed" and poison ~= "cured") then poison = p end
+				end
+			end
+			local rest = saved.resting and wesnoth.game_config.rest_heal_amount or 0
+			local change = healing + rest
+			if u.status.poisoned then
+				change = rest
+				if poison == "cured" then
+					u.status.poisoned = false
+				elseif poison ~= "slowed" then
+					change = rest - wesnoth.game_config.poison_amount
+				end
+			end
+			local hp = math.max(1, math.min(u.max_hitpoints, saved.hp + change))
+			if hp ~= u.hitpoints and locally_visible(u.x, u.y) then
+				local d = hp - u.hitpoints
+				wesnoth.interface.float_label(u.x, u.y, d > 0
+					and "<span color='#60ff60'>" .. d .. "</span>"
+					or "<span color='#ff6060'>" .. -d .. "</span>")
+			end
+			u.hitpoints = hp
+		end
 	end
 end

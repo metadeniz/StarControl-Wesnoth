@@ -3,15 +3,15 @@
 Takes the clip of Star Control 1's Alliance victory screen (1920x1080, the
 640x400 game screen in its top left corner) and keeps one frame of the
 picture: Earth ringed by the Alliance races. The grey bevelled frame and the
-caption box under it are cropped off (sc.alliance_victory puts the caption
-in the story text instead), leaving the 308x163 picture at the game's own
+caption box under it are cropped off (sc.victory_picture puts the caption
+in its message instead), leaving the 308x163 picture at the game's own
 resolution. The clip shows it doubled and compressed, so each 2x2 block is
 averaged back to one pixel, then the picture is blown up SCALE times with no
 smoothing: Wesnoth's story screen scales its background to fit the screen,
 and at about its final size the pixels stay sharp.
 
-sc.alliance_victory in lua/sc.lua shows it as a story screen when an Alliance
-side wins, while Star Control 1's Alliance victory theme plays.
+tools/make_victory_portraits.py sizes it for the message window that
+sc.victory_picture in lua/sc.lua shows when an Alliance side wins.
 
 Needs ffmpeg. Run from the repository root:
     python3 tools/make_alliance_victory.py path/to/clip.mp4

@@ -134,11 +134,11 @@ explosion, and the game waits for it to finish.
 | **Alliance Starbase** (leader only) | 4 moves, 110 HP; point-defense laser (**first strike**), missile battery (**marksman**); heals +4, defense grid (+10% resistance for the ships next to it), point-defense, leadership | **Hierarchy Starbase** (leader only) | 4 moves, 120 HP; defense turrets (**first strike**), fighter bays at range; repair dock (heals +8 and cures the ships next to it), slave shield (+20% resistance when attacked), leadership |
 | Earthling Cruiser | homing nukes, point-defense (fighters hit it at most 50%) | Ur-Quan Dreadnought | close-range fusion blast; fighters at any range (**swarm**: fewer as crew is lost) |
 | Chenjesu Broodhome | photon crystal (ranged; lighter shards close up), DOGI (slows) | Mycon Podship | homing plasmoids at range, heavier plasmoids close up (both half damage against Yehat and Utwig shields); regrows crew |
-| Mmrnmhrm X-Wing / Y-Wing | recruit either; lasers or torpedoes, transforms; X-Wing cures (heals +8 and cures poison), Y-Wing cures +4 | Spathi Eluder | howitzer, B.U.T.T. |
+| Mmrnmhrm X-Wing / Y-Wing | recruit either; lasers or torpedoes, transforms; X-Wing cures (heals +8 and cures poison), Y-Wing cures +4 | Spathi Eluder | howitzer (**backstab**), B.U.T.T. (**backstab**) |
 | Yehat Terminator | Attack with Shields (pulse cannons), Attack Only (rail cannons, pierce); armored hull (resists blade 40%, pierce 30%, impact 20%, arcane 10%); force shield (+40% with Attack with Shields, attacking or defending; +50% against ranged; down with Attack Only; no help against fighters or the Syreen song) | Umgah Drone | antimatter cone, skirmisher |
 | Syreen Penetrator | crew capacity as big as the Ur-Quan's (max HP 64 / 80 / 96) but always starts low (28 / 36 / 44 HP); promotion adds +8 HP instead of a full heal, or raises it to the new level's 36 / 44 if still below; planets, healers and resting only repair it up to that starting HP: only stolen crew (the song's drain, or capturing an enemy's life world, which fills it to max) takes it higher; ranged particle dagger; close range: one-shot Syreen song (**lures crew**: heals the full damage dealt; **backstab**: one extra strike when flanking) and an entrancing hum (**slows**; **backstab**: double damage and one extra strike when flanking); neither works on the unmanned Slylandro Probe | VUX Intruder | close-range laser (**first strike**); long-range limpets (slow) |
-| Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison), Blazer ram |
-| Shofixti Scout | dart gun; **Glory Device**: one unavoidable fire strike of 8–16 / 10–20 / 12–24 by level on one ship, destroying the Scout | Ilwrath Avenger | Hellfire, cloaking device |
+| Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison, **backstab**), Blazer ram (**charge**, **backstab**) |
+| Shofixti Scout | dart gun; **Glory Device**: one unavoidable fire strike of 8–16 / 10–20 / 12–24 by level on one ship, destroying the Scout; a Scout destroyed by a close-range attack has a 50% chance to set it off as it dies, hitting its attacker for half that | Ilwrath Avenger | Hellfire, cloaking device |
 
 | New Alliance of Free Stars | | Agents of Chaos | |
 |---|---|---|---|
@@ -168,8 +168,8 @@ Ur-Quan, Kohr-Ah and Chmmr Elite at 100).
 these further.) Each promotion adds HP and some mix of stronger or more
 frequent attacks, new attacks and new abilities. **Backstab** (double
 damage with an ally behind the target) comes with promotion, except the
-Syreen dagger, Androsynth acid and both Thraddash attacks, which have it
-from the start (and the Spathi and Shofixti, which only get it as Elites):
+Syreen dagger and both Androsynth, Spathi and Thraddash attacks, which have it
+from the start (and the Shofixti, which only get it as Elites):
 
 | Ship | Veteran | Elite |
 |---|---|---|
@@ -182,7 +182,7 @@ from the start (and the Spathi and Shofixti, which only get it as Elites):
 | Shofixti Scout | stronger darts, 10–20 damage Glory | **skirmisher**, darts **backstab**, 12–24 damage Glory |
 | Ur-Quan Dreadnought | heavier fusion blast, fighters ×5 | fighters ×6, **leadership** |
 | Mycon Podship | bigger plasmoids, faster regrowth | homing plasmoids **marksman**, new melee **poison** spore burst |
-| Spathi Eluder | **skirmisher**, stronger B.U.T.T. | B.U.T.T. ×3, **backstab** |
+| Spathi Eluder | **skirmisher**, stronger B.U.T.T. | B.U.T.T. ×3 |
 | Umgah Drone | stronger cone, **heals +4** | cone ×5, **magical** (70% to hit), **heals +8** |
 | VUX Intruder | stronger laser, limpets ×3, laser **backstab** | laser **marksman** |
 | Androsynth Guardian | hotter Blazer, stronger acid | acid ×4, **heals +4** |
@@ -252,6 +252,9 @@ the ship starts building a colony (life world), mine (mineral world) or
 outpost (dead world). Building takes a whole turn: the ship has to stay
 on the planet through its side's next turn, and when the turn after that
 starts, the planet is that side's and pays that turn.
+Only a side's own and its allies' planets repair its ships, so a ship
+that is still building gets no repair from the planet (healers next to it
+and resting still work, and poison isn't cured).
 An enemy's colony (life world) blown up this way plays the colony destroyed
 scene below the planet, with "Colony destroyed" under the ship until it fades,
 unless the ship is a Syreen, which takes the colonists as crew instead; an

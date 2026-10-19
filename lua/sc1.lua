@@ -5,10 +5,11 @@
 -- mission has a few maps (made by tools/make_sc1_maps.py, and fine to edit
 -- by hand), and at prestart, before the era's planet income and Precursor
 -- artifacts are set up, sc1.setup() picks one of them, then deals the
--- mission's holdings and planet types and puts the starting ships by their
--- starbases, all with the synced random numbers, so every player sees the
--- same game. On every map the Hierarchy (side 1) starts at the starbase
--- furthest north and the Alliance (side 2) at the one furthest south.
+-- mission's holdings and planet types and puts the starting ships at
+-- planets in their start zones, all with the synced random numbers, so
+-- every player sees the same game. On every map the Hierarchy (side 1)
+-- starts at the starbase furthest north and the Alliance (side 2) at the
+-- one furthest south.
 
 local T = wml.tag
 local _ = wesnoth.textdomain "wesnoth-Star_Control_TC"
@@ -17,7 +18,11 @@ sc1 = {}
 
 -- Each mission: its maps (in maps/), and each side's start from Star
 -- Control 1's SCENARIO files:
---   ships     unit types, placed on the docking rings round its starbase
+--   ships     unit types, each placed at a random planet of its start zone
+--   zones     each ship's start zone, as in Star Control 1 (default 0):
+--             0 the half of its side's planets nearer its starbase, 1 the
+--             other half of its side's, 2 the enemy's planets nearer the
+--             middle
 --   colonies  life worlds it owns; mines: mineral worlds it owns (the
 --             planets nearest its starbase, in random order)
 --   worlds    { dead, mineral, life }: the types dealt out to the other
@@ -75,6 +80,9 @@ function sc1.setup(mission_id)
 	local mission = sc1.missions[mission_id]
 	local name = mission.maps[mathx.random(#mission.maps)]
 	local data = filesystem.read_file("~add-ons/Star_Control_TC/maps/" .. name .. ".map")
+	-- park the starbases in the corner first: a smaller map would drop
+	-- units that end up off it
+	for i, u in ipairs(wesnoth.units.find_on_map {}) do u:to_map(i, 1) end
 	wesnoth.wml_actions.replace_map { map = data, expand = true, shrink = true }
 
 	-- the starbases: north for the Hierarchy, south for the Alliance
@@ -137,12 +145,30 @@ function sc1.setup(mission_id)
 			u:to_map(k[1], k[2])
 			u.facing = facing
 		end
-		-- the docking rings round the starbase, nearest the middle first;
-		-- ships beyond those go to the nearest free hex
-		local rings = wesnoth.map.find { terrain = "Yc", T.filter_adjacent_location { x = k[1], y = k[2] } }
-		by_distance(rings, home[3 - side])
+		-- each ship at a random planet of its start zone, as in Star
+		-- Control 1, preferring planets nobody owns
+		local taken = {}
 		for i, t in ipairs(mission[side].ships) do
-			local p = rings[i] or k
+			local zone = mission[side].zones and mission[side].zones[i] or 0
+			local list, from, to = halves[side], 1, math.ceil(#halves[side] / 2)
+			if zone == 1 then
+				from, to = to + 1, #halves[side]
+			elseif zone == 2 then
+				list = halves[3 - side]
+				from, to = math.ceil(#list / 2) + 1, #list
+			end
+			local free, any = {}, {}
+			for j = from, to do
+				local p = list[j]
+				local k = p[1] .. "," .. p[2]
+				if not taken[k] then
+					any[#any + 1] = p
+					if (wesnoth.map.get_owner(p) or 0) == 0 then free[#free + 1] = p end
+				end
+			end
+			local pool = #free > 0 and free or any
+			local p = #pool > 0 and pool[mathx.random(#pool)] or k
+			taken[p[1] .. "," .. p[2]] = true
 			wesnoth.wml_actions.unit {
 				type = t, side = side, x = p[1], y = p[2],
 				facing = facing, animate = false,
