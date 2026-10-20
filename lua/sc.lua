@@ -796,6 +796,9 @@ function sc.starbase_destroyed()
 	local c = wesnoth.current.event_context
 	local u = wesnoth.units.get(c.x1, c.y1)
 	if not u or not u.canrecruit then return end
+	-- The dead leader stays on the map until the event is over, and would
+	-- be drawn again, whole, while the scene plays.
+	u.hidden = true
 	sc.panel_play(STARBASE_DESTROYED_SCENE, leader_caption(u))
 end
 
