@@ -58,6 +58,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | 2p — Ruphus Isle (Deep Space) | 1 vs 1 |
 | 2p — Fred’s Fjord (psydev) | 1 vs 1 |
 | 2p — Flashy Chorus (psydev) | 1 vs 1 |
+| 2p — Necessary Illusions | 1 vs 1 |
 
 ## Music
 
@@ -328,9 +329,10 @@ Broodhome and the Sa-Matra also cross nebulae, dust clouds and badlands for 1 mo
   original 6-player map on a hexagon, the same in all six corners (turned
   and mirrored hex for hex), and its 4-player cut without the northeast and
   southwest corners, and `tools/make_year_501.py .` regenerates
-  Year 501, an original team map, west vs east, mirrored west to east; both
-  print each start's planet distances as
-  a balance check.
+  Year 501, an original team map, west vs east, mirrored west to east;
+  `tools/make_necessary_illusions.py .` regenerates Necessary Illusions, a
+  small original 1 vs 1 map, mirrored west to east. All three print each
+  start's planet distances as a balance check.
 - `tools/assign_planet_types.py <map> ...` makes each untyped planet a life,
   mineral or dead world, following the map's symmetry so every player gets
   the same mix. The map scripts above and `convert_map.py` run it on the maps
