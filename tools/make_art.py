@@ -559,6 +559,7 @@ def build_effects(uqm, out):
              f"images/halo/sc/nuke-boom-{i + 1}.png", True)
     build_glory(uqm, out)
     build_mycon_blast(uqm, out)
+    build_napalm(uqm, out)
     build_hits(uqm, out)
     build_crystal_shatter(uqm, out)
     # Ilwrath hellfire burst frames
@@ -662,6 +663,25 @@ def build_mycon_blast(uqm, out):
         canvas.alpha_composite(img, (half - x, half - y))
         size = round(2 * half * k)
         save(canvas.resize((size, size), Image.LANCZOS), out, f"images/halo/sc/mycon-blast-{i + 1}.png", True)
+
+
+def build_napalm(uqm, out):
+    """Thraddash afterburner napalm, as Star Control 2 draws it: thradd.c
+    drops a blob each frame the afterburner burns, starting on the napalm
+    sprite's biggest frame (7) and burning down to the smallest (0). Each
+    frame sits on a shared canvas with its .ani hotspot in the centre, at
+    0.6 scale; napalm-1 is frame 0, napalm-8 frame 7."""
+    ndir = os.path.join(uqm, "addons/mm-hd/ships/thraddash")
+    with open(os.path.join(ndir, "napalm-big.ani")) as f:
+        rows = [line.split() for line in f.read().splitlines()[:8]]
+    frames = [(Image.open(os.path.join(ndir, r[0])).convert("RGBA"), int(r[3]), int(r[4])) for r in rows]
+    half = max(max(x, img.width - x, y, img.height - y) for img, x, y in frames)
+    k = 0.6
+    for i, (img, x, y) in enumerate(frames):
+        canvas = Image.new("RGBA", (2 * half, 2 * half), (0, 0, 0, 0))
+        canvas.alpha_composite(img, (half - x, half - y))
+        size = round(2 * half * k)
+        save(canvas.resize((size, size), Image.LANCZOS), out, f"images/halo/sc/napalm-{i + 1}.png", True)
 
 
 def build_glory(uqm, out):

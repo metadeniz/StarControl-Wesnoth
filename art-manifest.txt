@@ -699,6 +699,14 @@ images/halo/sc/mycon-blast-5.png
 images/halo/sc/mycon-blast-6.png
 images/halo/sc/mycon-blast-7.png
 images/halo/sc/mycon-blast-8.png
+images/halo/sc/napalm-1.png
+images/halo/sc/napalm-2.png
+images/halo/sc/napalm-3.png
+images/halo/sc/napalm-4.png
+images/halo/sc/napalm-5.png
+images/halo/sc/napalm-6.png
+images/halo/sc/napalm-7.png
+images/halo/sc/napalm-8.png
 images/halo/sc/nuke-boom-1.png
 images/halo/sc/nuke-boom-2.png
 images/halo/sc/nuke-boom-3.png
