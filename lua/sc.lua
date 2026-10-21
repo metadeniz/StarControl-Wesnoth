@@ -353,8 +353,8 @@ end
 -- Victory pictures, shown in a narrator's message window like a scripted
 -- scenario event while the victory theme plays: Star Control 1's Earth
 -- ringed by the Alliance races, or an Ur-Quan reaching out its tentacles,
--- and for the New Alliance Star Control II's Captain grown old on
--- Unzervalt, with Talana in the sunset sky. The pictures are made by
+-- and for the New Alliance Star Control II's Captain waking up beside
+-- Talana, the freed Earth in the window. The pictures are made by
 -- tools/make_victory_portraits.py.
 local VICTORY_PICTURE = {
 	SC_Alliance = {
