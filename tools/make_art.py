@@ -2426,8 +2426,9 @@ def main():
     # Added by hand, not built here: Chenjesu and Mmrnmhrm themes by Titus
     # (supplied as MP3s, loudness-matched to the other music).
     manifest.extend(["music/sc/1. chenjesu-titus.ogg", "music/sc/1. mmrnmhrm-titus.ogg"])
-    # ...and Star Control 1's Alliance and Hierarchy victory themes (MP3s;
-    # played as sound effects).
+    # ...and the victory themes, played as sound effects: Star Control 1's
+    # Hierarchy theme (MP3), and for the Alliance the finale of Star Control
+    # II's ending theme (tools/make_alliance_victory_music.py).
     manifest.extend(["sounds/sc/alliance-victory.ogg", "sounds/sc/hierarchy-victory.ogg"])
     # ...an Androsynth theme by TheMisterCat (DUOLED), and the Melnorme theme
     # re-imagined by DJ Yan Yan Lipavsky (MP3s).
