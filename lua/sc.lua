@@ -380,38 +380,128 @@ local VICTORY_VERBS = {
 	_ "terminates", _ "creams", _ "overruns", _ "pastes", _ "blitzes",
 }
 
--- The New Alliance gets Star Control II's ending instead, on a story
--- screen: the Captain wakes up in Sick Bay beside Talana, over Earth
--- glowing the sick red of the Ur-Quan slave shield; the shield falls in a
--- white flash, leaving the Earth free and blue. The flash plays once, as
--- floating images over the red slide, each shown frame_ms after the last;
--- the frames are made by tools/make_new_alliance_victory.py.
+-- A story screen whose picture moves: a [message] portrait can't animate,
+-- but a story part's floating images appear one after another, and stay.
+-- Each frame is { file, x, y, w, h, at }: a w x h image laid over the
+-- part's background at x, y, in the background's own pixels, at ms after the
+-- screen opens; frames must be in order of at. The last frame stays up until
+-- the player moves on.
+--
+-- Every image on the screen is drawn again for each new frame, so a
+-- floating image that is resized with the background, which is scaled again
+-- each time, slows the animation down more and more as frames pile up. Here
+-- the image is scaled by an image path function, which Wesnoth caches, so
+-- each frame is scaled once: its name is a formula giving the size the
+-- background's scale makes it.
+local function animated_story(title, part, frames)
+	local function scaled(file, w, h)
+		return string.format(
+			"('%s~SCALE([max(1, trunc(%d * base_scale_x))],[max(1, trunc(%d * base_scale_y))])')",
+			file, w, h)
+	end
+	if frames[1] and frames[1].at > 0 then
+		-- Floating images start at once: hold the bare background first.
+		table.insert(part, { "image", {
+			file = part.background, x = 0, y = 0,
+			resize_with_background = true, delay = frames[1].at,
+		} })
+	end
+	for i, frame in ipairs(frames) do
+		local next_frame = frames[i + 1]
+		table.insert(part, { "image", {
+			file = scaled(frame.file, frame.w, frame.h),
+			x = frame.x, y = frame.y,
+			delay = next_frame and next_frame.at - frame.at or 0,
+		} })
+	end
+	gui.show_story({ { "part", part } }, title)
+end
+
+-- The Agents of Death get a Kohr-Ah standing over its pit of bones: the
+-- HD comm screen, with the HD Game Over screen's nebula behind it, made by
+-- tools/make_agents_of_death_victory.py. Its eyes blink, its lights glint,
+-- its feelers writhe and its claws twitch, each now and then, as on the comm
+-- screen: each group of overlay frames (first and last frame number, and
+-- where they go, and their size) plays forward and back, then rests a while.
+local KOHRAH_ANIMATIONS = {
+	{ 7, 12, 384, 120, 100, 98 },    -- left eye
+	{ 13, 19, 507, 129, 111, 104 },  -- right eye
+	{ 42, 48, 438, 213, 115, 110 },  -- lower eye
+	{ 20, 22, 495, 113, 33, 23 },    -- top light
+	{ 23, 25, 386, 233, 32, 35 },    -- left light
+	{ 26, 28, 569, 243, 34, 34 },    -- right light
+	{ 29, 32, 446, 346, 94, 82 },    -- feelers
+	{ 33, 37, 62, 283, 78, 72 },     -- left claw
+	{ 38, 41, 770, 285, 136, 112 },  -- right claw
+}
+local KOHRAH = {
+	frame_ms = 100,
+	rest_ms = { 1000, 3500 },   -- how long a group rests between plays
+	length_ms = 60000,          -- after this it stays still
+}
+
+local function kohrah_victory()
+	local dir = "story/sc/agents-of-death-victory/"
+	local frames = {}
+	for _, anim in ipairs(KOHRAH_ANIMATIONS) do
+		local first, last, x, y, w, h = table.unpack(anim)
+		local function add(at, name)
+			table.insert(frames, { file = dir .. name .. ".png", x = x, y = y, w = w, h = h, at = at })
+		end
+		local at = mathx.random(0, KOHRAH.rest_ms[2])
+		while at < KOHRAH.length_ms do
+			for n = first, last do
+				add(at, string.format("%02d", n))
+				at = at + KOHRAH.frame_ms
+			end
+			for n = last - 1, first + 1, -1 do
+				add(at, string.format("%02d", n))
+				at = at + KOHRAH.frame_ms
+			end
+			add(at, string.format("%02d-rest", first))
+			at = at + mathx.random(KOHRAH.rest_ms[1], KOHRAH.rest_ms[2])
+		end
+	end
+	table.sort(frames, function(a, b) return a.at < b.at end)
+	animated_story(_ "Agents of Death Victory", {
+		background = dir .. "00.png",
+		story = _ "The forces of death have prevailed. The cleansing continues...",
+		show_title = true,
+	}, frames)
+end
+
+-- The New Alliance gets Star Control II's ending instead: the Captain wakes
+-- up in Sick Bay beside Talana, over Earth glowing the sick red of the
+-- Ur-Quan slave shield; the shield falls in a white flash, leaving the Earth
+-- free and blue. The flash plays once over the red slide; the frames (whole
+-- slides) are made by tools/make_new_alliance_victory.py.
 local SHIELD_FALLS = {
 	frames = 20,
 	hold_ms = 1500,   -- the red Earth, before the shield goes down
 	frame_ms = 100,
+	w = 1600, h = 1000,
 }
 
 local function shield_falls()
 	local dir = "story/sc/new-alliance-victory/"
-	local part = {
+	local frames = {}
+	for i = 1, SHIELD_FALLS.frames - 1 do
+		table.insert(frames, {
+			file = string.format("%s%02d.png", dir, i),
+			x = 0, y = 0, w = SHIELD_FALLS.w, h = SHIELD_FALLS.h,
+			at = SHIELD_FALLS.hold_ms + (i - 1) * SHIELD_FALLS.frame_ms,
+		})
+	end
+	animated_story(_ "New Alliance Victory", {
 		background = dir .. "00.png",
 		story = _ "The New Alliance has prevailed! Freedom and liberation will soon follow...",
 		show_title = true,
-	}
-	for i = 1, SHIELD_FALLS.frames - 1 do
-		table.insert(part, { "image", {
-			file = string.format("%s%02d.png", dir, i),
-			x = 0, y = 0,
-			resize_with_background = true,
-			delay = i == 1 and SHIELD_FALLS.hold_ms or SHIELD_FALLS.frame_ms,
-		} })
-	end
-	gui.show_story({ { "part", part } }, _ "New Alliance Victory")
+	}, frames)
 end
 
 function sc.victory_picture(faction)
 	if faction == "SC_NewAlliance" then return shield_falls() end
+	if faction == "SC_DeathMarch" then return kohrah_victory() end
 	local picture = VICTORY_PICTURE[faction]
 	if not picture then return end
 	wesnoth.wml_actions.message {
