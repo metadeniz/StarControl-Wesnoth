@@ -603,9 +603,10 @@ def build_effects(uqm, out):
 
 
 def build_ship_death(uqm, out):
-    """A ship blowing up: Star Control 2's cloud of small booms under the
-    add-on's big one (boom-1..9, 70 ms a frame), baked into one halo
-    sequence so the big boom always draws on top. tactrans.c's
+    """A ship blowing up: Star Control 2's cloud of small booms
+    (ship-death-*). A leader's (leader-death-*) also has the add-on's big
+    boom (boom-1..9, 70 ms a frame) on top, baked into the same frames so
+    it always draws over the cloud. tactrans.c's
     explosion_preprocess spawns 1-3 booms a battle frame for 26 frames
     (55 in all), each a few pixels from the ship (a third of them 8 further
     out) and drifting 0-4 pixels a frame; each plays boom-big's 9 frames,
@@ -642,11 +643,12 @@ def build_ship_death(uqm, out):
                 img = small[age]
                 canvas.alpha_composite(img, (round(half + x + age * dx - img.width / 2),
                                              round(half + y + age * dy - img.height / 2)))
+        save(canvas, out, f"images/halo/sc/ship-death-{f + 1}.png", True)
         ms = f * tick
         if ms < 630:
             img = big[int(ms // 70)]
             canvas.alpha_composite(img, (half - img.width // 2, half - img.height // 2))
-        save(canvas, out, f"images/halo/sc/ship-death-{f + 1}.png", True)
+        save(canvas, out, f"images/halo/sc/leader-death-{f + 1}.png", True)
 
 
 # Star Control II hits with their own look. A shot whose sprite has more
