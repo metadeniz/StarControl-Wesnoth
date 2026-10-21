@@ -66,8 +66,8 @@ BEAMS = {
 
 # Beams that run on past the target's centre, as far as this fraction of the
 # way to the next hex beyond it (the rest stop at its centre): the Chmmr's
-# goes right through its target.
-REACH = {"chmmr-avatar": 1.45}
+# and the VUX's (the longest in SC2, LASER_BASE 150) go right through it.
+REACH = {"chmmr-avatar": 1.45, "vux-intruder": 1.45}
 # Twin beams that angle in to meet at the target's centre
 CONVERGE = {"mmrnmhrm-xform"}
 # Beams that start this fraction of the hull's length behind the nose: the
