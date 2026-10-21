@@ -514,17 +514,17 @@ def build_lasers(out):
 
 def build_song(out):
     """The Syreen song (original art; SC2 shows no song, only the crew it
-    lures): rings that ripple out from the Syreen, cropped to a wedge
-    aimed at its target, and the green dots of crew floating across
-    (misc.c draws an abandoning crewman as a green point). The wedges are
-    drawn facing north and north-east, on a canvas centred on the Syreen,
-    for the animation to flip to the other facings."""
-    n, size, half = 10, 180, 35  # half the wedge, in degrees
+    lures): rings that ripple out from the Syreen, each rendered whole and
+    then cropped to a wedge aimed at its target, and the green dots of crew
+    floating across (misc.c draws an abandoning crewman as a green point).
+    The wedges are cut facing north and north-east, on a canvas centred on
+    the Syreen, for the animation to flip to the other facings."""
+    n, size, half = 10, 180, 45  # half the wedge, in degrees
     for t in range(n):
         u = (t + 1) / n
         r = 10 + u * 76
-        ring = Image.new("RGBA", (size * 4, size * 4), (0, 0, 0, 0))
-        d = ImageDraw.Draw(ring)
+        img = Image.new("RGBA", (size * 4, size * 4), (0, 0, 0, 0))
+        d = ImageDraw.Draw(img)
         pts = []
         for i in range(361):
             a = math.radians(i)
@@ -533,14 +533,16 @@ def build_song(out):
         alpha = round(230 * (1 - u) ** 0.7)
         d.line(pts, fill=(230, 130, 255, alpha), width=10)
         d.line(pts, fill=(255, 220, 255, alpha), width=4)
+        ring = img.resize((size, size), Image.LANCZOS).filter(ImageFilter.GaussianBlur(0.5))
         for facing, heading in (("n", 0.0), ("ne", math.degrees(math.atan2(54, 36)))):
             # PIL measures angles clockwise from east; the heading is from north
-            mask = Image.new("L", ring.size, 0)
+            mask = Image.new("L", (size * 4, size * 4), 0)
             ImageDraw.Draw(mask).pieslice([0, 0, size * 4, size * 4], heading - 90 - half, heading - 90 + half, fill=255)
-            img = Image.new("RGBA", ring.size, (0, 0, 0, 0))
-            img.paste(ring, (0, 0), mask)
-            img = img.resize((size, size), Image.LANCZOS).filter(ImageFilter.GaussianBlur(0.5))
-            save(img, out, f"images/projectiles/sc/song-{t + 1}-{facing}.png", False)
+            mask = mask.resize((size, size), Image.LANCZOS)
+            wedge = ring.copy()
+            wedge.putalpha(Image.fromarray((np.asarray(ring.getchannel("A"), np.float32)
+                                            * np.asarray(mask, np.float32) / 255).round().astype(np.uint8)))
+            save(wedge, out, f"images/projectiles/sc/song-{t + 1}-{facing}.png", False)
     for t, dots in enumerate((((-5, -2), (3, -5), (5, 4)), ((-3, 4), (-6, -4), (4, -1)))):
         img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
         d = ImageDraw.Draw(img)
