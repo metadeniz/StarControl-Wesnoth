@@ -257,8 +257,8 @@ on the planet through its side's next turn, and when the turn after that
 starts, the planet is that side's and pays that turn.
 Every planet repairs a ship on it by 8 HP a turn (and cures poison),
 whoever owns it: a free planet, an enemy's, or one the ship is still
-building on. A side's own colonies (life worlds) repair its ships by 16
-instead, and a ship that stays on one through another turn is fully
+building on. A side's own colonies (life worlds) repair its ships by 8
+too, and a ship that stays on one through another turn is fully
 repaired (a Syreen only up to her starting HP). Moving off, even to come
 back, starts that over.
 An enemy's colony (life world) blown up this way plays the colony destroyed
