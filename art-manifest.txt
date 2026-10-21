@@ -1116,8 +1116,6 @@ images/projectiles/sc/spathi-missile-n.png
 images/projectiles/sc/spathi-missile-ne.png
 images/projectiles/sc/spit-1-n.png
 images/projectiles/sc/spit-1-ne.png
-images/projectiles/sc/spit-10-n.png
-images/projectiles/sc/spit-10-ne.png
 images/projectiles/sc/spit-2-n.png
 images/projectiles/sc/spit-2-ne.png
 images/projectiles/sc/spit-3-n.png
@@ -1128,12 +1126,6 @@ images/projectiles/sc/spit-5-n.png
 images/projectiles/sc/spit-5-ne.png
 images/projectiles/sc/spit-6-n.png
 images/projectiles/sc/spit-6-ne.png
-images/projectiles/sc/spit-7-n.png
-images/projectiles/sc/spit-7-ne.png
-images/projectiles/sc/spit-8-n.png
-images/projectiles/sc/spit-8-ne.png
-images/projectiles/sc/spit-9-n.png
-images/projectiles/sc/spit-9-ne.png
 images/projectiles/sc/spit-n.png
 images/projectiles/sc/spit-ne.png
 images/projectiles/sc/tongue-n.png

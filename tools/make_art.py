@@ -425,7 +425,7 @@ ANIMATED_PROJECTILES = {
     "buzzsaw": ("kohrah", "buzzsaw", range(0, 2), 0.5),          # blackurq.c: spins on 0-1
     "limpet": ("vux", "limpets", range(0, 4), 0.8),              # vux.c: wriggles through 0-3
     "bubble": ("androsynth", "bubble", range(0, 3), 0.6),        # androsyn.c: wobbles through 0-2
-    "spit": ("zoqfotpik", "spit", range(0, 10), 1.4),            # zoqfot.c: white to dark red, one a frame for its 10-frame life
+    "spit": ("zoqfotpik", "spit", range(0, 6), 1.4),             # zoqfot.c: fades from white to red
     "confuser": ("melnorme", "confuse", range(0, 8), 0.6),       # melnorme.c: cycles 0-7
 }
 
