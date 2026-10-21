@@ -831,10 +831,53 @@ end
 -- placed at the start and freshly promoted ships all start at these HP.
 local SYREEN_START_HP = { 28, 36, 44 }
 
+-- Her max HP follows her crew, so a Syreen holding all the crew she can get
+-- back by repair, or all she has stolen, shows a full, green bar: it is her
+-- level's starting HP or her HP, whichever is more, up to her crew capacity
+-- (the type's max HP). An object takes the rest off the type's max. Her song
+-- has to be able to fill her up to capacity (Wesnoth drains only up to max
+-- HP), so the object comes off for each fight ("attack") and is fitted again
+-- after it ("attack end").
+local SYREEN_CREW_OBJECT = "sc_syreen_crew"
+
+local function syreen_full_capacity(u)
+	u:remove_modifications({ id = SYREEN_CREW_OBJECT }, "object")
+end
+
+local function syreen_fit_max(u)
+	if not u or not is_a(u, "SC_Syreen_Penetrator") then return end
+	local hp = u.hitpoints
+	syreen_full_capacity(u)
+	u.variables.sc_crew_capacity = u.max_hitpoints
+	local cut = u.max_hitpoints - math.max(by_level(SYREEN_START_HP, u), hp)
+	if cut > 0 then
+		u:add_modification("object", { id = SYREEN_CREW_OBJECT,
+			T.effect { apply_to = "hitpoints", increase_total = -cut } })
+	end
+	u.hitpoints = math.min(hp, u.max_hitpoints)
+end
+
 local function syreen_low_start(u, floor)
 	if not is_a(u, "SC_Syreen_Penetrator") then return end
+	syreen_full_capacity(u)
 	local hp = math.max(by_level(SYREEN_START_HP, u), floor or 0)
 	u.hitpoints = math.min(hp, u.max_hitpoints)
+	syreen_fit_max(u)
+end
+
+-- attack: the Syreens in the fight get their whole capacity back.
+function sc.syreen_attack()
+	local c = wesnoth.current.event_context
+	for _, u in ipairs { wesnoth.units.get(c.x1, c.y1), wesnoth.units.get(c.x2, c.y2) } do
+		if is_a(u, "SC_Syreen_Penetrator") then syreen_full_capacity(u) end
+	end
+end
+
+-- attack end: and lose what they don't hold.
+function sc.syreen_attack_end()
+	local c = wesnoth.current.event_context
+	syreen_fit_max(wesnoth.units.get(c.x1, c.y1))
+	syreen_fit_max(wesnoth.units.get(c.x2, c.y2))
 end
 
 -- recruit: the event's unit.
@@ -876,6 +919,7 @@ end
 -- fires before a side heals and "turn refresh" after.
 function sc.syreen_before_healing()
 	for _, u in ipairs(wesnoth.units.find_on_map { side = wesnoth.current.side, race = "sc_syreen" }) do
+		syreen_fit_max(u)
 		u.variables.sc_hp_before_healing = u.hitpoints
 	end
 end
@@ -957,6 +1001,7 @@ function sc.syreen_captured()
 	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
 	local owner = wml.variables["owner_side"] or 0
 	if syreen_fills_crew(u, owner) then
+		syreen_full_capacity(u)
 		u.hitpoints = u.max_hitpoints
 		play_planet_anim(u.x, u.y, u.side, SYREEN_CAPTURE_ANIM, SYREEN_CAPTURE_DESTROYED_HALO)
 		-- and a label on the planet for the rest of the Syreen side's turn
