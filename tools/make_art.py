@@ -395,6 +395,34 @@ def build_projectiles(uqm, out):
             save(img, out, f"images/projectiles/sc/{pid}-{facing}.png", True)
 
 
+# Shots that Star Control II animates in flight, one image per frame
+# (<id>-<k>-n.png, <id>-<k>-ne.png); the unit files list the frames over
+# each flight at the battle's 24 fps (42 ms a frame).
+# id -> (UQM ship dir, sprite stem, frames, scale)
+ANIMATED_PROJECTILES = {
+    "blaster-p1": ("flagship", "blaster", range(0, 9), 0.8),     # sis_ship.c: power 1 grows, 0-8
+    "blaster-p2": ("flagship", "blaster", range(9, 10), 0.8),    # power 2 holds frame 9
+    "blaster-p3": ("flagship", "blaster", range(16, 20), 0.8),   # power 3 glows through 16-19
+    "buzzsaw": ("kohrah", "buzzsaw", range(0, 2), 0.5),          # blackurq.c: spins on 0-1
+    "limpet": ("vux", "limpets", range(0, 4), 0.8),              # vux.c: wriggles through 0-3
+    "bubble": ("androsynth", "bubble", range(0, 3), 0.6),        # androsyn.c: wobbles through 0-2
+    "spit": ("zoqfotpik", "spit", range(0, 6), 1.4),             # zoqfot.c: shrinks as it flies
+    "confuser": ("melnorme", "confuse", range(0, 8), 0.6),       # melnorme.c: cycles 0-7
+}
+
+
+def build_animated_projectiles(uqm, out):
+    for pid, (ship_dir, stem, frames, scale) in ANIMATED_PROJECTILES.items():
+        for k, frame in enumerate(frames, 1):
+            hd = hd_sprite(uqm, ship_dir, stem, frame)
+            w = max(2, round(hd.width * scale))
+            h = max(2, round(hd.height * scale))
+            small = hd.resize((w, h), Image.LANCZOS)
+            for facing in ("n", "ne"):
+                img = trim(rotated(small, FACINGS[facing]))
+                save(img, out, f"images/projectiles/sc/{pid}-{k}-{facing}.png", True)
+
+
 def build_lasers(out):
     for lid, rgb in LASERS.items():
         w, h = 9, 30
@@ -457,6 +485,7 @@ HITS = {
     "blaster-hit": ("flagship", "blaster", range(20, 27), 0.55),
     "blaster2-hit": ("flagship", "blaster", range(10, 16), 0.8),
     "blaster1-hit": ("flagship", "blaster", range(0, 1), 0.8),       # its first frame, 2 ticks
+    "confuser-hit": ("melnorme", "confuse", range(8, 16), 0.6),      # melnorme.c: clings to the target
 }
 
 
@@ -2105,6 +2134,7 @@ def main():
     build_hierarchy_starbase(args.out)   # original art
     build_alliance_starbase(args.out)    # original art
     build_projectiles(args.uqm, args.out)
+    build_animated_projectiles(args.uqm, args.out)
     build_lasers(args.out)
     build_fried_plumes(args.out, save, rotated, DIAG, args.seed)   # original art
     build_attack_icons(args.out)
