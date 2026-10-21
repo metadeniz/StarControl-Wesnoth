@@ -591,7 +591,7 @@ def build_hits(uqm, out):
 
 
 def build_crystal_shatter(uqm, out):
-    """The Chenjesu photon crystal bursting where it hits: chenjesu.c's eight
+    """The Chenjesu photon crystal bursting where it hits close up: chenjesu.c's eight
     shards (frame 1 of the spark sprite) flying out from the sparkles
     (frames 2-9), one battle frame (42 ms) apiece, on a shared canvas."""
     sdir = os.path.join(uqm, "addons/mm-hd/ships/chenjesu")
