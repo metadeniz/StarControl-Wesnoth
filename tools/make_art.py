@@ -547,7 +547,7 @@ def build_song(out):
     # ...and before them, the first ring wiggling round the Syreen without
     # growing, then fading away
     for t in range(6):
-        u = 1 / n
+        u = 3 / n  # the size of the third ring
         r = 10 + u * 76
         img = Image.new("RGBA", (size * 4, size * 4), (0, 0, 0, 0))
         d = ImageDraw.Draw(img)
@@ -560,7 +560,7 @@ def build_song(out):
         d.line(pts, fill=(230, 130, 255, alpha), width=10)
         d.line(pts, fill=(255, 220, 255, alpha), width=4)
         ring = img.resize((size, size), Image.LANCZOS).filter(ImageFilter.GaussianBlur(0.5))
-        save(ring.crop((60, 60, 120, 120)), out, f"images/halo/sc/song-ring-{t + 1}.png", False)
+        save(ring.crop((40, 40, 140, 140)), out, f"images/halo/sc/song-ring-{t + 1}.png", False)
     for t, dots in enumerate((((-5, -2), (3, -5), (5, 4)), ((-3, 4), (-6, -4), (4, -1)))):
         img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
         d = ImageDraw.Draw(img)
