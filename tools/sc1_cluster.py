@@ -1,180 +1,344 @@
-"""Star Control 1 style star clusters for the SC1 missions (used by
+"""Star Control 1's own star cluster generator, for the SC1 missions (used by
 tools/make_sc1_maps.py), and Wesnoth hex helpers.
 
-How a cluster is drawn, following D's notes on Star Control 1's maps: an X
-shape, a short trunk through the middle (2 or 3 planets near the centre so
-the middle is not always a one-planet choke) and two arms at each end.
-Planets are linked to every planet within a fixed range, shortest links
-first, never crossing another link; the two arms of one end only link near
-their fork, arms of opposite ends never. A cluster is kept only if
+generate_cluster() is SC1's generator, ported from STARCON.EXE (0628:216C)
+with the Microsoft C rand() it calls (214F:0112) by the starcon1-map-prototype
+project (src/generation/sc1Cluster.ts); a given seed builds the same cluster
+the game would. Stars are points in a cylinder: x runs along it (the
+Hierarchy's half 10-94, the Alliance's 96-180, the first star at 95), y and z
+lie in a disc of radius 118. Stars are placed one at a time, the sides taking
+turns, by rejection sampling, and two stars are linked exactly when they are
+closer than 38; none are closer than 20, no pair is 38-60 apart and no star
+has more than 4 links.
 
-  - it is all connected, with 34-42 links and 2-5 dead ends, and every arm
-    has 4 planets or more;
-  - planets that look close are close in links too (share a neighbour);
-  - no planet curls back: its route toward the centre gets closer to it;
-  - a dead end is at most 2 links from a planet with 3+ links;
-  - mostly 2+ links cross the middle (one in four may have a single choke);
-  - the left and right halves differ by at most 2 planets;
-  - each starbase, placed beyond the planet of its half farthest from the
-    centre, is at most 2 jumps from a planet with 3+ links.
-
-Needs numpy.
+flatten_cluster() is the prototype's flatLayout.ts: it only decides where the
+stars are drawn. Links keep SC1's 20-38 lengths, every star stays in its own
+half and roughly as near the middle as SC1 put it, and the first star sits in
+the exact middle.
 """
 
 import math
 
-import numpy as np
 
-N = 28                 # planets: 12 free worlds a side, plus a colony and a mine
-L = 480                # cluster length (top tip to bottom tip)
-DMIN = 46              # closest two planets may be
-R = 76                 # link range
-JITTER = 34            # how far planets stray from the skeleton
+class MscRand:
+    """Microsoft C runtime rand(): a 32-bit LCG returning bits 16-30."""
 
+    def __init__(self, seed):
+        self.state = seed & 0xFFFF   # srand() keeps a 16-bit seed
 
-# ---- the cluster, in cluster units (y down: the Hierarchy end is -y) ------
-
-def seg_cross(p1, p2, p3, p4):
-    def o(a, b, c):
-        return np.sign((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]))
-    return o(p1, p2, p3) != o(p1, p2, p4) and o(p3, p4, p1) != o(p3, p4, p2)
+    def next(self):
+        self.state = (self.state * 214013 + 2531011) & 0xFFFFFFFF
+        return (self.state >> 16) & 0x7FFF
 
 
-def cluster(rng):
-    """One try at a cluster; None if it breaks a rule."""
-    n = N
-    fork = rng.uniform(0.18, 0.32) * L          # trunk half-length
-    segs = {'trunk': (np.array([0, -fork]), np.array([0, fork]))}
-    for end, sy in (('H', -1), ('A', 1)):
-        for side, sx in (('L', -1), ('R', 1)):
-            tip = np.array([sx * rng.uniform(110, 200), sy * L / 2 * rng.uniform(0.85, 1.0)])
-            segs[end + side] = (np.array([0, sy * fork]), tip)
-    lens = {k: np.linalg.norm(b - a) for k, (a, b) in segs.items()}
-    keys = list(segs)
-    w = np.array([lens[k] * (1.5 if k == 'trunk' else 1) for k in keys])
-    w /= w.sum()
-    pts, lab, tpos = [], [], []
-    ncentre = int(rng.choice([2, 3]))
-    dx, dy = rng.uniform(28, 40), rng.normal(0, 12)
-    pts += [np.array([-dx, dy]), np.array([dx, -dy])]
-    if ncentre == 3:
-        pts.append(np.array([rng.normal(0, 10), rng.choice([-1, 1]) * rng.uniform(50, 60)]))
-    lab += ['trunk'] * ncentre
-    tpos += [0.5] * ncentre
-    tries = 0
-    while len(pts) < n and tries < 30000:
-        tries += 1
-        k = keys[rng.choice(len(keys), p=w)]
-        a, b = segs[k]
-        t = rng.uniform(0, 1)
-        d = (b - a) / lens[k]
-        nrm = np.array([-d[1], d[0]])
-        p = a + d * lens[k] * t + nrm * rng.normal(0, JITTER * (0.6 if k == 'trunk' else 1))
-        if all(np.linalg.norm(p - q) >= DMIN for q in pts):
-            pts.append(p)
-            lab.append(k)
-            tpos.append(t)
-    if len(pts) < n:
-        return None
-    P = np.array(pts)
-    D = np.linalg.norm(P[:, None] - P[None], axis=2)
+MIN_DIST = 20      # closer than this to any star: position rejected
+LINK_MAX = 38      # at least MIN_DIST and closer than this: linked
+GAP_MAX = 60       # at least LINK_MAX and closer than this: rejected
+WINDOW = 40        # only stars within this on every axis are checked
+MAX_NEW_LINKS = 3  # a new star links to at most this many...
+MAX_LINKS = 4      # ...and no star ever has more than this many
+RADIUS = 118
+CENTRE = 95        # x of the first star, where the halves meet
+FRONT = 47         # stars nearer the centre (in x) than this are a side's front
 
-    def allowed(i, j):
-        a, b = lab[i], lab[j]
-        if a != b and a != 'trunk' and b != 'trunk' and a[0] == b[0]:
-            return tpos[i] < 0.3 and tpos[j] < 0.3     # two arms of one end
-        if a != b and a != 'trunk' and b != 'trunk':
-            return False                               # arms of opposite ends
-        return True
 
-    E = sorted((D[i, j], i, j) for i in range(n) for j in range(i + 1, n)
-               if D[i, j] <= R and allowed(i, j))
-    keep = []
-    for d, i, j in E:
-        if any(len({i, j, a, b}) == 4 and seg_cross(P[i], P[j], P[a], P[b]) for _, a, b in keep):
-            continue
-        keep.append((d, i, j))
-    par = list(range(n))
+class Star:
+    def __init__(self, index, x, y, z, side):
+        self.index, self.x, self.y, self.z, self.side = index, x, y, z, side
+        self.links = []
 
-    def f(a):
-        while par[a] != a:
-            a = par[a]
-        return a
-    for _, i, j in keep:
-        par[f(i)] = f(j)
-    if len({f(i) for i in range(n)}) > 1:
-        return None
-    deg = np.bincount(np.array([[i, j] for _, i, j in keep]).ravel(), minlength=n)
-    if not (34 <= len(keep) <= 42 and 2 <= (deg == 1).sum() <= 5):
-        return None
-    if min(lab.count(k) for k in keys if k != 'trunk') < 4:
-        return None
-    adj = [set() for _ in range(n)]
-    for _, i, j in keep:
-        adj[i].add(j)
-        adj[j].add(i)
-    h = [99] * n
-    q = list(range(ncentre))
-    for c in q:
-        h[c] = 0
-    while q:
-        a = q.pop(0)
-        for b in adj[a]:
-            if h[b] > h[a] + 1:
-                h[b] = h[a] + 1
-                q.append(b)
-    r = np.linalg.norm(P, axis=1)
+    def __repr__(self):
+        return f"Star({self.index}, {self.x}, {self.y}, {self.z}, {self.side})"
+
+
+def generate_cluster(rng, count_a, count_b):
+    """SC1's cluster: count_a stars on the high-x half (A, the Alliance's),
+    count_b on the low-x half (B, the Hierarchy's). Sides alternate
+    placements (even ones go to A) until one runs out, as in SC1."""
+    total = count_a + count_b
+    if not 2 <= total <= 50:
+        raise ValueError(f"SC1 clusters need 2-50 stars, got {total}")
+    lst = []   # kept sorted by x, as the original scans it
+    for i in range(total):
+        first = i == 0
+        while True:
+            if first:
+                x, y, z = CENTRE, 10, rng.next() % 20
+                first = False
+            else:
+                x = rng.next() % 85 + 10
+                if count_a != 0 and ((i & 1) == 0 or count_b == 0):
+                    x += 86
+                while True:
+                    y = rng.next() % 236 - 118
+                    z = rng.next() % 236 - 118
+                    if not ((y == 0 and z == 0) or y * y + z * z > RADIUS ** 2):
+                        break
+            cand, insert_at, ok = [], -1, True
+            for k, s in enumerate(lst):
+                dx = s.x - x
+                if dx < -WINDOW:
+                    continue
+                if dx == 0:
+                    ok = False   # no two stars share an x
+                    break
+                if dx > 0:
+                    if insert_at < 0:
+                        insert_at = k
+                    if dx > WINDOW:
+                        break
+                if abs(s.y - y) > WINDOW or abs(s.z - z) > WINDOW:
+                    continue
+                d2 = dx * dx + (s.y - y) ** 2 + (s.z - z) ** 2
+                if d2 < MIN_DIST ** 2:
+                    ok = False
+                    break
+                if d2 < LINK_MAX ** 2:
+                    if len(cand) == MAX_NEW_LINKS or len(s.links) == MAX_LINKS:
+                        ok = False
+                        break
+                    cand.append(s)
+                elif d2 < GAP_MAX ** 2:
+                    ok = False   # near miss
+                    break
+            if not ok:
+                continue
+            if i != 0:
+                if not cand:
+                    continue   # must connect to the cluster
+                if i <= 4 and len(cand) < (i + 1) >> 1:
+                    continue   # stars 3 and 4 need two links
+            break
+        if count_b != 0 and ((i & 1) != 0 or count_a == 0):
+            count_b -= 1
+            side = 'B'
+        else:
+            count_a -= 1
+            side = 'A'
+        star = Star(i, x, y, z, side)
+        for c in cand:
+            star.links.append(c)
+            c.links.append(star)
+        if insert_at < 0:
+            lst.append(star)
+        else:
+            lst.insert(insert_at, star)
+    # SC1 then rolls three name numbers per star; keep rand() in step
+    for _ in range(len(lst) * 3):
+        rng.next()
+    return sorted(lst, key=lambda s: s.index)
+
+
+def is_front(star):
+    return abs(star.x - CENTRE) < FRONT
+
+
+# ---- flat layout (the prototype's flatLayout.ts) --------------------------
+
+ANGLES = 36          # views round the long axis tried as starting points
+TRIES = 4            # best starting views relaxed in full
+SIDE_GAP = 6         # stars stay this far from the centre line, on their side
+APART = 32           # stars that aren't linked stay this far apart
+LINK_CLEARANCE = 14  # and this far from a link they aren't part of
+LONG_LINK = 42
+
+
+def _edges(stars):
+    return [(s, t) for s in stars for t in s.links if t.index > s.index]
+
+
+def _nearest_on_segment(p, a, b):
+    da, dc = b[0] - a[0], b[1] - a[1]
+    l2 = da * da + dc * dc or 1
+    t = max(0, min(1, ((p[0] - a[0]) * da + (p[1] - a[1]) * dc) / l2))
+    return a[0] + t * da, a[1] + t * dc
+
+
+def _sign(v):
+    return (v > 0) - (v < 0)
+
+
+def _orient(p, q, r):
+    return _sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]))
+
+
+def _crosses(a, b, c, d):
+    return _orient(a, b, c) * _orient(a, b, d) < 0 and _orient(c, d, a) * _orient(c, d, b) < 0
+
+
+def layout_flaws(stars, pos):
+    """(long links, stars on links, crowded pairs, crossings)."""
+    edges = _edges(stars)
+    crossings = 0
+    for i in range(len(edges)):
+        for j in range(i + 1, len(edges)):
+            a, b = edges[i]
+            c, d = edges[j]
+            if a is c or a is d or b is c or b is d:
+                continue
+            if _crosses(pos[a], pos[b], pos[c], pos[d]):
+                crossings += 1
+    crowded = 0
+    for i in range(len(stars)):
+        for j in range(i + 1, len(stars)):
+            if stars[j] not in stars[i].links and math.dist(pos[stars[i]], pos[stars[j]]) < 25:
+                crowded += 1
+    on_link = 0
+    for s in stars:
+        for a, b in edges:
+            if s is a or s is b:
+                continue
+            p = pos[s]
+            if math.dist(p, _nearest_on_segment(p, pos[a], pos[b])) < 10:
+                on_link += 1
+    long_links = sum(math.dist(pos[a], pos[b]) > LONG_LINK for a, b in edges)
+    return long_links, on_link, crowded, crossings
+
+
+def _score(stars, pos):
+    long_links, on_link, crowded, crossings = layout_flaws(stars, pos)
+    return long_links * 5 + on_link * 4 + crowded * 4 + crossings
+
+
+def _view(stars, step):
+    angle = step * math.pi / ANGLES
+    c, s = math.cos(angle), math.sin(angle)
+    return {t: (t.x - CENTRE, t.y * c - t.z * s) for t in stars}
+
+
+def _relax(stars, start):
+    n = len(stars)
+    along = [start[s][0] for s in stars]
+    across = [start[s][1] for s in stars]
+    home = [s.x - CENTRE for s in stars]
+    side_a = [s.side == 'A' for s in stars]
+    fixed = [s.index == 0 for s in stars]
+    slot = {s: i for i, s in enumerate(stars)}
+    linked = [[False] * n for _ in range(n)]
+    target = [[0.0] * n for _ in range(n)]
+    edges = []
+    for a, b in _edges(stars):
+        i, j = slot[a], slot[b]
+        linked[i][j] = linked[j][i] = True
+        target[i][j] = target[j][i] = math.hypot(a.x - b.x, a.y - b.y, a.z - b.z)
+        edges.append((i, j))
     for i in range(n):
-        for j in range(i + 1, n):
-            if j not in adj[i] and D[i, j] < 0.85 * R and not (adj[i] & adj[j]):
-                return None
-    if any(h[i] > 0 and min(r[j] for j in adj[i] if h[j] == h[i] - 1) > r[i] + 10 for i in range(n)):
-        return None
+        if fixed[i]:
+            along[i] = across[i] = 0.0
 
-    def tail(i):
-        prev, cur, k = None, i, 0
-        while deg[cur] < 3 and k < 5:
-            nxt = [x for x in adj[cur] if x != prev]
-            if not nxt:
-                return 99
-            prev, cur, k = cur, nxt[0], k + 1
-        return k
-    if any(deg[i] == 1 and tail(i) > 2 for i in range(n)):
-        return None
-    across = sum((P[i, 1] < 0) != (P[j, 1] < 0) for _, i, j in keep)
-    if across < 2 and rng.random() < 0.75:
-        return None
-    if abs(int((P[:, 0] < -10).sum()) - int((P[:, 0] > 10).sum())) > 2:
-        return None
-    bases = {}
-    for end, sy in (('H', -1), ('A', 1)):
-        half = [i for i in range(n) if lab[i] != 'trunk' and lab[i][0] == end]
-        anchor = max(half, key=lambda i: np.linalg.norm(P[i]))
-        arm = lab[anchor]
-        idx = [i for i in range(n) if lab[i] == arm]
-        out = P[anchor] / np.linalg.norm(P[anchor])
-        bp = P[anchor] + out * 28
-        if np.linalg.norm(P - bp, axis=1).min() < 24:
-            return None
-        near = sorted(idx, key=lambda i: np.linalg.norm(P[i] - bp))[:2]
-        links = [i for i in near if np.linalg.norm(P[i] - bp) <= R] or near[:1]
-        bases[end] = (P[anchor], out, links)
+    def keep_to_side(i):
+        along[i] = max(along[i], SIDE_GAP) if side_a[i] else min(along[i], -SIDE_GAP)
 
-    def hub_dist(starts):
-        seen = {x: 1 for x in starts}
-        q = list(starts)
-        while q:
-            a = q.pop(0)
-            if deg[a] >= 3:
-                return seen[a]
-            for b in adj[a]:
-                if b not in seen:
-                    seen[b] = seen[a] + 1
-                    q.append(b)
-        return 99
-    if any(hub_dist(links) > 2 for _, _, links in bases.values()):
-        return None
-    return P, [(i, j) for _, i, j in keep], bases
+    def nearest(k, i, j):
+        da, dc = along[j] - along[i], across[j] - across[i]
+        t = max(0, min(1, ((along[k] - along[i]) * da + (across[k] - across[i]) * dc) / (da * da + dc * dc or 1)))
+        return along[i] + t * da, across[i] + t * dc
+
+    # 1. springs: links pull toward their SC1 length, other stars push apart,
+    #    every star drawn gently back toward its SC1 distance from the centre
+    rounds = 150
+    for rnd in range(rounds):
+        step = 1 - rnd / rounds + 0.1
+        fa = [0.0] * n
+        fc = [0.0] * n
+        for i in range(n):
+            for j in range(i + 1, n):
+                d = math.hypot(along[j] - along[i], across[j] - across[i]) or 0.01
+                if linked[i][j]:
+                    k = (d - target[i][j]) * 0.5
+                elif d < 48:
+                    k = -(48 - d) * 0.3
+                else:
+                    continue
+                if k == 0:
+                    continue
+                ua = (along[j] - along[i]) / d * k
+                uc = (across[j] - across[i]) / d * k
+                fa[i] += ua
+                fc[i] += uc
+                fa[j] -= ua
+                fc[j] -= uc
+        for k in range(n):
+            for i, j in edges:
+                if k == i or k == j:
+                    continue
+                qa, qc = nearest(k, i, j)
+                d = math.hypot(along[k] - qa, across[k] - qc) or 0.01
+                if d >= 16:
+                    continue
+                ua = (along[k] - qa) / d * (16 - d) * 0.3
+                uc = (across[k] - qc) / d * (16 - d) * 0.3
+                fa[k] += ua
+                fc[k] += uc
+                fa[i] -= ua / 2
+                fc[i] -= uc / 2
+                fa[j] -= ua / 2
+                fc[j] -= uc / 2
+        for i in range(n):
+            if fixed[i]:
+                continue
+            fa[i] += (home[i] - along[i]) * 0.02
+            size = math.hypot(fa[i], fc[i])
+            scale = (6 / size if size > 6 else 1) * step
+            along[i] += fa[i] * scale
+            across[i] += fc[i] * scale
+            keep_to_side(i)
+
+    # 2. hard limits: stars apart and off other links, links within 20-38
+    def move(i, da, dc):
+        if fixed[i]:
+            return
+        along[i] += da
+        across[i] += dc
+        keep_to_side(i)
+
+    def hold(i, j, lo, hi):
+        d = math.hypot(along[j] - along[i], across[j] - across[i]) or 0.01
+        goal = min(max(d, lo), hi)
+        if goal == d:
+            return
+        share = (d - goal) / d / (1 if fixed[i] or fixed[j] else 2)
+        da, dc = (along[j] - along[i]) * share, (across[j] - across[i]) * share
+        move(i, da, dc)
+        move(j, -da, -dc)
+
+    for _ in range(80):
+        for i in range(n):
+            for j in range(i + 1, n):
+                if not linked[i][j]:
+                    hold(i, j, APART, math.inf)
+        for k in range(n):
+            for i, j in edges:
+                if k == i or k == j:
+                    continue
+                qa, qc = nearest(k, i, j)
+                d = math.hypot(along[k] - qa, across[k] - qc) or 0.01
+                if d >= LINK_CLEARANCE:
+                    continue
+                f = (LINK_CLEARANCE - d) / d / 2
+                da, dc = (along[k] - qa) * f, (across[k] - qc) * f
+                move(k, da, dc)
+                move(i, -da / 2, -dc / 2)
+                move(j, -da / 2, -dc / 2)
+        for i, j in edges:
+            hold(i, j, MIN_DIST, LINK_MAX)
+    return {s: (along[i], across[i]) for i, s in enumerate(stars)}
+
+
+def flatten_cluster(stars):
+    """{star: (along, across)} in SC1 units, the first star at (0, 0);
+    along is SC1's x (the Alliance's half positive)."""
+    def key(step):
+        long_links, on_link, crowded, crossings = layout_flaws(stars, _view(stars, step))
+        return crossings * 3 + crowded + on_link
+    starts = sorted(range(ANGLES), key=key)[:TRIES]
+    best, best_score = None, math.inf
+    for step in starts:
+        pos = _relax(stars, _view(stars, step))
+        s = _score(stars, pos)
+        if s < best_score:
+            best, best_score = pos, s
+    return best
 
 
 # ---- hexes ---------------------------------------------------------------
