@@ -580,11 +580,14 @@ def build_ship_death(uqm, out):
     explosion_preprocess spawns 1-3 booms a battle frame for 26 frames
     (55 in all), each a few pixels from the ship (a third of them 8 further
     out) and drifting 0-4 pixels a frame; each plays boom-big's 9 frames,
-    one a battle frame (42 ms). HD art at 1x; a fixed seed keeps the cloud
-    the same every build."""
+    one a battle frame (42 ms). The cloud is the HD art at 0.6 scale, booms,
+    spread and drift alike; a fixed seed keeps it the same every build."""
     battle = os.path.join(uqm, "addons/mm-hd/battle")
     small = [Image.open(os.path.join(battle, f"boom-big-{i:03d}.png")).convert("RGBA") for i in range(9)]
     big = [img.resize((img.width * 3, img.height * 3), Image.LANCZOS) for img in small]
+    k = 0.6
+    small = [img.resize((max(1, round(img.width * k)), max(1, round(img.height * k))), Image.LANCZOS)
+             for img in small]
     rng = np.random.default_rng(1994)
     booms = []   # (spawn frame, x, y, dx, dy)
     for t in range(26):
@@ -594,9 +597,11 @@ def build_ship_death(uqm, out):
             if rng.random() < 1 / 3:
                 dist += 32
             b, v = rng.uniform(0, 2 * math.pi), int(rng.integers(5)) * 4
-            booms.append((t, dist * math.cos(a), dist * math.sin(a), v * math.cos(b), v * math.sin(b)))
+            booms.append((t, k * dist * math.cos(a), k * dist * math.sin(a),
+                          k * v * math.cos(b), k * v * math.sin(b)))
     half = math.ceil(max(max(abs(x + 8 * dx), abs(y + 8 * dy)) for _, x, y, dx, dy in booms)
                      + max(small[4].size) / 2)
+    half = max(half, (max(big[4].size) + 1) // 2)
     tick = 1000 / 24
     for f in range(34):
         canvas = Image.new("RGBA", (2 * half, 2 * half), (0, 0, 0, 0))
