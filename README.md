@@ -253,9 +253,9 @@ the ship starts building a colony (life world), mine (mineral world) or
 outpost (dead world). Building takes a whole turn: the ship has to stay
 on the planet through its side's next turn, and when the turn after that
 starts, the planet is that side's and pays that turn.
-Only a side's own and its allies' planets repair its ships, so a ship
-that is still building gets no repair from the planet (healers next to it
-and resting still work, and poison isn't cured).
+Every planet repairs a ship on it by 8 HP a turn (and cures poison),
+whoever owns it: a free planet, an enemy's, or one the ship is still
+building on.
 An enemy's colony (life world) blown up this way plays the colony destroyed
 scene below the planet, with "Colony destroyed" under the ship until it fades,
 unless the ship is a Syreen, which takes the colonists as crew instead; an
