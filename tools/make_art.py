@@ -1054,40 +1054,6 @@ def build_music(uqm, out):
         manifest.append(dest)
 
 
-# Star Control II's ending theme is too long for a victory theme, so the
-# Alliance plays a cut of it: the module with a shorter order list. Its
-# patterns are 7.68 s each, so the cut falls on the song's own phrases.
-# Orders 14-19 of the song (1:47.52-2:27.20, its finale), then pattern 8,
-# the closing chord that the song never reaches because its last pattern
-# jumps back to order 9.
-VICTORY_CUTS = {
-    "alliance-victory": ("base/cutscene/ending/victoryf.mod", [10, 4, 3, 9, 6, 7, 8]),
-}
-
-
-def build_victory_cuts(uqm, out):
-    import subprocess
-    import tempfile
-    for name, (rel, orders) in VICTORY_CUTS.items():
-        with open(os.path.join(uqm, rel), "rb") as f:
-            mod = bytearray(f.read())
-        mod[950] = len(orders)                                  # song length
-        mod[952:1080] = bytes(orders + [0] * (128 - len(orders)))
-        for pat in set(orders):                                 # drop position jumps (Bxx)
-            for cell in range(1084 + pat * 1024, 1084 + (pat + 1) * 1024, 4):
-                if mod[cell + 2] & 15 == 0xB:
-                    mod[cell + 2] &= 0xF0
-                    mod[cell + 3] = 0
-        dest = f"sounds/sc/{name}.ogg"
-        with tempfile.NamedTemporaryFile(suffix=".mod") as tmp:
-            tmp.write(mod)
-            tmp.flush()
-            subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", tmp.name,
-                            "-af", "silenceremove=stop_periods=1:stop_threshold=-60dB:stop_duration=0.5",
-                            "-q:a", "4", os.path.join(out, dest)], check=True)
-        manifest.append(dest)
-
-
 def build_sounds(uqm, out):
     for sid, rel in SOUNDS.items():
         dest = f"sounds/sc/{sid}.wav"
@@ -2450,7 +2416,6 @@ def main():
     build_sounds(args.uqm, args.out)
     build_ditties(args.uqm, args.out, args.remix)
     build_music(args.uqm, args.out)
-    build_victory_cuts(args.uqm, args.out)
     if args.remix:
         build_remixes(args.remix, args.out)
     if args.threedo:
@@ -2461,9 +2426,10 @@ def main():
     # Added by hand, not built here: Chenjesu and Mmrnmhrm themes by Titus
     # (supplied as MP3s, loudness-matched to the other music).
     manifest.extend(["music/sc/1. chenjesu-titus.ogg", "music/sc/1. mmrnmhrm-titus.ogg"])
-    # ...and Star Control 1's Hierarchy victory theme (MP3; played as a sound
-    # effect).
-    manifest.append("sounds/sc/hierarchy-victory.ogg")
+    # ...and the victory themes, played as sound effects: Star Control 1's
+    # Hierarchy theme (MP3), and for the Alliance the finale of Star Control
+    # II's ending theme (tools/make_alliance_victory_music.py).
+    manifest.extend(["sounds/sc/alliance-victory.ogg", "sounds/sc/hierarchy-victory.ogg"])
     # ...an Androsynth theme by TheMisterCat (DUOLED), and the Melnorme theme
     # re-imagined by DJ Yan Yan Lipavsky (MP3s).
     manifest.extend(["music/sc/2. androsynth-duoled.ogg", "music/sc/3. melnorme-lipavsky.ogg"])
