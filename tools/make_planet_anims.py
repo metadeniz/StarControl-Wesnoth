@@ -57,7 +57,7 @@ CUTOUT = {"artifact"}           # scenes cut out of a dark background
 TEXT = {"colony-destroyed": "Colony destroyed", "mine-destroyed": "Mine destroyed"}
 FONT = "/usr/share/games/wesnoth/1.16/fonts/Lato-Regular.ttf"   # Wesnoth's own
 SIZE = 15
-COLOR = (255, 128, 96)         # as "Planet destroyed"
+COLOR = (255, 128, 96)         # orange-red
 STEP = 2                       # keep every 2nd frame: 30 fps -> 15 fps
 FADE = (0.8, 0.6, 0.4, 0.2)
 
