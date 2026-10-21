@@ -603,18 +603,21 @@ def build_effects(uqm, out):
 
 
 def build_ship_death(uqm, out):
-    """A ship blowing up: Star Control 2's cloud of small booms under the
-    add-on's big one (boom-1..9, 70 ms a frame), baked into one halo
-    sequence so the big boom always draws on top. tactrans.c's
+    """A ship blowing up: Star Control 2's cloud of small booms
+    (ship-death-*). A leader's (leader-death-*) also has the add-on's big
+    boom (boom-1..9, 70 ms a frame) on top, baked into the same frames so
+    it always draws over the cloud. tactrans.c's
     explosion_preprocess spawns 1-3 booms a battle frame for 26 frames
     (55 in all), each a few pixels from the ship (a third of them 8 further
     out) and drifting 0-4 pixels a frame; each plays boom-big's 9 frames,
-    one a battle frame (42 ms). The cloud is the HD art at 0.6 scale, booms,
-    spread and drift alike; a fixed seed keeps it the same every build."""
+    one a battle frame. Here a battle frame lasts 70 ms, not SC2's 42, so
+    the cloud plays slower, in step with the big boom. The cloud is the HD
+    art at 0.5 scale, booms, spread and drift alike; a fixed seed keeps it
+    the same every build."""
     battle = os.path.join(uqm, "addons/mm-hd/battle")
     small = [Image.open(os.path.join(battle, f"boom-big-{i:03d}.png")).convert("RGBA") for i in range(9)]
     big = [img.resize((img.width * 3, img.height * 3), Image.LANCZOS) for img in small]
-    k = 0.6
+    k = 0.5
     small = [img.resize((max(1, round(img.width * k)), max(1, round(img.height * k))), Image.LANCZOS)
              for img in small]
     rng = np.random.default_rng(1994)
@@ -631,7 +634,7 @@ def build_ship_death(uqm, out):
     half = math.ceil(max(max(abs(x + 8 * dx), abs(y + 8 * dy)) for _, x, y, dx, dy in booms)
                      + max(small[4].size) / 2)
     half = max(half, (max(big[4].size) + 1) // 2)
-    tick = 1000 / 24
+    tick = 70
     for f in range(34):
         canvas = Image.new("RGBA", (2 * half, 2 * half), (0, 0, 0, 0))
         for t, x, y, dx, dy in booms:
@@ -640,11 +643,12 @@ def build_ship_death(uqm, out):
                 img = small[age]
                 canvas.alpha_composite(img, (round(half + x + age * dx - img.width / 2),
                                              round(half + y + age * dy - img.height / 2)))
+        save(canvas, out, f"images/halo/sc/ship-death-{f + 1}.png", True)
         ms = f * tick
         if ms < 630:
             img = big[int(ms // 70)]
             canvas.alpha_composite(img, (half - img.width // 2, half - img.height // 2))
-        save(canvas, out, f"images/halo/sc/ship-death-{f + 1}.png", True)
+        save(canvas, out, f"images/halo/sc/leader-death-{f + 1}.png", True)
 
 
 # Star Control II hits with their own look. A shot whose sprite has more
