@@ -350,12 +350,10 @@ function sc.victory_theme()
 	if side then sc.victory_picture(side.__cfg.faction) end
 end
 
--- Victory pictures, shown in a narrator's message window like a scripted
--- scenario event while the victory theme plays: Star Control 1's Earth
--- ringed by the Alliance races, or an Ur-Quan reaching out its tentacles,
--- and for the New Alliance Star Control II's Captain waking up beside
--- Talana, the freed Earth in the window. The pictures are made by
--- tools/make_victory_portraits.py.
+-- Star Control 1's victory pictures, shown in a narrator's message window
+-- like a scripted scenario event while the victory theme plays: Earth ringed
+-- by the Alliance races, or an Ur-Quan reaching out its tentacles. The
+-- pictures are made by tools/make_victory_portraits.py.
 local VICTORY_PICTURE = {
 	SC_Alliance = {
 		caption = _ "Alliance Victory",
@@ -368,12 +366,6 @@ local VICTORY_PICTURE = {
 		image = "portraits/sc/hierarchy-victory.png",
 		winner = _ "Hierarchy",
 		loser = _ "Alliance",
-	},
-	SC_NewAlliance = {
-		caption = _ "New Alliance Victory",
-		image = "portraits/sc/new-alliance-victory.png",
-		winner = _ "New Alliance",
-		loser = _ "Hierarchy",
 	},
 }
 
@@ -388,7 +380,38 @@ local VICTORY_VERBS = {
 	_ "terminates", _ "creams", _ "overruns", _ "pastes", _ "blitzes",
 }
 
+-- The New Alliance gets Star Control II's ending instead, on a story
+-- screen: the Captain wakes up in Sick Bay beside Talana, over Earth
+-- glowing the sick red of the Ur-Quan slave shield; the shield falls in a
+-- white flash, leaving the Earth free and blue. The flash plays once, as
+-- floating images over the red slide, each shown frame_ms after the last;
+-- the frames are made by tools/make_new_alliance_victory.py.
+local SHIELD_FALLS = {
+	frames = 20,
+	hold_ms = 1500,   -- the red Earth, before the shield goes down
+	frame_ms = 100,
+}
+
+local function shield_falls()
+	local dir = "story/sc/new-alliance-victory/"
+	local part = {
+		background = dir .. "00.png",
+		story = _ "Freedom and liberation will follow.",
+		show_title = true,
+	}
+	for i = 1, SHIELD_FALLS.frames - 1 do
+		table.insert(part, { "image", {
+			file = string.format("%s%02d.png", dir, i),
+			x = 0, y = 0,
+			resize_with_background = true,
+			delay = i == 1 and SHIELD_FALLS.hold_ms or SHIELD_FALLS.frame_ms,
+		} })
+	end
+	gui.show_story({ { "part", part } }, _ "New Alliance Victory")
+end
+
 function sc.victory_picture(faction)
+	if faction == "SC_NewAlliance" then return shield_falls() end
 	local picture = VICTORY_PICTURE[faction]
 	if not picture then return end
 	wesnoth.wml_actions.message {
