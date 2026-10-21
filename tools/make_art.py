@@ -793,10 +793,10 @@ def build_samatra(uqm, out):
     rgb = a[..., :3]
     mx, mn = rgb.max(axis=2), rgb.min(axis=2)
     sat = (mx - mn) / np.maximum(mx, 1)
-    h, w = mx.shape
-    yy, xx = np.mgrid[0:h, 0:w]
-    inside = ((xx - w / 2) / 250) ** 2 + ((yy - 138) / 105) ** 2 < 1
-    keep = (sat > 0.35) & (mx > 30) & inside & (yy < 235)   # grey rocks and the shield bar go
+    yy = np.mgrid[0:mx.shape[0], 0:mx.shape[1]][0]
+    # The grey rocks fail the saturation test; the shield bar starts at y=271.
+    # Cut no tighter, or the lower jaw at the bottom left goes too.
+    keep = (sat > 0.35) & (mx > 30) & (yy < 262)
     a[..., 3] = np.where(keep, a[..., 3], 0)
     body = trim(Image.fromarray(a.astype("uint8")))
     # Over twice a hex wide: it is huge, and spills over its neighbours.
