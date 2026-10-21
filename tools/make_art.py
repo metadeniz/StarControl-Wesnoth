@@ -249,6 +249,29 @@ def trim(img):
     return img.crop(box) if box else img
 
 
+def turned(hd, angle):
+    """The hull rotated by `angle` and trimmed, with where its centre (the
+    middle of the unrotated hull's box) ended up. Trimming a rotated hull to
+    its box can leave that centre off the box's middle, so it is tracked."""
+    hull = trim(hd)
+    r = rotated(hull, angle)
+    box = r.getbbox()
+    return r.crop(box), (r.width / 2 - box[0], r.height / 2 - box[1])
+
+
+def on_centre(img, cx, cy):
+    """`img` on a square canvas (at least a hex) with the point (cx, cy) in
+    the middle: the hull's centre stays on the hex's centre, and its centre
+    line through the hex's middle, whichever way it faces. Returns the canvas
+    and where `img` went on it."""
+    reach = max(cx, img.width - cx, cy, img.height - cy)
+    size = max(HEX, 2 * math.ceil(reach), img.width + img.width % 2, img.height + img.height % 2)
+    origin = (math.floor(size / 2 - cx), math.floor(size / 2 - cy))
+    canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    canvas.alpha_composite(img, origin)
+    return canvas, origin
+
+
 def centred(img, size=HEX):
     canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     canvas.alpha_composite(img, ((size - img.width) // 2, (size - img.height) // 2))
@@ -332,17 +355,17 @@ def build_ships(uqm, out):
             if uid in FILL_HEX and level == 1:
                 scale = hex_filling_scale(trim(hd))
             for facing, angle in FACINGS.items():
-                r = trim(rotated(hd, angle))
+                r, (cx, cy) = turned(hd, angle)
                 w = max(1, round(r.width * scale))
                 h = max(1, round(r.height * scale))
-                img = centred(r.resize((w, h), Image.LANCZOS), max(HEX, w + w % 2, h + h % 2))
+                img, origin = on_centre(r.resize((w, h), Image.LANCZOS), cx * w / r.width, cy * h / r.height)
                 if glow:
                     img = with_glow(img, colour, *glow)
                 save(img, out, f"images/units/sc/{uid}-l{level}-{facing}.png", True)
                 if facing == "ne":
                     save(img, out, f"images/units/sc/{uid}-l{level}.png", True)
                 if uid in SHIELDS:
-                    img = shielded(uqm, ship_dir, stem, SHIELDS[uid], hd, angle, (w, h), img)
+                    img = shielded(uqm, ship_dir, stem, SHIELDS[uid], hd, angle, (w, h), img, origin)
                     save(img, out, f"images/units/sc/{uid}-l{level}-shield-{facing}.png", True)
 
 
@@ -373,13 +396,14 @@ def with_turret(uqm, ship_dir, ship_stem, stem, hd):
     return out
 
 
-def shielded(uqm, ship_dir, ship_stem, stem, hd, angle, size, img):
+def shielded(uqm, ship_dir, ship_stem, stem, hd, angle, size, img, origin):
     """The ship with its shield up, as Star Control II draws the Yehat force
     shield: UQM swaps in a second sprite, the ship inside a white ring,
     lined up with the ship by its hotspot. The ring goes under the finished
-    sprite `img` (the ship `hd` rotated by `angle` and resized to `size`),
-    so the ship and its level glow stay exactly as they are; the canvas
-    grows evenly on all sides to fit the ring, keeping the ship centred."""
+    sprite `img` (the ship `hd` rotated by `angle`, resized to `size` and
+    put at `origin`), so the ship and its level glow stay exactly as they
+    are; the canvas grows evenly on all sides to fit the ring, keeping the
+    ship centred."""
     special = hd_sprite(uqm, ship_dir, stem)
     (sx, sy), (hx, hy) = ani_hotspot(uqm, ship_dir, stem), ani_hotspot(uqm, ship_dir, ship_stem)
     ship = Image.new("RGBA", special.size, (0, 0, 0, 0))
@@ -390,9 +414,9 @@ def shielded(uqm, ship_dir, ship_stem, stem, hd, angle, size, img):
     ring = ring.resize((round(ring.width * kx), round(ring.height * ky)), Image.LANCZOS)
     rbox = ring.getbbox()
     ring = ring.crop(rbox)
-    # where the ring lands on `img`, which centres the resized ship
-    rx = (img.width - size[0]) // 2 - round(box[0] * kx) + rbox[0]
-    ry = (img.height - size[1]) // 2 - round(box[1] * ky) + rbox[1]
+    # where the ring lands on `img`, which has the resized ship at `origin`
+    rx = origin[0] - round(box[0] * kx) + rbox[0]
+    ry = origin[1] - round(box[1] * ky) + rbox[1]
     pad = max(0, -rx, -ry, rx + ring.width - img.width, ry + ring.height - img.height)
     canvas = Image.new("RGBA", (img.width + 2 * pad, img.height + 2 * pad), (0, 0, 0, 0))
     canvas.alpha_composite(ring, (rx + pad, ry + pad))
@@ -937,6 +961,7 @@ def build_sounds(uqm, out):
         shutil.copyfile(os.path.join(uqm, rel), os.path.join(out, dest))
         manifest.append(dest)
     build_chmmr_sounds(out)
+    build_held_sounds(out)
 
 
 def read_wav(path):
@@ -976,16 +1001,33 @@ def build_chmmr_sounds(out):
     long_laser = held(laser, rate, 0.6, 0.3)
     write_wav(os.path.join(snd, "chmmr-laser-long.wav"), long_laser, rate)
 
-    # The tractor beam hums under the whole shot, its sample looped end to
-    # end; the laser joins once the beam has locked on.
+    # The tractor beam hums under the whole shot, held down like the laser
+    # (chmmr.c plays its sound again every frame the special is held); the
+    # laser joins once the beam has locked on.
     lead = int(0.15 * rate)
     mix = np.zeros(lead + len(long_laser), np.float32)
-    hum = np.tile(tractor, len(mix) // len(tractor) + 1)[:len(mix)]
-    hum[-len(tractor):] *= np.linspace(1, 0, len(tractor))
-    mix += 1.2 * hum
+    tail = len(tractor) / rate
+    hum = held(tractor, rate, len(mix) / rate - tail, tail)
+    mix[:len(hum)] += 1.2 * hum[:len(mix)]
     mix[lead:] += 0.8 * long_laser
     write_wav(os.path.join(snd, "chmmr-tractor-laser.wav"), mix, rate)
     manifest.extend(["sounds/sc/chmmr-laser-long.wav", "sounds/sc/chmmr-tractor-laser.wav"])
+
+
+# sample -> (seconds held, seconds the last restart rings out): lasers that,
+# like the Chmmr's, fire every frame for as long as the button is held
+# (WEAPON_WAIT 0 in vux.c and mmrnmhrm.c)
+HELD = {"vux-laser": (0.6, 0.3), "mmrnmhrm-laser": (0.45, 0.15)}
+
+
+def build_held_sounds(out):
+    """A burst of laser fire per attack, `<sample>-long.wav`, from the
+    single shot."""
+    snd = os.path.join(out, "sounds/sc")
+    for name, (seconds, tail) in HELD.items():
+        sample, rate = read_wav(os.path.join(snd, f"{name}.wav"))
+        write_wav(os.path.join(snd, f"{name}-long.wav"), held(sample, rate, seconds, tail), rate)
+        manifest.append(f"sounds/sc/{name}-long.wav")
 
 
 # ------------------------------------------------------- original terrain

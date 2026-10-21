@@ -64,10 +64,10 @@ BEAMS = {
 }
 
 
-# Beams that run on past the target, as far as this fraction of the way to
-# the next hex beyond it (the rest stop at the target's centre): the VUX
-# laser is the longest in SC2 (LASER_BASE 150), the X-Form's 125.
-REACH = {"vux-intruder": 1.7}
+# Beams that run on past the target's centre, as far as this fraction of the
+# way to the next hex beyond it (the rest stop at its centre): the Chmmr's
+# goes right through its target.
+REACH = {"chmmr-avatar": 1.45}
 # Twin beams that angle in to meet at the target's centre
 CONVERGE = {"mmrnmhrm-xform"}
 # Beams that start this fraction of the hull's length behind the nose: the
@@ -108,8 +108,8 @@ def draw_fixed(colour, start, end, width, dim):
 
 def hull_axis(path, angle):
     """How far the hull's centre line sits to the side of the sprite's
-    middle, facing `angle`: rotating a hull and trimming it to its box can
-    leave it off centre on the diagonals."""
+    middle, facing `angle`: make_art.py centres it, so this is only the
+    pixel or so that rounding leaves on the diagonals."""
     a = np.array(Image.open(path).convert("RGBA"))[..., 3]
     ys, xs = np.nonzero(a >= 128)
     dx, dy = xs + 0.5 - a.shape[1] / 2, ys + 0.5 - a.shape[0] / 2
