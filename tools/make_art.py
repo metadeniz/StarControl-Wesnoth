@@ -514,15 +514,16 @@ def build_lasers(out):
 
 def build_song(out):
     """The Syreen song (original art; SC2 shows no song, only the crew it
-    lures): rings that ripple out from the Syreen, each rendered whole and
-    then cropped to a wedge aimed at its target, and the green dots of crew
+    lures): a small ring that wiggles round the Syreen, then rings that
+    ripple out from its nose, each rendered whole and then cropped to a
+    wedge aimed at its target, and the green dots of crew
     floating across (misc.c draws an abandoning crewman as a green point).
     The wedges are cut facing north and north-east, on a canvas centred on
     the Syreen, for the animation to flip to the other facings."""
     n, size, half = 10, 180, 45  # half the wedge, in degrees
     for t in range(n):
         u = (t + 1) / n
-        r = 10 + u * 76
+        r = 4 + u * 66  # from the nose to a little past the target
         img = Image.new("RGBA", (size * 4, size * 4), (0, 0, 0, 0))
         d = ImageDraw.Draw(img)
         pts = []
@@ -543,6 +544,23 @@ def build_song(out):
             wedge.putalpha(Image.fromarray((np.asarray(ring.getchannel("A"), np.float32)
                                             * np.asarray(mask, np.float32) / 255).round().astype(np.uint8)))
             save(wedge, out, f"images/projectiles/sc/song-{t + 1}-{facing}.png", False)
+    # ...and before them, the first ring wiggling round the Syreen without
+    # growing, then fading away
+    for t in range(6):
+        u = 1 / n
+        r = 10 + u * 76
+        img = Image.new("RGBA", (size * 4, size * 4), (0, 0, 0, 0))
+        d = ImageDraw.Draw(img)
+        pts = []
+        for i in range(361):
+            a = math.radians(i)
+            rr = (r + 2.2 * math.sin(12 * a + 6 * u + 1.3 * t)) * 4
+            pts.append((size * 2 + rr * math.sin(a), size * 2 - rr * math.cos(a)))
+        alpha = round(230 * (1 - u) ** 0.7 * (1, 1, 1, 1, 0.6, 0.3)[t])
+        d.line(pts, fill=(230, 130, 255, alpha), width=10)
+        d.line(pts, fill=(255, 220, 255, alpha), width=4)
+        ring = img.resize((size, size), Image.LANCZOS).filter(ImageFilter.GaussianBlur(0.5))
+        save(ring.crop((60, 60, 120, 120)), out, f"images/halo/sc/song-ring-{t + 1}.png", False)
     for t, dots in enumerate((((-5, -2), (3, -5), (5, 4)), ((-3, 4), (-6, -4), (4, -1)))):
         img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
         d = ImageDraw.Draw(img)
