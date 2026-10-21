@@ -546,7 +546,7 @@ def build_song(out):
             save(wedge, out, f"images/projectiles/sc/song-{t + 1}-{facing}.png", False)
     # ...and with them, a ring wiggling round the Syreen without growing,
     # then fading away
-    for t in range(10):
+    for t in range(14):
         u = 3 / n  # the size of the third ring
         r = 10 + u * 76
         img = Image.new("RGBA", (size * 4, size * 4), (0, 0, 0, 0))
@@ -556,7 +556,7 @@ def build_song(out):
             a = math.radians(i)
             rr = (r + 2.2 * math.sin(12 * a + 6 * u + 1.3 * t)) * 4
             pts.append((size * 2 + rr * math.sin(a), size * 2 - rr * math.cos(a)))
-        alpha = round(230 * (1 - u) ** 0.7 * (1, 1, 1, 1, 1, 1, 1, 0.75, 0.5, 0.25)[t])
+        alpha = round(230 * (1 - u) ** 0.7 * ((1,) * 11 + (0.75, 0.5, 0.25))[t])
         d.line(pts, fill=(230, 130, 255, alpha), width=10)
         d.line(pts, fill=(255, 220, 255, alpha), width=4)
         ring = img.resize((size, size), Image.LANCZOS).filter(ImageFilter.GaussianBlur(0.5))
