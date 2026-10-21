@@ -865,19 +865,47 @@ local function syreen_low_start(u, floor)
 	syreen_fit_max(u)
 end
 
--- attack: the Syreens in the fight get their whole capacity back.
-function sc.syreen_attack()
-	local c = wesnoth.current.event_context
-	for _, u in ipairs { wesnoth.units.get(c.x1, c.y1), wesnoth.units.get(c.x2, c.y2) } do
-		if is_a(u, "SC_Syreen_Penetrator") then syreen_full_capacity(u) end
+-- How much crew her song lures varies: the listed damage is the average,
+-- and each fight it rolls from 80% to 120% of it (10 -> 8-12, 13 -> 10-16).
+-- The roll is an object for the length of the fight; the engine re-reads
+-- the weapon after the attack event, so the drain follows it.
+local SYREEN_SONG_ROLL_OBJECT = "sc_syreen_song_roll"
+
+local function syreen_roll_song(u)
+	for _, a in ipairs(u.attacks) do
+		if a.name == "syreen_song" then
+			local roll = mathx.random(math.floor(a.damage * 0.8 + 0.5), math.floor(a.damage * 1.2 + 0.5))
+			if roll ~= a.damage then
+				u:add_modification("object", { id = SYREEN_SONG_ROLL_OBJECT,
+					T.effect { apply_to = "attack", name = "syreen_song", increase_damage = roll - a.damage } })
+			end
+			return
+		end
 	end
 end
 
--- attack end: and lose what they don't hold.
+-- attack: the Syreens in the fight get their whole capacity back, and
+-- one singing rolls her song.
+function sc.syreen_attack()
+	local c = wesnoth.current.event_context
+	local weapons = { wml.variables["weapon.name"], wml.variables["second_weapon.name"] }
+	for i, u in ipairs { wesnoth.units.get(c.x1, c.y1), wesnoth.units.get(c.x2, c.y2) } do
+		if is_a(u, "SC_Syreen_Penetrator") then
+			syreen_full_capacity(u)
+			if weapons[i] == "syreen_song" then syreen_roll_song(u) end
+		end
+	end
+end
+
+-- attack end: and lose what they don't hold, and the roll.
 function sc.syreen_attack_end()
 	local c = wesnoth.current.event_context
-	syreen_fit_max(wesnoth.units.get(c.x1, c.y1))
-	syreen_fit_max(wesnoth.units.get(c.x2, c.y2))
+	for _, u in ipairs { wesnoth.units.get(c.x1, c.y1), wesnoth.units.get(c.x2, c.y2) } do
+		if is_a(u, "SC_Syreen_Penetrator") then
+			u:remove_modifications({ id = SYREEN_SONG_ROLL_OBJECT }, "object")
+			syreen_fit_max(u)
+		end
+	end
 end
 
 -- recruit: the event's unit.
