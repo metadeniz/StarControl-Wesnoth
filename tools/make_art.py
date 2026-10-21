@@ -337,6 +337,47 @@ def build_ships(uqm, out):
                 save(img, out, f"images/units/sc/{uid}-l{level}-{facing}.png", True)
                 if facing == "ne":
                     save(img, out, f"images/units/sc/{uid}-l{level}.png", True)
+                if uid in SHIELDS:
+                    img = shielded(uqm, ship_dir, stem, SHIELDS[uid], hd, angle, (w, h), img)
+                    save(img, out, f"images/units/sc/{uid}-l{level}-shield-{facing}.png", True)
+
+
+# unit image id -> stem of the UQM sprite drawn while the ship's shield is up
+SHIELDS = {"yehat-terminator": "shield"}
+
+
+def ani_hotspot(uqm, ship_dir, stem):
+    """Hotspot of an HD sprite's first frame, from its .ani file."""
+    with open(os.path.join(uqm, "addons/mm-hd/ships", ship_dir, f"{stem}-big.ani")) as f:
+        x, y = f.readline().split()[3:5]
+    return int(x), int(y)
+
+
+def shielded(uqm, ship_dir, ship_stem, stem, hd, angle, size, img):
+    """The ship with its shield up, as Star Control II draws the Yehat force
+    shield: UQM swaps in a second sprite, the ship inside a white ring,
+    lined up with the ship by its hotspot. The ring goes under the finished
+    sprite `img` (the ship `hd` rotated by `angle` and resized to `size`),
+    so the ship and its level glow stay exactly as they are; the canvas
+    grows evenly on all sides to fit the ring, keeping the ship centred."""
+    special = hd_sprite(uqm, ship_dir, stem)
+    (sx, sy), (hx, hy) = ani_hotspot(uqm, ship_dir, stem), ani_hotspot(uqm, ship_dir, ship_stem)
+    ship = Image.new("RGBA", special.size, (0, 0, 0, 0))
+    ship.alpha_composite(hd, (sx - hx, sy - hy))
+    box = rotated(ship, angle).getbbox()
+    ring = rotated(special, angle)
+    kx, ky = size[0] / (box[2] - box[0]), size[1] / (box[3] - box[1])
+    ring = ring.resize((round(ring.width * kx), round(ring.height * ky)), Image.LANCZOS)
+    rbox = ring.getbbox()
+    ring = ring.crop(rbox)
+    # where the ring lands on `img`, which centres the resized ship
+    rx = (img.width - size[0]) // 2 - round(box[0] * kx) + rbox[0]
+    ry = (img.height - size[1]) // 2 - round(box[1] * ky) + rbox[1]
+    pad = max(0, -rx, -ry, rx + ring.width - img.width, ry + ring.height - img.height)
+    canvas = Image.new("RGBA", (img.width + 2 * pad, img.height + 2 * pad), (0, 0, 0, 0))
+    canvas.alpha_composite(ring, (rx + pad, ry + pad))
+    canvas.alpha_composite(img, (pad, pad))
+    return canvas
 
 
 def build_projectiles(uqm, out):
@@ -384,6 +425,7 @@ def build_effects(uqm, out):
         save(img.resize((round(img.width * 0.5), round(img.height * 0.5)), Image.LANCZOS), out,
              f"images/halo/sc/nuke-boom-{i + 1}.png", True)
     build_glory(uqm, out)
+    build_mycon_blast(uqm, out)
     # Ilwrath hellfire burst frames
     fdir = os.path.join(uqm, "addons/mm-hd/ships/ilwrath")
     frames = sorted(f for f in os.listdir(fdir) if f.startswith("fire-big-") and f.endswith(".png"))
@@ -393,6 +435,24 @@ def build_effects(uqm, out):
         save(img.resize((max(1, round(img.width * k)), max(1, round(img.height * k))), Image.LANCZOS),
              out, f"images/halo/sc/hellfire-{i + 1}.png", True)
     return len(frames)
+
+
+def build_mycon_blast(uqm, out):
+    """Mycon plasmoid hit, as Star Control 2 draws it: the plasma sprite's
+    last 8 frames (from 11 on), a burst of glowing globs that mycon.c's
+    plasma_blast_preprocess plays forward then back. Each frame sits on a
+    shared canvas with its .ani hotspot in the centre, at 0.6 scale."""
+    pdir = os.path.join(uqm, "addons/mm-hd/ships/mycon")
+    with open(os.path.join(pdir, "plasma-big.ani")) as f:
+        rows = [line.split() for line in f.read().splitlines()[11:19]]
+    frames = [(Image.open(os.path.join(pdir, r[0])).convert("RGBA"), int(r[3]), int(r[4])) for r in rows]
+    half = max(max(x, img.width - x, y, img.height - y) for img, x, y in frames)
+    k = 0.6
+    for i, (img, x, y) in enumerate(frames):
+        canvas = Image.new("RGBA", (2 * half, 2 * half), (0, 0, 0, 0))
+        canvas.alpha_composite(img, (half - x, half - y))
+        size = round(2 * half * k)
+        save(canvas.resize((size, size), Image.LANCZOS), out, f"images/halo/sc/mycon-blast-{i + 1}.png", True)
 
 
 def build_glory(uqm, out):
