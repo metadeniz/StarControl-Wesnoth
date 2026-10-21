@@ -337,6 +337,47 @@ def build_ships(uqm, out):
                 save(img, out, f"images/units/sc/{uid}-l{level}-{facing}.png", True)
                 if facing == "ne":
                     save(img, out, f"images/units/sc/{uid}-l{level}.png", True)
+                if uid in SHIELDS:
+                    img = shielded(uqm, ship_dir, stem, SHIELDS[uid], hd, angle, (w, h), img)
+                    save(img, out, f"images/units/sc/{uid}-l{level}-shield-{facing}.png", True)
+
+
+# unit image id -> stem of the UQM sprite drawn while the ship's shield is up
+SHIELDS = {"yehat-terminator": "shield"}
+
+
+def ani_hotspot(uqm, ship_dir, stem):
+    """Hotspot of an HD sprite's first frame, from its .ani file."""
+    with open(os.path.join(uqm, "addons/mm-hd/ships", ship_dir, f"{stem}-big.ani")) as f:
+        x, y = f.readline().split()[3:5]
+    return int(x), int(y)
+
+
+def shielded(uqm, ship_dir, ship_stem, stem, hd, angle, size, img):
+    """The ship with its shield up, as Star Control II draws the Yehat force
+    shield: UQM swaps in a second sprite, the ship inside a white ring,
+    lined up with the ship by its hotspot. The ring goes under the finished
+    sprite `img` (the ship `hd` rotated by `angle` and resized to `size`),
+    so the ship and its level glow stay exactly as they are; the canvas
+    grows evenly on all sides to fit the ring, keeping the ship centred."""
+    special = hd_sprite(uqm, ship_dir, stem)
+    (sx, sy), (hx, hy) = ani_hotspot(uqm, ship_dir, stem), ani_hotspot(uqm, ship_dir, ship_stem)
+    ship = Image.new("RGBA", special.size, (0, 0, 0, 0))
+    ship.alpha_composite(hd, (sx - hx, sy - hy))
+    box = rotated(ship, angle).getbbox()
+    ring = rotated(special, angle)
+    kx, ky = size[0] / (box[2] - box[0]), size[1] / (box[3] - box[1])
+    ring = ring.resize((round(ring.width * kx), round(ring.height * ky)), Image.LANCZOS)
+    rbox = ring.getbbox()
+    ring = ring.crop(rbox)
+    # where the ring lands on `img`, which centres the resized ship
+    rx = (img.width - size[0]) // 2 - round(box[0] * kx) + rbox[0]
+    ry = (img.height - size[1]) // 2 - round(box[1] * ky) + rbox[1]
+    pad = max(0, -rx, -ry, rx + ring.width - img.width, ry + ring.height - img.height)
+    canvas = Image.new("RGBA", (img.width + 2 * pad, img.height + 2 * pad), (0, 0, 0, 0))
+    canvas.alpha_composite(ring, (rx + pad, ry + pad))
+    canvas.alpha_composite(img, (pad, pad))
+    return canvas
 
 
 def build_projectiles(uqm, out):
