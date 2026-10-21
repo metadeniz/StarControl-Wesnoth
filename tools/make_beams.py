@@ -74,6 +74,10 @@ CONVERGE = {"mmrnmhrm-xform"}
 # Chmmr's emitter sits recessed between the two prongs of its bow
 RECESS = {"chmmr-avatar": 0.07}
 
+# Beams fired in quick bursts: an empty frame `<beam>-0` too, for the gaps
+# between the shots (the Arilou's three zaps)
+BURSTS = {"arilou-skiff"}
+
 # ships whose sprites are not drawn per level, or not for every level
 SPRITES = {"precursor-flagship": ["-l1"]}
 
@@ -204,6 +208,9 @@ def main():
                     img = draw(kind, colour, length, [lat * w + side for lat in laterals], width, angle, rng, dim,
                                ship in CONVERGE)
                     img.save(os.path.join(beams, f"{stem}-{kind}-{k + 1}-{facing}.png"), optimize=True)
+                    n += 1
+                if ship in BURSTS:
+                    Image.new("RGBA", (1, 1), (0, 0, 0, 0)).save(os.path.join(beams, f"{stem}-{kind}-0-{facing}.png"))
                     n += 1
     for stem, (kind, colour, frames, start, width) in FIXED.items():
         for facing, end in HEXES.items():

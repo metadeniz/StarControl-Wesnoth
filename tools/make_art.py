@@ -1018,16 +1018,27 @@ def build_chmmr_sounds(out):
 # like the Chmmr's, fire every frame for as long as the button is held
 # (WEAPON_WAIT 0 in vux.c and mmrnmhrm.c)
 HELD = {"vux-laser": (0.6, 0.3), "mmrnmhrm-laser": (0.45, 0.15)}
+# sample -> (shots, seconds apart): quick bursts, `<sample>-burst.wav`, each
+# shot's sound overlapping the last (the Arilou's three zaps)
+BURSTS = {"arilou-laser": (3, 0.1125)}
 
 
 def build_held_sounds(out):
-    """A burst of laser fire per attack, `<sample>-long.wav`, from the
-    single shot."""
+    """A burst of laser fire per attack, `<sample>-long.wav` or
+    `<sample>-burst.wav`, from the single shot."""
     snd = os.path.join(out, "sounds/sc")
     for name, (seconds, tail) in HELD.items():
         sample, rate = read_wav(os.path.join(snd, f"{name}.wav"))
         write_wav(os.path.join(snd, f"{name}-long.wav"), held(sample, rate, seconds, tail), rate)
         manifest.append(f"sounds/sc/{name}-long.wav")
+    for name, (shots, every) in BURSTS.items():
+        sample, rate = read_wav(os.path.join(snd, f"{name}.wav"))
+        step = round(every * rate)
+        mix = np.zeros(step * (shots - 1) + len(sample), np.float32)
+        for k in range(shots):
+            mix[k * step:k * step + len(sample)] += 0.8 * sample
+        write_wav(os.path.join(snd, f"{name}-burst.wav"), mix, rate)
+        manifest.append(f"sounds/sc/{name}-burst.wav")
 
 
 # ------------------------------------------------------- original terrain

@@ -1814,6 +1814,7 @@ sounds/sc/alliance-victory.ogg
 sounds/sc/androsynth-blazer.wav
 sounds/sc/androsynth-bubbles.wav
 sounds/sc/arilou-jump.wav
+sounds/sc/arilou-laser-burst.wav
 sounds/sc/arilou-laser.wav
 sounds/sc/artifact.wav
 sounds/sc/boom-huge.wav
