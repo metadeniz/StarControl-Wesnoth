@@ -1020,7 +1020,7 @@ def build_chmmr_sounds(out):
 HELD = {"vux-laser": (0.6, 0.3), "mmrnmhrm-laser": (0.45, 0.15)}
 # sample -> (shots, seconds apart): quick bursts, `<sample>-burst.wav`, each
 # shot's sound overlapping the last (the Arilou's three zaps)
-BURSTS = {"arilou-laser": (3, 0.2)}
+BURSTS = {"arilou-laser": (3, 0.16)}
 
 
 def build_held_sounds(out):
