@@ -383,14 +383,7 @@ def build_effects(uqm, out):
         img = Image.open(os.path.join(ndir, f"saturn-big-{i + 16:03d}.png")).convert("RGBA")
         save(img.resize((round(img.width * 0.5), round(img.height * 0.5)), Image.LANCZOS), out,
              f"images/halo/sc/nuke-boom-{i + 1}.png", True)
-    # Shofixti Glory Device: blown up to cover the scout's neighbours.
-    ddir = os.path.join(uqm, "addons/mm-hd/ships/shofixti")
-    frames = sorted(f for f in os.listdir(ddir) if f.startswith("destruct-big-") and f.endswith(".png"))
-    for i, f in enumerate(frames):
-        img = Image.open(os.path.join(ddir, f)).convert("RGBA")
-        k = 200 / max(img.size)
-        save(img.resize((round(img.width * k), round(img.height * k)), Image.LANCZOS), out,
-             f"images/halo/sc/glory-{i + 1}.png", True)
+    build_glory(uqm, out)
     # Ilwrath hellfire burst frames
     fdir = os.path.join(uqm, "addons/mm-hd/ships/ilwrath")
     frames = sorted(f for f in os.listdir(fdir) if f.startswith("fire-big-") and f.endswith(".png"))
@@ -400,6 +393,26 @@ def build_effects(uqm, out):
         save(img.resize((max(1, round(img.width * k)), max(1, round(img.height * k))), Image.LANCZOS),
              out, f"images/halo/sc/hellfire-{i + 1}.png", True)
     return len(frames)
+
+
+def build_glory(uqm, out):
+    """Shofixti Glory Device, as Star Control 2 draws it: the original
+    (non-HD) destruct masks, a cloud of single pixels that grows over 8
+    frames, each stamp-filled with the next colour of shofixti.c's
+    destruct_preprocess (white, yellow, pink, brown, then dark red). All
+    frames share one scale so the cloud grows, its last frame covering the
+    scout's neighbours (200 px); the pixels stay chunky (3x nearest, then
+    halved)."""
+    ddir = os.path.join(uqm, "base/ships/shofixti")
+    colours = [(255, 255, 255), (255, 255, 82), (255, 82, 82), (165, 82, 0)] + [(165, 0, 0)] * 4
+    frames = sorted(f for f in os.listdir(ddir) if f.startswith("destruct-big-") and f.endswith(".png"))
+    for i, f in enumerate(frames):
+        mask = Image.fromarray((np.array(Image.open(os.path.join(ddir, f))) == 1).astype(np.uint8) * 255)
+        mask = mask.resize((mask.width * 3, mask.height * 3), Image.NEAREST)
+        mask = mask.resize((round(mask.width / 2), round(mask.height / 2)), Image.BOX)
+        img = Image.new("RGBA", mask.size, colours[min(i, len(colours) - 1)] + (255,))
+        img.putalpha(mask)
+        save(img, out, f"images/halo/sc/glory-{i + 1}.png", True)
 
 
 def build_samatra(uqm, out):
