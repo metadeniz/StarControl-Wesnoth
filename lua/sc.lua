@@ -1139,9 +1139,9 @@ end
 
 -- Planet types --------------------------------------------------------------
 -- Each planet type pays its own gold and supports its own upkeep:
---   mineral world  2 gold, supports 2 levels of upkeep
---   life world     0 gold, supports 2
---   dead world     0 gold, supports 0
+--   mineral world  3 gold, supports 1 level of upkeep
+--   life world     2 gold, supports 2
+--   dead world     1 gold, supports 1
 -- An untyped planet (^Vyp, ^Vys) pays what the game settings say.
 -- Wesnoth only knows one village gold and support per side, so those are
 -- set to 0 and the planets' share is folded into the side's base income,
@@ -1150,9 +1150,9 @@ end
 --                 + the upkeep the planets support (no more than is owed)
 -- which leaves the engine's income = base + gold - (upkeep - support, if any).
 local PLANET_YIELD = {
-	Vym = { 2, 2 }, Vysm = { 2, 2 },
-	Vyl = { 0, 2 }, Vysl = { 0, 2 },
-	Vyd = { 0, 0 }, Vysd = { 0, 0 },
+	Vym = { 3, 1 }, Vysm = { 3, 1 },
+	Vyl = { 2, 2 }, Vysl = { 2, 2 },
+	Vyd = { 1, 1 }, Vysd = { 1, 1 },
 }
 
 local function planet_yield(terrain, side)
