@@ -1057,11 +1057,11 @@ def build_music(uqm, out):
 # Star Control II's ending theme is too long for a victory theme, so the
 # Alliance plays a cut of it: the module with a shorter order list. Its
 # patterns are 7.68 s each, so the cut falls on the song's own phrases.
-# Orders 4-8 of the song (0:30.72-1:16.80, the theme at full strength), then
-# pattern 8, the closing chord that the song never reaches because its last
-# pattern jumps back to order 9.
+# Orders 14-19 of the song (1:47.52-2:27.20, its finale), then pattern 8,
+# the closing chord that the song never reaches because its last pattern
+# jumps back to order 9.
 VICTORY_CUTS = {
-    "alliance-victory": ("base/cutscene/ending/victoryf.mod", [4, 3, 3, 5, 10, 8]),
+    "alliance-victory": ("base/cutscene/ending/victoryf.mod", [10, 4, 3, 9, 6, 7, 8]),
 }
 
 
