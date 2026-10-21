@@ -9,7 +9,8 @@ and stars. Any faction can fight any other.
 **Status: prototype, development paused.** Personal use only: the ship
 sprites, projectiles, explosions and sounds come from The Ur-Quan Masters
 (CC BY-NC-SA 2.5), and music tracks from the Precursors' UQM Remix
-Packs. The terrain art is original.
+Packs. The terrain art is original. See [CREDITS.md](CREDITS.md) for
+everyone whose work it uses.
 
 ## Install and play
 
