@@ -15,22 +15,29 @@ kept, at 15 fps, then the last picture fades out over a few frames.
   artifact          the Precursor device's screen filling with glyphs, cut
                     out of its starfield (see cutout_mask)
 
+Scenes with no recording are read from the game's own files instead
+(tools/sc1_pkg.py): the 54x36 picture, shown at twice the size (108x72),
+still for LEAD frames, then one frame of its animation each 15 fps frame.
+  outpost-destroyed the fortification on a dead world shot to pieces, then
+                    the ships parked on the asteroids around it
+
 lua/sc.lua plays them as halos: sc.planet_captured when a ship destroys an
-enemy's colony (life world, unless it's a Syreen filling its crew there) or
-mine (mineral world), sc.syreen_captured when a Syreen fills its crew, and
+enemy's colony (life world, unless it's a Syreen filling its crew there),
+mine (mineral world) or outpost (dead world), sc.syreen_captured when a Syreen fills its crew, and
 sc.check_artifact when a ship finds an artifact. A halo is drawn centred on
 its hex, so the frames are baked twice onto a taller canvas with the picture
 a little over a hex (84 px) off centre, clear of the label at the bottom of
 the planet's hex: images/halo/sc/SCENE-below-NNN.png shows it below the
 planet, SCENE-above-NNN.png above it (for planets near the bottom edge).
-The colony and mine scenes also carry their text ("Colony destroyed",
-"Mine destroyed") just under the picture, so it fades out and goes with
+The destroyed scenes also carry their text ("Colony destroyed", "Mine
+destroyed", "Outpost destroyed") just under the picture, so it fades out and goes with
 the scene; the canvas grows by the text's height at both ends to keep the
 picture centred where it was, and above the planet, the picture moves up
 by that much, to keep the text clear of the planet's hex.
 
 Needs ffmpeg. Run from the repository root:
     python3 tools/make_planet_anims.py SCENE path/to/recording.mp4
+    python3 tools/make_planet_anims.py SCENE path/to/TACTICS.PKG
 """
 
 import glob
@@ -53,8 +60,12 @@ SCENES = {
     "syreen-capture": (139, 311),
     "artifact": (3, 207),
 }
+# scenes read from TACTICS.PKG: planet scene, animation (see sc1_pkg.scene)
+PKG_SCENES = {"outpost-destroyed": (0, 2)}
+LEAD = 7                       # still frames before the animation, as in colony-destroyed's recording
 CUTOUT = {"artifact"}           # scenes cut out of a dark background
-TEXT = {"colony-destroyed": "Colony destroyed", "mine-destroyed": "Mine destroyed"}
+TEXT = {"colony-destroyed": "Colony destroyed", "mine-destroyed": "Mine destroyed",
+        "outpost-destroyed": "Outpost destroyed"}
 FONT = "/usr/share/games/wesnoth/1.16/fonts/Lato-Regular.ttf"   # Wesnoth's own
 SIZE = 15
 COLOR = (255, 128, 96)         # orange-red
@@ -125,15 +136,27 @@ def text_image(text):
     return im
 
 
-def main(scene, clip):
+def recorded(scene, clip):
     start, end = SCENES[scene]
     with tempfile.TemporaryDirectory() as tmp:
         subprocess.run(["ffmpeg", "-v", "error", "-i", clip, os.path.join(tmp, "%04d.png")], check=True)
         paths = sorted(glob.glob(os.path.join(tmp, "*.png")))
         frames = [Image.open(p).convert("RGB").crop(CROP) for p in paths[start - 1:end]]
+    return frames[::STEP]
+
+
+def from_pkg(scene, tactics):
+    import sc1_pkg
+    with open(tactics, "rb") as f:
+        pics = sc1_pkg.scene(f.read(), *PKG_SCENES[scene])
+    pics = [p.resize((p.width * 2, p.height * 2), Image.NEAREST) for p in pics]
+    return pics[:1] * LEAD + pics[1:]
+
+
+def main(scene, src):
+    kept = from_pkg(scene, src) if scene in PKG_SCENES else recorded(scene, src)
     for old in glob.glob(f"images/halo/sc/{scene}-above-*.png") + glob.glob(f"images/halo/sc/{scene}-below-*.png"):
         os.remove(old)
-    kept = frames[::STEP]
     w, h = kept[0].size
     mask = cutout_mask(kept) if scene in CUTOUT else Image.new("L", (w, h), 255)
     text = text_image(TEXT[scene]) if scene in TEXT else None
