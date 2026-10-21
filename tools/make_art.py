@@ -168,6 +168,7 @@ SOUNDS = {
     "umgah-cone": "base/ships/umgah/primary.wav",
     "vux-laser": "base/ships/vux/primary.wav",
     "vux-limpets": "base/ships/vux/secondary.wav",
+    "vux-limpet-bite": "base/ships/vux/limpet_bite.wav",   # a limpet sticks to a hull
     "androsynth-bubbles": "base/ships/androsynth/primary.wav",
     "androsynth-blazer": "base/ships/androsynth/secondary.wav",
     "ilwrath-hellfire": "base/ships/ilwrath/primary.wav",
@@ -426,6 +427,7 @@ def build_effects(uqm, out):
              f"images/halo/sc/nuke-boom-{i + 1}.png", True)
     build_glory(uqm, out)
     build_mycon_blast(uqm, out)
+    build_hits(uqm, out)
     # Ilwrath hellfire burst frames
     fdir = os.path.join(uqm, "addons/mm-hd/ships/ilwrath")
     frames = sorted(f for f in os.listdir(fdir) if f.startswith("fire-big-") and f.endswith(".png"))
@@ -435,6 +437,44 @@ def build_effects(uqm, out):
         save(img.resize((max(1, round(img.width * k)), max(1, round(img.height * k))), Image.LANCZOS),
              out, f"images/halo/sc/hellfire-{i + 1}.png", True)
     return len(frames)
+
+
+# Star Control II hits with their own look. A shot whose sprite has more
+# frames than its 16 facings explodes into those extra frames (weapon.c's
+# weapon_collision); a few ships pick other frames in their own collision
+# code. Each plays at the battle's 24 frames a second.
+# halo id -> (UQM ship dir, sprite stem, frames, scale)
+HITS = {
+    "fusion-hit": ("urquan", "fusion", range(16, 24), 0.5),          # Ur-Quan fusion blast
+    "mass-driver-hit": ("druuge", "cannon", range(16, 24), 0.8),     # Druuge mass driver
+    "howitzer-hit": ("orz", "howitzer", range(16, 22), 0.5),         # Orz howitzer
+    "glob-hit": ("supox", "glob", range(16, 21), 0.6),               # Supox glob
+    "crystal-hit": ("chenjesu", "spark", range(2, 10), 0.6),         # chenjesu.c: 8 sparkles
+    "buzzsaw-hit": ("kohrah", "buzzsaw", range(2, 7), 0.5),          # blackurq.c: the saw splinters
+    "charge-hit": ("melnorme", "pumpup", range(20, 26), 0.8),        # melnorme.c: 3 + charge frames
+    # sis_ship.c's blaster by power: 3 for the Flagship; 2 and 1 for level-2
+    # and level-1 Precursor ships, should the add-on ever have them
+    "blaster-hit": ("flagship", "blaster", range(20, 27), 0.55),
+    "blaster2-hit": ("flagship", "blaster", range(10, 16), 0.8),
+    "blaster1-hit": ("flagship", "blaster", range(0, 1), 0.8),       # its first frame, 2 ticks
+}
+
+
+def build_hits(uqm, out):
+    """SC2's own hit animations (HITS), each frame on a shared canvas with
+    its .ani hotspot in the centre."""
+    for hid, (ship_dir, stem, frames, k) in HITS.items():
+        sdir = os.path.join(uqm, "addons/mm-hd/ships", ship_dir)
+        with open(os.path.join(sdir, f"{stem}-big.ani")) as f:
+            lines = f.read().splitlines()
+        rows = [lines[i].split() for i in frames]
+        imgs = [(Image.open(os.path.join(sdir, r[0])).convert("RGBA"), int(r[3]), int(r[4])) for r in rows]
+        half = max(max(x, img.width - x, y, img.height - y) for img, x, y in imgs)
+        size = round(2 * half * k)
+        for i, (img, x, y) in enumerate(imgs):
+            canvas = Image.new("RGBA", (2 * half, 2 * half), (0, 0, 0, 0))
+            canvas.alpha_composite(img, (half - x, half - y))
+            save(canvas.resize((size, size), Image.LANCZOS), out, f"images/halo/sc/{hid}-{i + 1}.png", True)
 
 
 def build_mycon_blast(uqm, out):
