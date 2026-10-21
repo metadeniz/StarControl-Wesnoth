@@ -10,6 +10,8 @@
 -- Display only: nothing here touches the game state, so it can't go out of
 -- sync between players.
 
+local _ = wesnoth.textdomain "wesnoth-Star_Control_TC"
+
 local FACINGS = { "n", "ne", "se", "s", "sw", "nw" }
 local FRAME_MS = 150
 -- A transparent canvas the size of the box, to centre each frame on
@@ -121,4 +123,19 @@ end
 wesnoth.interface.game_display.report_battery = function()
 	if not scene then return {} end
 	return scene.caption_elements
+end
+
+-- A Syreen's max HP follows the crew she holds (see "Syreen crew" in
+-- sc.lua), so her HP in the sidebar also shows how much crew she has room
+-- for, e.g. "28/28 (64)".
+local unit_hp = wesnoth.interface.game_display.unit_hp
+wesnoth.interface.game_display.unit_hp = function()
+	local report = unit_hp()
+	local u = wesnoth.interface.get_displayed_unit()
+	local capacity = u and u.variables.sc_crew_capacity
+	if capacity and capacity > u.max_hitpoints then
+		report[#report + 1] = { "element", { text = " (" .. capacity .. ")",
+			tooltip = tostring(_ "Crew capacity: the Syreen has room for this much crew. Repair only refills her starting crew; luring crew with her song, or capturing an enemy colony, fills the rest.") } }
+	end
+	return report
 end

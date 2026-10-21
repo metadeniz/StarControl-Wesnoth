@@ -848,6 +848,7 @@ local function syreen_fit_max(u)
 	if not u or not is_a(u, "SC_Syreen_Penetrator") then return end
 	local hp = u.hitpoints
 	syreen_full_capacity(u)
+	u.variables.sc_crew_capacity = u.max_hitpoints
 	local cut = u.max_hitpoints - math.max(by_level(SYREEN_START_HP, u), hp)
 	if cut > 0 then
 		u:add_modification("object", { id = SYREEN_CREW_OBJECT,
