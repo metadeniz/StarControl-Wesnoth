@@ -396,7 +396,7 @@ local function shield_falls()
 	local dir = "story/sc/new-alliance-victory/"
 	local part = {
 		background = dir .. "00.png",
-		story = _ "Freedom and liberation will follow.",
+		story = _ "The New Alliance has prevailed! Freedom and liberation will follow...",
 		show_title = true,
 	}
 	for i = 1, SHIELD_FALLS.frames - 1 do
