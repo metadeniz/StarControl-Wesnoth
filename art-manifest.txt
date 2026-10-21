@@ -289,6 +289,15 @@ images/halo/sc/charge-hit-3.png
 images/halo/sc/charge-hit-4.png
 images/halo/sc/charge-hit-5.png
 images/halo/sc/charge-hit-6.png
+images/halo/sc/chmmr-ion-1.png
+images/halo/sc/chmmr-ion-2.png
+images/halo/sc/chmmr-ion-3.png
+images/halo/sc/chmmr-ion-4.png
+images/halo/sc/chmmr-ion-5.png
+images/halo/sc/chmmr-ion-6.png
+images/halo/sc/chmmr-ion-7.png
+images/halo/sc/chmmr-ion-8.png
+images/halo/sc/chmmr-ion-9.png
 images/halo/sc/colony-destroyed-above-001.png
 images/halo/sc/colony-destroyed-above-002.png
 images/halo/sc/colony-destroyed-above-003.png

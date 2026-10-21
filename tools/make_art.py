@@ -570,6 +570,9 @@ HITS = {
     # chenjesu.c: the DOGI's crackle as it fizzles out, here where it saps
     # a ship's energy (it does no damage, so no blast)
     "dogi-drain": ("chenjesu", "doggy", range(1, 7), 0.7),
+    # chmmr.c: the ion sparks the megawatt laser leaves along its length
+    # (frames 32-40 of the muzzle sprite, one a battle frame)
+    "chmmr-ion": ("chmmr", "muzzle", range(32, 41), 0.5),
 }
 
 
