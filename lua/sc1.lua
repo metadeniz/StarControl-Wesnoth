@@ -2,31 +2,32 @@
 -- Written against the Wesnoth 1.16 Lua API; loaded after sc.lua.
 --
 -- Star Control 1 drew a fresh star cluster for every game. Here each
--- mission has a few maps (made by tools/make_sc1_maps.py, and fine to edit
--- by hand), and at prestart, before the era's planet income and Precursor
--- artifacts are set up, sc1.setup() picks one of them, then deals the
--- mission's holdings and planet types and puts the starting ships at
--- planets in their start zones, all with the synced random numbers, so
--- every player sees the same game. On every map the Hierarchy (side 1)
--- starts at the starbase furthest north and the Alliance (side 2) at the
--- one furthest south.
+-- mission has a few maps, each drawn by tools/make_sc1_maps.py round the
+-- cluster SC1's own generator builds from one seed, with a .lua file beside
+-- it giving each star's hex and its x along SC1's cluster. At prestart,
+-- before the era's planet income and Precursor artifacts are set up,
+-- sc1.setup() picks one of the maps and sets the game up the way SC1's
+-- scenario setup does (STARCON.EXE 014C:01FE, as the starcon1-map-prototype
+-- project read it): each side's worlds dealt at random onto its half, the
+-- starbases at the far ends and the ships placed by start zone. It uses the
+-- synced random numbers, so every player sees the same game. On every map
+-- the Hierarchy (side 1) starts at the north end and the Alliance (side 2)
+-- at the south.
 
 local T = wml.tag
 local _ = wesnoth.textdomain "wesnoth-Star_Control_TC"
 
 sc1 = {}
 
--- Each mission: its maps (in maps/), and each side's start from Star
+-- Each mission: its maps (in maps/), and each side's setup from Star
 -- Control 1's SCENARIO files:
---   ships     unit types, each placed at a random planet of its start zone
---   zones     each ship's start zone, as in Star Control 1 (default 0):
---             0 the half of its side's planets nearer its starbase, 1 the
---             other half of its side's, 2 the enemy's planets nearer the
---             middle
---   colonies  life worlds it owns; mines: mineral worlds it owns (the
---             planets nearest its starbase, in random order)
---   worlds    { dead, mineral, life }: the types dealt out to the other
---             planets in its half of the map (the half nearer its starbase)
+--   ships   { unit type, start zone }, each placed at a random star of its
+--           zone, as in SC1: 0 its half's back (the stars farther from the
+--           centre), 1 its half's front, 2 the enemy's nearest unclaimed
+--           stars, 3 anywhere
+--   worlds  { dead, mineral, life, colony, fortified colony, mine,
+--           fortified mine }: the worlds dealt onto its half, one per star
+--           (colonies and mines start owned)
 sc1.missions = {
 	first_encounter = {
 		maps = {
@@ -34,145 +35,153 @@ sc1.missions = {
 			"2p_SC1_First_Encounter_3", "2p_SC1_First_Encounter_4",
 		},
 		{   -- side 1, the Hierarchy
-			ships = { "SC_Spathi_Eluder", "SC_Androsynth_Guardian", "SC_Ilwrath_Avenger" },
-			colonies = 1, mines = 1,
-			worlds = { 0, 6, 6 },
+			ships = { { "SC_Spathi_Eluder", 0 }, { "SC_Androsynth_Guardian", 0 }, { "SC_Ilwrath_Avenger", 0 } },
+			worlds = { 0, 6, 6, 1, 0, 1, 0 },
 		},
 		{   -- side 2, the Alliance
-			ships = { "SC_Mmrnmhrm_XForm", "SC_Arilou_Skiff", "SC_Earthling_Cruiser" },
-			colonies = 1, mines = 1,
-			worlds = { 0, 6, 6 },
+			ships = { { "SC_Mmrnmhrm_XForm", 0 }, { "SC_Arilou_Skiff", 0 }, { "SC_Earthling_Cruiser", 0 } },
+			worlds = { 0, 6, 6, 1, 0, 1, 0 },
 		},
 	},
 }
 
--- Hexes apart (even columns sit half a hex lower).
-local function distance(a, b)
-	local function cube(p)
-		local q = p[1] - 1
-		local r = p[2] - (q - q % 2) / 2
-		return q, r, -q - r
-	end
-	local ax, az, ay = cube(a)
-	local bx, bz, by = cube(b)
-	return math.max(math.abs(ax - bx), math.abs(ay - by), math.abs(az - bz))
-end
+-- SC1's world deck, in the order it counts through the cards when drawing
+-- one: { index in worlds, planet type, owned }
+local deck = {
+	{ 1, "d" }, { 3, "l" }, { 2, "m" }, { 4, "l", true }, { 6, "m", true },
+	{ 5, "l", true }, { 7, "m", true },
+}
 
-local function shuffle(list)
-	for i = #list, 2, -1 do
-		local j = mathx.random(i)
-		list[i], list[j] = list[j], list[i]
-	end
-	return list
-end
-
-local function by_distance(list, from)
-	table.sort(list, function(a, b)
-		local da, db = distance(a, from), distance(b, from)
-		if da ~= db then return da < db end
-		if a[2] ~= b[2] then return a[2] < b[2] end
-		return a[1] < b[1]
-	end)
-	return list
-end
+local CENTRE, FRONT = 95, 47   -- SC1: the centre star's x; a side's front
 
 function sc1.setup(mission_id)
 	local mission = sc1.missions[mission_id]
 	local name = mission.maps[mathx.random(#mission.maps)]
-	local data = filesystem.read_file("~add-ons/Star_Control_TC/maps/" .. name .. ".map")
+	local path = "~add-ons/Star_Control_TC/maps/" .. name
+	local data = filesystem.read_file(path .. ".map")
+	local stars = wesnoth.dofile(path .. ".lua")
 	-- park the starbases in the corner first: a smaller map would drop
 	-- units that end up off it
 	for i, u in ipairs(wesnoth.units.find_on_map {}) do u:to_map(i, 1) end
 	wesnoth.wml_actions.replace_map { map = data, expand = true, shrink = true }
 
+	-- every star, counted from each side's far end toward the enemy's;
+	-- the Hierarchy's half is SC1's low x
+	local walk = { {}, {} }
+	for i, s in ipairs(stars) do
+		local star = { x = s[1], y = s[2], sc1x = s[3], index = i }
+		walk[1][i], walk[2][i] = star, star
+	end
+	table.sort(walk[1], function(a, b) return a.sc1x < b.sc1x end)
+	table.sort(walk[2], function(a, b) return a.sc1x > b.sc1x end)
+
+	-- deal the worlds: one card per star, drawn at random from the side's deck
+	local count, back, front, unowned = {}, { 0, 0 }, { 0, 0 }, {}
+	local owner = {}   -- star -> side, for worlds owned or claimed
+	for side = 1, 2 do
+		local left = 0
+		local cards = {}
+		for i, n in ipairs(mission[side].worlds) do
+			cards[i] = n
+			left = left + n
+		end
+		count[side], unowned[side] = left, left
+		for k = 1, count[side] do
+			local star = walk[side][k]
+			if math.abs(star.sc1x - CENTRE) < FRONT then
+				front[side] = front[side] + 1
+			else
+				back[side] = back[side] + 1
+			end
+			local r = mathx.random(left) - 1
+			left = left - 1
+			for _, card in ipairs(deck) do
+				r = r - cards[card[1]]
+				if r < 0 then
+					cards[card[1]] = cards[card[1]] - 1
+					star.type, star.improved = card[2], card[3]
+					if card[3] then
+						owner[star] = side
+						unowned[side] = unowned[side] - 1
+					end
+					break
+				end
+			end
+		end
+	end
+	for _, star in ipairs(walk[1]) do
+		wesnoth.wml_actions.terrain {
+			x = star.x, y = star.y, layer = "overlay", terrain = "^Vy" .. (star.type or "d"),
+		}
+		wesnoth.map.set_owner(star.x, star.y, star.improved and owner[star] or 0, false)
+	end
+
 	-- the starbases: north for the Hierarchy, south for the Alliance
 	local keeps = wesnoth.map.find { terrain = "Yk" }
 	table.sort(keeps, function(a, b) return a[2] < b[2] end)
 	local home = { keeps[1], keeps[#keeps] }
+	local facing = { "s", "n" }
 
-	-- each side's half: the half of the planets nearer its starbase than
-	-- the enemy's (by how much nearer, so the halves come out even)
-	local planets = wesnoth.map.find { terrain = "*^Vy*" }
-	local function lean(p) return distance(p, home[1]) - distance(p, home[2]) end
-	table.sort(planets, function(a, b)
-		local la, lb = lean(a), lean(b)
-		if la ~= lb then return la < lb end
-		if a[2] ~= b[2] then return a[2] < b[2] end
-		return a[1] < b[1]
-	end)
-	local halves = { {}, {} }
-	for i, p in ipairs(planets) do
-		table.insert(halves[i <= #planets / 2 and 1 or 2], { p[1], p[2] })
+	-- a random star of walk[side][base + 1 .. base + range] the enemy
+	-- doesn't own (SC1 rerolls those), which the side then claims unless a
+	-- world there is improved or an enemy ship is there
+	local ships_at = {}
+	for _, star in ipairs(walk[1]) do ships_at[star] = {} end
+	local function place(side, base, range)
+		local options = {}
+		for k = base + 1, base + math.max(range, 1) do
+			local star = walk[side][k]
+			if star and owner[star] ~= 3 - side then options[#options + 1] = star end
+		end
+		local star = #options > 0 and options[mathx.random(#options)] or walk[side][1]
+		local was_own = owner[star] == side
+		if not star.improved and not ships_at[star][3 - side] then owner[star] = side end
+		return star, was_own
 	end
-
-	local deal = {}
-	for side = 1, 2 do
-		local m = mission[side]
-		local planets = by_distance(halves[side], home[side])
-		local holdings = {}
-		for _ = 1, m.colonies or 0 do holdings[#holdings + 1] = "l" end
-		for _ = 1, m.mines or 0 do holdings[#holdings + 1] = "m" end
-		shuffle(holdings)
-		local types = {}
-		for t, n in ipairs(m.worlds) do
-			for _ = 1, n do types[#types + 1] = ({ "d", "m", "l" })[t] end
-		end
-		-- more planets than the mission names: deal the mix again
-		local count = #types
-		while #types < #planets - #holdings and count > 0 do
-			types[#types + 1] = types[#types - count + 1]
-		end
-		shuffle(types)
-		for i, p in ipairs(planets) do
-			local owned = i <= #holdings
-			deal[#deal + 1] = {
-				loc = p, side = owned and side or nil,
-				type = owned and holdings[i] or types[i - #holdings] or "d",
-			}
-		end
-	end
-	for _, d in ipairs(deal) do
-		wesnoth.wml_actions.terrain {
-			x = d.loc[1], y = d.loc[2], layer = "overlay", terrain = "^Vy" .. d.type,
-		}
-		wesnoth.map.set_owner(d.loc[1], d.loc[2], d.side or 0, false)
+	local function ship(side, type, star)
+		ships_at[star][side] = true
+		local u = wesnoth.units.create { type = type, side = side, facing = facing[side] }
+		-- one ship to a hex: more at one star wait beside it
+		local x, y = wesnoth.paths.find_vacant_hex(star.x, star.y, u)
+		u:to_map(x, y)
 	end
 
 	for side = 1, 2 do
 		local k = home[side]
-		local facing = side == 1 and "s" or "n"
 		for _, u in ipairs(wesnoth.units.find_on_map { side = side, canrecruit = true }) do
 			u:to_map(k[1], k[2])
-			u.facing = facing
+			u.facing = facing[side]
 		end
-		-- each ship at a random planet of its start zone, as in Star
-		-- Control 1, preferring planets nobody owns
-		local taken = {}
-		for i, t in ipairs(mission[side].ships) do
-			local zone = mission[side].zones and mission[side].zones[i] or 0
-			local list, from, to = halves[side], 1, math.ceil(#halves[side] / 2)
-			if zone == 1 then
-				from, to = to + 1, #halves[side]
-			elseif zone == 2 then
-				list = halves[3 - side]
-				from, to = math.ceil(#list / 2) + 1, #list
+		-- SC1 always puts the starbase on the star farthest from the
+		-- centre; its keep is beside that star
+		local _, was_own = place(side, 0, 1)
+		if not was_own then unowned[side] = unowned[side] - 1 end
+		for _, s in ipairs(mission[side].ships) do
+			if s[2] <= 1 then
+				local base, range = 0, back[side]
+				if s[2] == 1 then base, range = back[side], front[side] end
+				if range == 0 then base, range = 0, back[side] > 0 and back[side] or front[side] end
+				local star, own = place(side, base, range)
+				if not own then unowned[side] = unowned[side] - 1 end
+				ship(side, s[1], star)
 			end
-			local free, any = {}, {}
-			for j = from, to do
-				local p = list[j]
-				local k = p[1] .. "," .. p[2]
-				if not taken[k] then
-					any[#any + 1] = p
-					if (wesnoth.map.get_owner(p) or 0) == 0 then free[#free + 1] = p end
+		end
+	end
+	for side = 1, 2 do
+		for _, s in ipairs(mission[side].ships) do
+			if s[2] >= 2 then
+				local base, range = 0, #stars
+				if s[2] == 2 then
+					-- the enemy stars nearest the middle, as many as the
+					-- enemy has unclaimed
+					base, range = count[side], unowned[3 - side]
+					if range == 0 then
+						range = front[side] > 0 and front[side] or back[side]
+						base = count[side] - range
+					end
 				end
+				ship(side, s[1], (place(side, base, range)))
 			end
-			local pool = #free > 0 and free or any
-			local p = #pool > 0 and pool[mathx.random(#pool)] or k
-			taken[p[1] .. "," .. p[2]] = true
-			wesnoth.wml_actions.unit {
-				type = t, side = side, x = p[1], y = p[2],
-				facing = facing, animate = false,
-			}
 		end
 	end
 end
