@@ -550,6 +550,7 @@ def build_effects(uqm, out):
     for i in range(8):
         img = Image.open(os.path.join(battle, f"blast-big-{i:03d}.png")).convert("RGBA")
         save(img, out, f"images/halo/sc/blast-{i + 1}.png", True)
+    build_ship_death(uqm, out)
     # Earthling nuke: the missile sprite's own explosion frames (16 on; the
     # first 16 are its facings), at the missile's scale.
     ndir = os.path.join(uqm, "addons/mm-hd/ships/human")
@@ -570,6 +571,46 @@ def build_effects(uqm, out):
         save(img.resize((max(1, round(img.width * k)), max(1, round(img.height * k))), Image.LANCZOS),
              out, f"images/halo/sc/hellfire-{i + 1}.png", True)
     return len(frames)
+
+
+def build_ship_death(uqm, out):
+    """A ship blowing up: Star Control 2's cloud of small booms under the
+    add-on's big one (boom-1..9, 70 ms a frame), baked into one halo
+    sequence so the big boom always draws on top. tactrans.c's
+    explosion_preprocess spawns 1-3 booms a battle frame for 26 frames
+    (55 in all), each a few pixels from the ship (a third of them 8 further
+    out) and drifting 0-4 pixels a frame; each plays boom-big's 9 frames,
+    one a battle frame (42 ms). HD art at 1x; a fixed seed keeps the cloud
+    the same every build."""
+    battle = os.path.join(uqm, "addons/mm-hd/battle")
+    small = [Image.open(os.path.join(battle, f"boom-big-{i:03d}.png")).convert("RGBA") for i in range(9)]
+    big = [img.resize((img.width * 3, img.height * 3), Image.LANCZOS) for img in small]
+    rng = np.random.default_rng(1994)
+    booms = []   # (spawn frame, x, y, dx, dy)
+    for t in range(26):
+        n = 1 if t < 3 or t >= 20 else 2 if t < 6 or t >= 18 else 3
+        for _ in range(n):
+            a, dist = rng.uniform(0, 2 * math.pi), int(rng.integers(8)) * 4
+            if rng.random() < 1 / 3:
+                dist += 32
+            b, v = rng.uniform(0, 2 * math.pi), int(rng.integers(5)) * 4
+            booms.append((t, dist * math.cos(a), dist * math.sin(a), v * math.cos(b), v * math.sin(b)))
+    half = math.ceil(max(max(abs(x + 8 * dx), abs(y + 8 * dy)) for _, x, y, dx, dy in booms)
+                     + max(small[4].size) / 2)
+    tick = 1000 / 24
+    for f in range(34):
+        canvas = Image.new("RGBA", (2 * half, 2 * half), (0, 0, 0, 0))
+        for t, x, y, dx, dy in booms:
+            age = f - t
+            if 0 <= age < 9:
+                img = small[age]
+                canvas.alpha_composite(img, (round(half + x + age * dx - img.width / 2),
+                                             round(half + y + age * dy - img.height / 2)))
+        ms = f * tick
+        if ms < 630:
+            img = big[int(ms // 70)]
+            canvas.alpha_composite(img, (half - img.width // 2, half - img.height // 2))
+        save(canvas, out, f"images/halo/sc/ship-death-{f + 1}.png", True)
 
 
 # Star Control II hits with their own look. A shot whose sprite has more
