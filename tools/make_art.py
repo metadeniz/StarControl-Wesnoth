@@ -1019,7 +1019,7 @@ def build_chmmr_sounds(out):
 # (WEAPON_WAIT 0 in vux.c and mmrnmhrm.c)
 HELD = {"vux-laser": (0.6, 0.3), "mmrnmhrm-laser": (0.45, 0.15)}
 # sample -> (shots, seconds apart): quick bursts, `<sample>-burst.wav`, each
-# shot's sound overlapping the last (the Arilou's three zaps)
+# shot's sound stopping the last (the Arilou's three zaps)
 BURSTS = {"arilou-laser": (3, 0.16)}
 
 
@@ -1034,9 +1034,12 @@ def build_held_sounds(out):
     for name, (shots, every) in BURSTS.items():
         sample, rate = read_wav(os.path.join(snd, f"{name}.wav"))
         step = round(every * rate)
-        mix = np.zeros(step * (shots - 1) + len(sample), np.float32)
-        for k in range(shots):
-            mix[k * step:k * step + len(sample)] += 0.8 * sample
+        # each shot cuts the last one off, as UQM restarting the sound on
+        # the ship's channel does, with a short fade so the cut doesn't click
+        fade = int(0.006 * rate)
+        cut = sample[:step].copy()
+        cut[-fade:] *= np.linspace(1, 0, fade)
+        mix = np.concatenate([cut] * (shots - 1) + [sample])
         write_wav(os.path.join(snd, f"{name}-burst.wav"), mix, rate)
         manifest.append(f"sounds/sc/{name}-burst.wav")
 
