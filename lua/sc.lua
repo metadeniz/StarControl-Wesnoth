@@ -13,7 +13,7 @@ local function count(name)
 end
 
 -- Every ship comes in levels 1-3: SC_X, SC_X_L2, SC_X_L3. The New Alliance
--- and the Agents of Chaos recruit their own level-1 copies of some older
+-- and the Agents of Death recruit their own level-1 copies of some older
 -- ships, SC_X_NA and SC_X_AC.
 local function base_type(t) return (t:gsub("_L[23]$", ""):gsub("_NA$", ""):gsub("_AC$", "")) end
 local function is_a(u, base) return u and base_type(u.type) == base end
@@ -302,7 +302,7 @@ local PLAYLISTS = {   -- faction -> mode -> tracks
 		"3. remix-utwig-ultron", "0. remix-commander", "0. remix-arilou", "3. remix-melnorme", "3. melnorme-lipavsky", "0. remix-syreen", "3. syreen-ramen-rider",
 		"0. remix-mystic-shadows", "0. remix-quasispace", "0. remix-hyperspace",
 		"0. remix-starbase" },
-	-- the Agents of Chaos hear modern versions: the Precursors' remixes
+	-- the Agents of Death hear modern versions: the Precursors' remixes
 	SC_DeathMarch = { "4. kohrah-cleansing-required", "4. kohrah-eternal-doctrine", "4. kohrah-battle",
 		"4. druuge-crimson-corporation", "0. thraddash-culture-19", "4. slylandro-we-come-in-peace",
 		"4. orz-squeezing-the-juice", "0. mycon-rebirth", "0. ilwrath-all-evil", "4. samatra-battle",
@@ -804,7 +804,7 @@ end)()
 
 -- The Alliance and the Hierarchy lose their starbase; the New Alliance's
 -- leaders go by their captains' names (the Vindicator), and the Agents of
--- Chaos' by their ship (the Sa-Matra).
+-- Death's by their ship (the Sa-Matra).
 local function leader_caption(u)
 	local faction = wesnoth.sides[u.side].__cfg.faction
 	if STARBASE_CAPTIONS[faction] then return STARBASE_CAPTIONS[faction] end
