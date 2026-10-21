@@ -2,7 +2,7 @@
 
 A total conversion of Battle for Wesnoth into the wars of Star Control: the
 Alliance of Free Stars against the Ur-Quan Hierarchy (Star Control 1), and
-the New Alliance of Free Stars against the Agents of Chaos (Star
+the New Alliance of Free Stars against the Agents of Death (Star
 Control II), fought over space maps with nebulae, asteroid fields, planets
 and stars. Any faction can fight any other.
 
@@ -96,7 +96,7 @@ right-click menu, which goes through the three in turn. The remixes are:
   has no original track in the list). The orchestral Ur-Quan cover has no remix
   and stays.
 
-The New Alliance and the Agents of Chaos have one playlist each:
+The New Alliance and the Agents of Death have one playlist each:
 
 - **New Alliance:** Ramen Rider's cover of the Syreen theme, the Melnorme
   theme re-imagined by DJ Yan Yan Lipavsky, and the
@@ -107,7 +107,7 @@ The New Alliance and the Agents of Chaos have one playlist each:
   Falayalaralfali"), Melnorme ("Turning Purple"), Syreen ("Close Encounters of the Seventh Kind"),
   quasispace ("Mystic Shadows", "Through the Angles of Space"), hyperspace ("Across the Galaxy") and Starbase ("Under a Red
   Sky").
-- **Agents of Chaos:** modern versions only, the Precursors' remixes: Kohr-Ah ("Cleansing
+- **Agents of Death:** modern versions only, the Precursors' remixes: Kohr-Ah ("Cleansing
   Required", "The Eternal Doctrine", "Kohr-Ah" battle remix), Druuge
   ("Property of the Crimson Corporation"), Thraddash ("Culture 19"),
   Slylandro Probes ("We Come In Peace"), Orz ("Squeezing the Juice"), Mycon
@@ -116,7 +116,7 @@ The New Alliance and the Agents of Chaos have one playlist each:
 
 When you win, the old Alliance hears a 44-second cut of Star Control II's
 ending theme, the Hierarchy Star Control 1's Hierarchy victory theme, the New
-Alliance Star Control II's victory fanfare, and the Agents of Chaos the opening of Chopin's Funeral
+Alliance Star Control II's victory fanfare, and the Agents of Death the opening of Chopin's Funeral
 March. An Alliance win also shows Star Control 1's victory picture, Earth
 ringed by the Alliance races, as a story screen while its theme plays. When a ship destroys
 another, its race's victory ditty plays over the music (the Sa-Matra, which has
@@ -143,11 +143,11 @@ explosion, and the game waits for it to finish.
 | Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison, **backstab**), Blazer ram (**charge**, **backstab**) |
 | Shofixti Scout | dart gun; **Glory Device**: one unavoidable fire strike of 8–16 / 10–20 / 12–24 by level on one ship, destroying the Scout; a Scout destroyed by a close-range attack has a 50% chance to set it off as it dies, hitting its attacker for half that | Ilwrath Avenger | Hellfire, cloaking device |
 
-| New Alliance of Free Stars | | Agents of Chaos | |
+| New Alliance of Free Stars | | Agents of Death | |
 |---|---|---|---|
 | **Precursor Flagship** (leader only) | 4 moves, a Precursor drive (like the Chmmr's) and **hyperjump** between planets; fusion blaster, point-defense, self-repair, heals +4, leadership | **Sa-Matra** (leader only) | 4 moves and a stronger Precursor drive (1 move through nebulae, dust, badlands and asteroids); yellow comets (near and far), slowing green blobs, self-repair +8, cures and heals +8, leadership |
 | Earthling Cruiser | as in the Alliance | Kohr-Ah Marauder | 4 moves; spinning blades; F.R.I.E.D. plasma ring (**magical**) |
-| Chmmr Avatar | 4 moves, and a drive that handles nebulae, dust, badlands and asteroids better than other large hulls; close-range tractor beam + laser and Tractor + ZapSats (**first strike**, **auto-targeting** 70% on offense and defense, **swarm**, +1 damage vs. small and tiny hulls); ranged megawatt laser (**marksman**, **slows**); point-defense | Druuge Mauler | 4 moves; long-range mass driver (**marksman**); nothing up close |
+| Chmmr Avatar | 4 moves, and a drive that handles nebulae, dust, badlands and asteroids better than other large hulls; close-range tractor beam + laser; ranged megawatt laser (**marksman**); point-defense | Druuge Mauler | 4 moves; long-range mass driver (**marksman**); nothing up close |
 | Zoq-Fot-Pik Stinger | cheap; acid spit, hard-hitting tongue | Thraddash Torch | fast; afterburner (**charge**, **backstab**), horn blasters (**backstab**) |
 | Pkunk Fury | fast triple gun; **reincarnation**: reborn at full HP when destroyed, 80% the first time, halving with each rebirth | Slylandro Probe | 7 moves; seeking lightning (**magical**); repairs 8 HP a turn in asteroid fields |
 | Supox Blade | **skirmisher**; globs of goo | Orz Nemesis | hard-hitting space marines (**boarding**: ignore armour and shields); light howitzer |

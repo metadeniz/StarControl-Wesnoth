@@ -13,7 +13,7 @@ local function count(name)
 end
 
 -- Every ship comes in levels 1-3: SC_X, SC_X_L2, SC_X_L3. The New Alliance
--- and the Agents of Chaos recruit their own level-1 copies of some older
+-- and the Agents of Death recruit their own level-1 copies of some older
 -- ships, SC_X_NA and SC_X_AC.
 local function base_type(t) return (t:gsub("_L[23]$", ""):gsub("_NA$", ""):gsub("_AC$", "")) end
 local function is_a(u, base) return u and base_type(u.type) == base end
@@ -302,7 +302,7 @@ local PLAYLISTS = {   -- faction -> mode -> tracks
 		"3. remix-utwig-ultron", "0. remix-commander", "0. remix-arilou", "3. remix-melnorme", "3. melnorme-lipavsky", "0. remix-syreen", "3. syreen-ramen-rider",
 		"0. remix-mystic-shadows", "0. remix-quasispace", "0. remix-hyperspace",
 		"0. remix-starbase" },
-	-- the Agents of Chaos hear modern versions: the Precursors' remixes
+	-- the Agents of Death hear modern versions: the Precursors' remixes
 	SC_DeathMarch = { "4. kohrah-cleansing-required", "4. kohrah-eternal-doctrine", "4. kohrah-battle",
 		"4. druuge-crimson-corporation", "0. thraddash-culture-19", "4. slylandro-we-come-in-peace",
 		"4. orz-squeezing-the-juice", "0. mycon-rebirth", "0. ilwrath-all-evil", "4. samatra-battle",
@@ -380,7 +380,38 @@ local VICTORY_VERBS = {
 	_ "terminates", _ "creams", _ "overruns", _ "pastes", _ "blitzes",
 }
 
+-- The New Alliance gets Star Control II's ending instead, on a story
+-- screen: the Captain wakes up in Sick Bay beside Talana, over Earth
+-- glowing the sick red of the Ur-Quan slave shield; the shield falls in a
+-- white flash, leaving the Earth free and blue. The flash plays once, as
+-- floating images over the red slide, each shown frame_ms after the last;
+-- the frames are made by tools/make_new_alliance_victory.py.
+local SHIELD_FALLS = {
+	frames = 20,
+	hold_ms = 1500,   -- the red Earth, before the shield goes down
+	frame_ms = 100,
+}
+
+local function shield_falls()
+	local dir = "story/sc/new-alliance-victory/"
+	local part = {
+		background = dir .. "00.png",
+		story = _ "The New Alliance has prevailed! Freedom and liberation will soon follow...",
+		show_title = true,
+	}
+	for i = 1, SHIELD_FALLS.frames - 1 do
+		table.insert(part, { "image", {
+			file = string.format("%s%02d.png", dir, i),
+			x = 0, y = 0,
+			resize_with_background = true,
+			delay = i == 1 and SHIELD_FALLS.hold_ms or SHIELD_FALLS.frame_ms,
+		} })
+	end
+	gui.show_story({ { "part", part } }, _ "New Alliance Victory")
+end
+
 function sc.victory_picture(faction)
+	if faction == "SC_NewAlliance" then return shield_falls() end
 	local picture = VICTORY_PICTURE[faction]
 	if not picture then return end
 	wesnoth.wml_actions.message {
@@ -804,7 +835,7 @@ end)()
 
 -- The Alliance and the Hierarchy lose their starbase; the New Alliance's
 -- leaders go by their captains' names (the Vindicator), and the Agents of
--- Chaos' by their ship (the Sa-Matra).
+-- Death's by their ship (the Sa-Matra).
 local function leader_caption(u)
 	local faction = wesnoth.sides[u.side].__cfg.faction
 	if STARBASE_CAPTIONS[faction] then return STARBASE_CAPTIONS[faction] end
