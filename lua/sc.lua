@@ -380,7 +380,38 @@ local VICTORY_VERBS = {
 	_ "terminates", _ "creams", _ "overruns", _ "pastes", _ "blitzes",
 }
 
+-- The New Alliance gets Star Control II's ending instead, on a story
+-- screen: the Captain wakes up in Sick Bay beside Talana, over Earth
+-- glowing the sick red of the Ur-Quan slave shield; the shield falls in a
+-- white flash, leaving the Earth free and blue. The flash plays once, as
+-- floating images over the red slide, each shown frame_ms after the last;
+-- the frames are made by tools/make_new_alliance_victory.py.
+local SHIELD_FALLS = {
+	frames = 20,
+	hold_ms = 1500,   -- the red Earth, before the shield goes down
+	frame_ms = 100,
+}
+
+local function shield_falls()
+	local dir = "story/sc/new-alliance-victory/"
+	local part = {
+		background = dir .. "00.png",
+		story = _ "The New Alliance has prevailed! Freedom and liberation will soon follow...",
+		show_title = true,
+	}
+	for i = 1, SHIELD_FALLS.frames - 1 do
+		table.insert(part, { "image", {
+			file = string.format("%s%02d.png", dir, i),
+			x = 0, y = 0,
+			resize_with_background = true,
+			delay = i == 1 and SHIELD_FALLS.hold_ms or SHIELD_FALLS.frame_ms,
+		} })
+	end
+	gui.show_story({ { "part", part } }, _ "New Alliance Victory")
+end
+
 function sc.victory_picture(faction)
+	if faction == "SC_NewAlliance" then return shield_falls() end
 	local picture = VICTORY_PICTURE[faction]
 	if not picture then return end
 	wesnoth.wml_actions.message {
