@@ -24,8 +24,10 @@ a little over a hex (84 px) off centre, clear of the label at the bottom of
 the planet's hex: images/halo/sc/SCENE-below-NNN.png shows it below the
 planet, SCENE-above-NNN.png above it (for planets near the bottom edge).
 The colony and mine scenes also carry their text ("Colony destroyed",
-"Mine destroyed") where Wesnoth puts a map label, at the bottom of the
-planet's hex, so it fades out and goes with the scene.
+"Mine destroyed") just under the picture, so it fades out and goes with
+the scene; the canvas grows by the text's height at both ends to keep the
+picture centred where it was, and above the planet, the picture moves up
+by that much, to keep the text clear of the planet's hex.
 
 Needs ffmpeg. Run from the repository root:
     python3 tools/make_planet_anims.py SCENE path/to/recording.mp4
@@ -56,7 +58,6 @@ TEXT = {"colony-destroyed": "Colony destroyed", "mine-destroyed": "Mine destroye
 FONT = "/usr/share/games/wesnoth/1.16/fonts/Lato-Regular.ttf"   # Wesnoth's own
 SIZE = 15
 COLOR = (255, 128, 96)         # as "Planet destroyed"
-TEXT_TOP = 22                  # px below the hex centre, as a map label
 STEP = 2                       # keep every 2nd frame: 30 fps -> 15 fps
 FADE = (0.8, 0.6, 0.4, 0.2)
 
@@ -137,17 +138,18 @@ def main(scene, clip):
     mask = cutout_mask(kept) if scene in CUTOUT else Image.new("L", (w, h), 255)
     text = text_image(TEXT[scene]) if scene in TEXT else None
     cw = max(w, text.width) if text else w
+    th = text.height if text else 0
     shown = [(f, 1.0) for f in kept] + [(kept[-1], a) for a in FADE]
     for n, (rgb, a) in enumerate(shown, 1):
         pic = rgb.convert("RGBA")
         pic.putalpha(mask.point(lambda v: round(v * a)))
-        for where, top in (("above", 0), ("below", 2 * HEX)):
-            canvas = Image.new("RGBA", (cw, h + 2 * HEX))
+        for where, top in (("above", 0), ("below", 2 * HEX + th)):
+            canvas = Image.new("RGBA", (cw, h + 2 * HEX + 2 * th))
             canvas.paste(pic, ((cw - w) // 2, top))
             if text:
                 faded = text.copy()
                 faded.putalpha(faded.getchannel("A").point(lambda v: round(v * a)))
-                canvas.alpha_composite(faded, ((cw - text.width) // 2, canvas.height // 2 + TEXT_TOP))
+                canvas.alpha_composite(faded, ((cw - text.width) // 2, top + h))
             canvas.save(OUT.format(scene, where, n))
     print(f"{len(shown)} frames ({len(kept)} + {len(FADE)} fading) of {w}x{h}, above and below")
 
