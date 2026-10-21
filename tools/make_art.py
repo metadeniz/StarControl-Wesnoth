@@ -303,6 +303,11 @@ LEVEL_GROWTH = 1.12
 # Flagship leads with it, so it should look huge): facing north, its sides
 # touch the hex's slanted edges and its nose and tail poke out top and bottom.
 FILL_HEX = {"precursor-flagship"}
+# Ships whose blue hull is drawn darker than in UQM: unit image id ->
+# (brightness factor, how far the hue moves toward deep blue, saturation
+# factor). The Precursor Flagship reads as a deep navy, as remembered from
+# Star Control II. Its glow keeps the original hull's lighter blue.
+DARKER_HULL = {"precursor-flagship": (0.55, 0.5, 1.15)}
 
 
 def hex_filling_scale(img):
@@ -342,6 +347,22 @@ def with_glow(img, colour, radius, strength):
     return out
 
 
+def darker_hull(img, brightness, deepen, saturation):
+    """`img` with its blue hull plates darker and a deeper blue; the lights,
+    struts and pods (other hues, or grey) stay as they are."""
+    a = np.array(img)
+    hsv = np.array(img.convert("RGB").convert("HSV")).astype(float) / 255
+    h, s, v = hsv[..., 0], hsv[..., 1], hsv[..., 2]
+    blue = (h > 0.5) & (h < 0.72) & (s > 0.25)
+    h = np.where(blue, h + (0.62 - h) * deepen, h)
+    s = np.where(blue, np.minimum(1.0, s * saturation), s)
+    v = np.where(blue, v * brightness, v)
+    rgb = Image.fromarray((np.stack([h, s, v], axis=-1) * 255).round().astype(np.uint8), "HSV").convert("RGB")
+    out = np.array(rgb)
+    a[..., :3] = np.where(blue[..., None], out, a[..., :3])
+    return Image.fromarray(a, "RGBA")
+
+
 def build_ships(uqm, out):
     for uid, (ship_dir, stem) in SHIPS.items():
         hd = hd_sprite(uqm, ship_dir, stem)
@@ -350,6 +371,8 @@ def build_ships(uqm, out):
         fit = min(70.0 / max(trim(rotated(hd, a)).size) for a in FACINGS.values())
         top = min(ship_scale(uqm, ship_dir, stem, hd) * LEVEL_GROWTH, fit)
         colour = glow_colour(hd)
+        if uid in DARKER_HULL:
+            hd = darker_hull(hd, *DARKER_HULL[uid])
         for level, (size, glow) in LEVELS.items():
             scale = top * size
             if uid in FILL_HEX and level == 1:
