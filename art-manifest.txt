@@ -262,6 +262,7 @@ images/halo/sc/blaster-hit-4.png
 images/halo/sc/blaster-hit-5.png
 images/halo/sc/blaster-hit-6.png
 images/halo/sc/blaster-hit-7.png
+images/halo/sc/blaster1-hit-1.png
 images/halo/sc/blaster2-hit-1.png
 images/halo/sc/blaster2-hit-2.png
 images/halo/sc/blaster2-hit-3.png

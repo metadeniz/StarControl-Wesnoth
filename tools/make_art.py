@@ -452,8 +452,11 @@ HITS = {
     "crystal-hit": ("chenjesu", "spark", range(2, 10), 0.6),         # chenjesu.c: 8 sparkles
     "buzzsaw-hit": ("kohrah", "buzzsaw", range(2, 7), 0.5),          # blackurq.c: the saw splinters
     "charge-hit": ("melnorme", "pumpup", range(20, 26), 0.8),        # melnorme.c: 3 + charge frames
-    "blaster-hit": ("flagship", "blaster", range(20, 27), 0.55),      # sis_ship.c: power 3 blaster
-    "blaster2-hit": ("flagship", "blaster", range(10, 16), 0.8),     # ...and power 2
+    # sis_ship.c's blaster by power: 3 for the Flagship; 2 and 1 for level-2
+    # and level-1 Precursor ships, should the add-on ever have them
+    "blaster-hit": ("flagship", "blaster", range(20, 27), 0.55),
+    "blaster2-hit": ("flagship", "blaster", range(10, 16), 0.8),
+    "blaster1-hit": ("flagship", "blaster", range(0, 1), 0.8),       # its first frame, 2 ticks
 }
 
 
