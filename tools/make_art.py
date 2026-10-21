@@ -514,8 +514,8 @@ def build_lasers(out):
 
 def build_song(out):
     """The Syreen song (original art; SC2 shows no song, only the crew it
-    lures): a small ring that wiggles round the Syreen, then rings that
-    ripple out from its nose, each rendered whole and then cropped to a
+    lures): a ring that wiggles round the Syreen while rings ripple out
+    from its nose, each rendered whole and then cropped to a
     wedge aimed at its target, and the green dots of crew
     floating across (misc.c draws an abandoning crewman as a green point).
     The wedges are cut facing north and north-east, on a canvas centred on
@@ -544,9 +544,9 @@ def build_song(out):
             wedge.putalpha(Image.fromarray((np.asarray(ring.getchannel("A"), np.float32)
                                             * np.asarray(mask, np.float32) / 255).round().astype(np.uint8)))
             save(wedge, out, f"images/projectiles/sc/song-{t + 1}-{facing}.png", False)
-    # ...and before them, the first ring wiggling round the Syreen without
-    # growing, then fading away
-    for t in range(6):
+    # ...and with them, a ring wiggling round the Syreen without growing,
+    # then fading away
+    for t in range(10):
         u = 3 / n  # the size of the third ring
         r = 10 + u * 76
         img = Image.new("RGBA", (size * 4, size * 4), (0, 0, 0, 0))
@@ -556,7 +556,7 @@ def build_song(out):
             a = math.radians(i)
             rr = (r + 2.2 * math.sin(12 * a + 6 * u + 1.3 * t)) * 4
             pts.append((size * 2 + rr * math.sin(a), size * 2 - rr * math.cos(a)))
-        alpha = round(230 * (1 - u) ** 0.7 * (1, 1, 1, 1, 0.6, 0.3)[t])
+        alpha = round(230 * (1 - u) ** 0.7 * (1, 1, 1, 1, 1, 1, 1, 0.75, 0.5, 0.25)[t])
         d.line(pts, fill=(230, 130, 255, alpha), width=10)
         d.line(pts, fill=(255, 220, 255, alpha), width=4)
         ring = img.resize((size, size), Image.LANCZOS).filter(ImageFilter.GaussianBlur(0.5))
