@@ -1,0 +1,129 @@
+#!/usr/bin/env python3
+"""Draw the laser and lightning beams (original art).
+
+Star Control II's lasers are not shots that fly: for one battle frame UQM
+draws a line from the ship to the end of the laser's range, or to whatever
+it hits. Here a beam runs from the ship's nose to the centre of the target
+hex, so each ship sprite gets beams of its own length. SC_BEAM_ANIM centres
+them halfway between (SC_BEAM_MID_* in utils/noses.cfg) and flips them for
+the other facings.
+
+Writes images/projectiles/sc/beams/<ship sprite>-<beam>-<k>-<n|ne>.png.
+Run it after make_art.py, which draws the ship sprites.
+
+Usage:
+    make_beams.py --out <add-on dir>
+"""
+
+import argparse
+import math
+import os
+import random
+
+from PIL import Image, ImageDraw, ImageFilter
+
+from make_noses import STEP, nose
+
+# The NE facing, as an angle from north (neighbouring hexes are 54 px across
+# and 36 px up).
+DIAG = math.atan2(54, 36)
+SS = 4  # supersampling
+
+
+def rgb15(r, g, b):
+    return tuple(round(v * 255 / 31) for v in (r, g, b))
+
+
+# ship sprite stem (without -l<level>) -> (beam, colours, frames, beams side by
+# side as fractions of the hull's width from its centre, line width)
+BEAMS = {
+    # vux.c: one green laser to LASER_BASE, the longest in the game
+    "vux-intruder": ("laser", [rgb15(0x0A, 0x1F, 0x0A)], 2, [0.0], 2.5),
+    # mmrnmhrm.c: twin red lasers from the wings (WING_OFFS 48 of the
+    # hull's 104 HD px), drawn a little closer in so both strike the target
+    # ship in its hex
+    "mmrnmhrm-xform": ("laser", [rgb15(0x1F, 0x0A, 0x0A)], 2, [-0.34, 0.34], 2.0),
+    # chmmr.c: the megawatt laser cycles its colour every frame (cycle_array)
+    "chmmr-avatar": ("laser", [rgb15(0x17, 0, 0), rgb15(0x1F, 0x03, 0), rgb15(0x1F, 0x11, 0),
+                               rgb15(0x1F, 0x03, 0)], 4, [0.0], 3.5),
+    # slylandr.c: a crooked chain of short segments, each bolt white or one
+    # of three blues
+    "slylandro-probe": ("lightning", [rgb15(0x1F, 0x1F, 0x1F), rgb15(0x16, 0x17, 0x1F),
+                                      rgb15(0x06, 0x07, 0x1F), rgb15(0, 0, 0x18)], 4, [0.0], 2.0),
+}
+
+
+def hull_width(path):
+    alpha = Image.open(path).split()[3].point(lambda a: 255 if a >= 128 else 0)
+    box = alpha.getbbox()
+    return box[2] - box[0]
+
+
+def lightning_path(length, rng):
+    """Points of a crooked bolt along the beam axis: (along, sideways)."""
+    pts, along, side = [(-length / 2, 0.0)], -length / 2, 0.0
+    while True:
+        along += rng.uniform(4, 10)
+        if along >= length / 2 - 3:
+            break
+        side = 0.5 * side + rng.uniform(-4.5, 4.5)
+        pts.append((along, side))
+    pts.append((length / 2, 0.0))
+    return pts
+
+
+def draw(kind, colour, length, laterals, width, angle, rng, dim):
+    """One beam frame, centred on the image, along `angle` (0 = north)."""
+    ux, uy = math.sin(angle), -math.cos(angle)   # along the beam
+    vx, vy = math.cos(angle), math.sin(angle)    # sideways
+    strands = []
+    for lat in laterals:
+        pts = lightning_path(length, rng) if kind == "lightning" else [(-length / 2, 0.0), (length / 2, 0.0)]
+        strands.append([(a * ux + (s + lat) * vx, a * uy + (s + lat) * vy) for a, s in pts])
+    half = max(max(abs(x), abs(y)) for strand in strands for x, y in strand) + 6
+    size = 2 * math.ceil(half)
+    img = Image.new("RGBA", (size * SS, size * SS), (0, 0, 0, 0))
+    glow = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    centre = size * SS / 2
+    k = 0.65 if dim else 1.0
+    core = tuple(round(c + (255 - c) * 0.6) for c in colour)
+    for strand in strands:
+        xy = [(centre + x * SS, centre + y * SS) for x, y in strand]
+        ImageDraw.Draw(glow).line(xy, fill=colour + (round(110 * k),), width=round(width * 3 * SS), joint="curve")
+        d = ImageDraw.Draw(img)
+        d.line(xy, fill=colour + (round(255 * k),), width=round(width * SS), joint="curve")
+        d.line(xy, fill=core + (round(255 * k),), width=max(SS, round(width * SS / 3)), joint="curve")
+    glow = glow.filter(ImageFilter.GaussianBlur(2 * SS))
+    glow.alpha_composite(img)
+    return glow.resize((size, size), Image.LANCZOS)
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--out", required=True, help="add-on directory")
+    args = ap.parse_args()
+    units = os.path.join(args.out, "images/units/sc")
+    beams = os.path.join(args.out, "images/projectiles/sc/beams")
+    os.makedirs(beams, exist_ok=True)
+    n = 0
+    for ship, (kind, colours, frames, laterals, width) in BEAMS.items():
+        for level in (1, 2, 3):
+            stem = f"{ship}-l{level}"
+            w = hull_width(os.path.join(units, f"{stem}-n.png"))
+            for facing, angle in (("n", 0.0), ("ne", DIAG)):
+                frac = round(min(0.7, nose(os.path.join(units, f"{stem}-{facing}.png"), facing) / STEP[facing]), 2)
+                length = (1 - frac) * STEP[facing]
+                rng = random.Random(f"{stem}-{facing}")
+                for k in range(frames):
+                    if kind == "lightning":
+                        colour, dim = rng.choice(colours), False
+                    else:
+                        colour, dim = colours[k % len(colours)], len(colours) == 1 and k % 2 == 1
+                    img = draw(kind, colour, length, [lat * w for lat in laterals], width, angle, rng, dim)
+                    img.save(os.path.join(beams, f"{stem}-{kind}-{k + 1}-{facing}.png"), optimize=True)
+                    n += 1
+    print(f"ok: {n} beam frames")
+
+
+if __name__ == "__main__":
+    main()
