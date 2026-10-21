@@ -1,39 +1,33 @@
 -- Star Control TC: Star Control 1's built-in missions (scenarios/scenarios_sc1.cfg).
 -- Written against the Wesnoth 1.16 Lua API; loaded after sc.lua.
 --
--- Star Control 1 drew a fresh star cluster for every game. Here each
--- mission has a few maps, each drawn by tools/make_sc1_maps.py round the
--- cluster SC1's own generator builds from one seed, with a .lua file beside
--- it giving each star's hex and its x along SC1's cluster. At prestart,
--- before the era's planet income and Precursor artifacts are set up,
--- sc1.setup() picks one of the maps and sets the game up the way SC1's
--- scenario setup does (STARCON.EXE 014C:01FE, as the starcon1-map-prototype
--- project read it): each side's worlds dealt at random onto its half, the
--- starbases at the far ends and the ships placed by start zone. It uses the
--- synced random numbers, so every player sees the same game. On every map
--- the Hierarchy (side 1) starts at the north end and the Alliance (side 2)
--- at the south.
+-- Star Control 1 drew a fresh star cluster for every game, and so do these:
+-- at prestart, before the era's planet income and Precursor artifacts are
+-- set up, sc1.setup() has lua/sc1_map.lua build a map round the cluster
+-- SC1's own generator makes from a random seed, then sets the game up the
+-- way SC1's scenario setup does (STARCON.EXE 014C:01FE, as the
+-- starcon1-map-prototype project read it): each side's worlds dealt at
+-- random onto its half, the starbases at the far ends and the ships placed
+-- by start zone. It uses the synced random numbers, so every player sees
+-- the same game. The Hierarchy (side 1) starts at the north end and the
+-- Alliance (side 2) at the south.
 
 local T = wml.tag
 local _ = wesnoth.textdomain "wesnoth-Star_Control_TC"
 
 sc1 = {}
 
--- Each mission: its maps (in maps/), and each side's setup from Star
--- Control 1's SCENARIO files:
+-- Each mission: each side's setup from Star Control 1's SCENARIO files:
 --   ships   { unit type, start zone }, each placed at a random star of its
 --           zone, as in SC1: 0 its half's back (the stars farther from the
 --           centre), 1 its half's front, 2 the enemy's nearest unclaimed
 --           stars, 3 anywhere
 --   worlds  { dead, mineral, life, colony, fortified colony, mine,
 --           fortified mine }: the worlds dealt onto its half, one per star
---           (colonies and mines start owned)
+--           (colonies and mines start owned); SC1 gives the side a star
+--           for each
 sc1.missions = {
 	first_encounter = {
-		maps = {
-			"2p_SC1_First_Encounter_1", "2p_SC1_First_Encounter_2",
-			"2p_SC1_First_Encounter_3", "2p_SC1_First_Encounter_4",
-		},
 		{   -- side 1, the Hierarchy
 			ships = { { "SC_Spathi_Eluder", 0 }, { "SC_Androsynth_Guardian", 0 }, { "SC_Ilwrath_Avenger", 0 } },
 			worlds = { 0, 6, 6, 1, 0, 1, 0 },
@@ -52,14 +46,16 @@ local deck = {
 	{ 5, "l", true }, { 7, "m", true },
 }
 
-local CENTRE, FRONT = 95, 47   -- SC1: the centre star's x; a side's front
+local sc1_map = wesnoth.dofile("~add-ons/Star_Control_TC/lua/sc1_map.lua")
 
 function sc1.setup(mission_id)
 	local mission = sc1.missions[mission_id]
-	local name = mission.maps[mathx.random(#mission.maps)]
-	local path = "~add-ons/Star_Control_TC/maps/" .. name
-	local data = filesystem.read_file(path .. ".map")
-	local stars = wesnoth.dofile(path .. ".lua")
+	local count = {}
+	for side = 1, 2 do
+		count[side] = 0
+		for _, n in ipairs(mission[side].worlds) do count[side] = count[side] + n end
+	end
+	local data, stars = sc1_map.build(mathx.random(0, 65535), count[1], count[2], mathx.random)
 	-- park the starbases in the corner first: a smaller map would drop
 	-- units that end up off it
 	for i, u in ipairs(wesnoth.units.find_on_map {}) do u:to_map(i, 1) end
@@ -76,19 +72,16 @@ function sc1.setup(mission_id)
 	table.sort(walk[2], function(a, b) return a.sc1x > b.sc1x end)
 
 	-- deal the worlds: one card per star, drawn at random from the side's deck
-	local count, back, front, unowned = {}, { 0, 0 }, { 0, 0 }, {}
+	local back, front, unowned = { 0, 0 }, { 0, 0 }, {}
 	local owner = {}   -- star -> side, for worlds owned or claimed
 	for side = 1, 2 do
-		local left = 0
 		local cards = {}
-		for i, n in ipairs(mission[side].worlds) do
-			cards[i] = n
-			left = left + n
-		end
-		count[side], unowned[side] = left, left
+		for i, n in ipairs(mission[side].worlds) do cards[i] = n end
+		local left = count[side]
+		unowned[side] = left
 		for k = 1, count[side] do
 			local star = walk[side][k]
-			if math.abs(star.sc1x - CENTRE) < FRONT then
+			if math.abs(star.sc1x - sc1_map.CENTRE) < sc1_map.FRONT then
 				front[side] = front[side] + 1
 			else
 				back[side] = back[side] + 1
