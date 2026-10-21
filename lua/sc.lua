@@ -1264,3 +1264,56 @@ function sc.hold_ai_builders()
 		if a.side == side and u and u.id == a.id then u.moves = 0 end
 	end
 end
+
+-- Colonies -------------------------------------------------------------------
+-- A ship on its own side's colony (life world) is repaired 16 HP a turn
+-- instead of a planet's 8, and fully if it was already there at its last
+-- repair. "side turn" notes the ships on their colonies before the side
+-- heals; "turn refresh" adds the colony's extra after Wesnoth's own +8. This
+-- runs before sc.syreen_after_healing, so a Syreen still stops at its cap.
+local COLONY_HEAL = 16
+local PLANET_HEAL = 8
+
+local function on_own_colony(u)
+	return is_life_world(u.x, u.y) and wesnoth.map.get_owner(u.x, u.y) == u.side
+end
+
+function sc.colony_before_healing()
+	for _, u in ipairs(wesnoth.units.find_on_map { side = wesnoth.current.side }) do
+		if on_own_colony(u) and not u.status.unhealable and not u.status.petrified then
+			u.variables.sc_colony_repair = { hp = u.hitpoints, poisoned = u.status.poisoned }
+		else
+			u.variables.sc_colony_stay = nil
+		end
+	end
+end
+
+function sc.colony_after_healing()
+	local turn = wesnoth.current.turn
+	for _, u in ipairs(wesnoth.units.find_on_map { side = wesnoth.current.side }) do
+		local saved = u.variables.sc_colony_repair
+		if saved then
+			u.variables.sc_colony_repair = nil
+			local stay = u.variables.sc_colony_stay
+			local hp = u.hitpoints
+			if stay and stay.x == u.x and stay.y == u.y and stay.turn == turn - 1 then
+				hp = u.max_hitpoints
+			elseif not saved.poisoned then
+				-- Poison is cured instead of repaired, as on any planet.
+				hp = math.min(u.max_hitpoints, hp + COLONY_HEAL - PLANET_HEAL)
+			end
+			if hp > u.hitpoints and locally_visible(u.x, u.y) then
+				wesnoth.interface.float_label(u.x, u.y,
+					"<span color='#60ff60'>" .. hp - u.hitpoints .. "</span>")
+			end
+			u.hitpoints = hp
+			u.variables.sc_colony_stay = { x = u.x, y = u.y, turn = turn }
+		end
+	end
+end
+
+-- A ship that moves off has to stay a whole turn again for the full repair.
+function sc.colony_moveto()
+	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
+	if u then u.variables.sc_colony_stay = nil end
+end
