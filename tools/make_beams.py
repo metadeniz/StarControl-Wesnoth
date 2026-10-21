@@ -22,6 +22,7 @@ import math
 import os
 import random
 
+import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 from make_noses import STEP, nose
@@ -69,6 +70,9 @@ BEAMS = {
 REACH = {"vux-intruder": 1.7}
 # Twin beams that angle in to meet at the target's centre
 CONVERGE = {"mmrnmhrm-xform"}
+# Beams that start this fraction of the hull's length behind the nose: the
+# Chmmr's emitter sits recessed between the two prongs of its bow
+RECESS = {"chmmr-avatar": 0.07}
 
 # ships whose sprites are not drawn per level, or not for every level
 SPRITES = {"precursor-flagship": ["-l1"]}
@@ -100,6 +104,16 @@ def draw_fixed(colour, start, end, width, dim):
     glow = glow.filter(ImageFilter.GaussianBlur(2 * SS))
     glow.alpha_composite(img)
     return glow.resize((2 * half, 2 * half), Image.LANCZOS)
+
+
+def hull_axis(path, angle):
+    """How far the hull's centre line sits to the side of the sprite's
+    middle, facing `angle`: rotating a hull and trimming it to its box can
+    leave it off centre on the diagonals."""
+    a = np.array(Image.open(path).convert("RGBA"))[..., 3]
+    ys, xs = np.nonzero(a >= 128)
+    dx, dy = xs + 0.5 - a.shape[1] / 2, ys + 0.5 - a.shape[0] / 2
+    return float((dx * math.cos(angle) + dy * math.sin(angle)).mean())
 
 
 def hull_size(path):
@@ -170,8 +184,10 @@ def main():
             stem = f"{ship}{suffix}"
             w, h = hull_size(os.path.join(units, f"{stem}-n.png"))
             for facing, angle in (("n", 0.0), ("ne", DIAG)):
+                path = os.path.join(units, f"{stem}-{facing}.png")
                 if start is None:
-                    frac = round(min(0.7, nose(os.path.join(units, f"{stem}-{facing}.png"), facing) / STEP[facing]), 2)
+                    frac = round(min(0.7, nose(path, facing) / STEP[facing]), 2)
+                    frac -= RECESS.get(ship, 0) * h / STEP[facing]
                 else:
                     frac = start * h / STEP[facing]
                 reach = REACH.get(ship, 1.0)
@@ -184,7 +200,8 @@ def main():
                         colour, dim = rng.choice(colours), False
                     else:
                         colour, dim = colours[k % len(colours)], len(colours) == 1 and k % 2 == 1
-                    img = draw(kind, colour, length, [lat * w for lat in laterals], width, angle, rng, dim,
+                    side = hull_axis(path, angle)
+                    img = draw(kind, colour, length, [lat * w + side for lat in laterals], width, angle, rng, dim,
                                ship in CONVERGE)
                     img.save(os.path.join(beams, f"{stem}-{kind}-{k + 1}-{facing}.png"), optimize=True)
                     n += 1
