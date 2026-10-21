@@ -425,6 +425,7 @@ def build_effects(uqm, out):
         save(img.resize((round(img.width * 0.5), round(img.height * 0.5)), Image.LANCZOS), out,
              f"images/halo/sc/nuke-boom-{i + 1}.png", True)
     build_glory(uqm, out)
+    build_mycon_blast(uqm, out)
     # Ilwrath hellfire burst frames
     fdir = os.path.join(uqm, "addons/mm-hd/ships/ilwrath")
     frames = sorted(f for f in os.listdir(fdir) if f.startswith("fire-big-") and f.endswith(".png"))
@@ -434,6 +435,24 @@ def build_effects(uqm, out):
         save(img.resize((max(1, round(img.width * k)), max(1, round(img.height * k))), Image.LANCZOS),
              out, f"images/halo/sc/hellfire-{i + 1}.png", True)
     return len(frames)
+
+
+def build_mycon_blast(uqm, out):
+    """Mycon plasmoid hit, as Star Control 2 draws it: the plasma sprite's
+    last 8 frames (from 11 on), a burst of glowing globs that mycon.c's
+    plasma_blast_preprocess plays forward then back. Each frame sits on a
+    shared canvas with its .ani hotspot in the centre, at 0.6 scale."""
+    pdir = os.path.join(uqm, "addons/mm-hd/ships/mycon")
+    with open(os.path.join(pdir, "plasma-big.ani")) as f:
+        rows = [line.split() for line in f.read().splitlines()[11:19]]
+    frames = [(Image.open(os.path.join(pdir, r[0])).convert("RGBA"), int(r[3]), int(r[4])) for r in rows]
+    half = max(max(x, img.width - x, y, img.height - y) for img, x, y in frames)
+    k = 0.6
+    for i, (img, x, y) in enumerate(frames):
+        canvas = Image.new("RGBA", (2 * half, 2 * half), (0, 0, 0, 0))
+        canvas.alpha_composite(img, (half - x, half - y))
+        size = round(2 * half * k)
+        save(canvas.resize((size, size), Image.LANCZOS), out, f"images/halo/sc/mycon-blast-{i + 1}.png", True)
 
 
 def build_glory(uqm, out):
