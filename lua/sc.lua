@@ -350,10 +350,12 @@ function sc.victory_theme()
 	if side then sc.victory_picture(side.__cfg.faction) end
 end
 
--- Star Control 1's victory pictures, shown in a narrator's message window
--- like a scripted scenario event while the victory theme plays: Earth ringed
--- by the Alliance races, or an Ur-Quan reaching out its tentacles. The
--- pictures are made by tools/make_victory_portraits.py.
+-- Victory pictures, shown in a narrator's message window like a scripted
+-- scenario event while the victory theme plays: Star Control 1's Earth
+-- ringed by the Alliance races, or an Ur-Quan reaching out its tentacles,
+-- and for the New Alliance Star Control II's Talana, as you wake up after
+-- her seduction scene. The pictures are made by
+-- tools/make_victory_portraits.py.
 local VICTORY_PICTURE = {
 	SC_Alliance = {
 		caption = _ "Alliance Victory",
@@ -366,6 +368,12 @@ local VICTORY_PICTURE = {
 		image = "portraits/sc/hierarchy-victory.png",
 		winner = _ "Hierarchy",
 		loser = _ "Alliance",
+	},
+	SC_NewAlliance = {
+		caption = _ "New Alliance Victory",
+		image = "portraits/sc/new-alliance-victory.png",
+		winner = _ "New Alliance",
+		loser = _ "Hierarchy",
 	},
 }
 
