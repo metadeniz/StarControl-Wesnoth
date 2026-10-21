@@ -38,7 +38,7 @@ and must stay non-commercial.
 - Syreen theme cover and Androsynth encounter theme by Ramen Rider
 - Orchestral Ur-Quan theme cover by Idan Schneider
 - Hyperspace theme refresh (2014) by Anamnesis
-- Star Control 1's Alliance and Hierarchy victory themes
+- Star Control 1's Hierarchy victory theme
 - Death March victory theme: the opening of Chopin's Funeral March (public domain)
 
 ## Original work
