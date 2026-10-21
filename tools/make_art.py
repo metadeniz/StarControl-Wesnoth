@@ -146,6 +146,7 @@ SOUNDS = {
     "chenjesu-crystal": "base/ships/chenjesu/primary.wav",
     "chenjesu-dogi": "base/ships/chenjesu/secondary.wav",
     "chenjesu-shrapnel": "base/ships/chenjesu/shrapnel.wav",  # crystal shattering
+    "chenjesu-dogi-bark": "base/ships/chenjesu/dogibark.wav",  # the DOGI saps a ship's energy
     "mmrnmhrm-laser": "base/ships/mmrnmhrm/primaryx.wav",
     "mmrnmhrm-torpedo": "base/ships/mmrnmhrm/primaryy.wav",
     "mmrnmhrm-transform": "base/ships/mmrnmhrm/secondary.wav",
@@ -248,6 +249,29 @@ def trim(img):
     return img.crop(box) if box else img
 
 
+def turned(hd, angle):
+    """The hull rotated by `angle` and trimmed, with where its centre (the
+    middle of the unrotated hull's box) ended up. Trimming a rotated hull to
+    its box can leave that centre off the box's middle, so it is tracked."""
+    hull = trim(hd)
+    r = rotated(hull, angle)
+    box = r.getbbox()
+    return r.crop(box), (r.width / 2 - box[0], r.height / 2 - box[1])
+
+
+def on_centre(img, cx, cy):
+    """`img` on a square canvas (at least a hex) with the point (cx, cy) in
+    the middle: the hull's centre stays on the hex's centre, and its centre
+    line through the hex's middle, whichever way it faces. Returns the canvas
+    and where `img` went on it."""
+    reach = max(cx, img.width - cx, cy, img.height - cy)
+    size = max(HEX, 2 * math.ceil(reach), img.width + img.width % 2, img.height + img.height % 2)
+    origin = (math.floor(size / 2 - cx), math.floor(size / 2 - cy))
+    canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    canvas.alpha_composite(img, origin)
+    return canvas, origin
+
+
 def centred(img, size=HEX):
     canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     canvas.alpha_composite(img, ((size - img.width) // 2, (size - img.height) // 2))
@@ -321,6 +345,8 @@ def with_glow(img, colour, radius, strength):
 def build_ships(uqm, out):
     for uid, (ship_dir, stem) in SHIPS.items():
         hd = hd_sprite(uqm, ship_dir, stem)
+        if uid in TURRETS:
+            hd = with_turret(uqm, ship_dir, stem, TURRETS[uid], hd)
         fit = min(70.0 / max(trim(rotated(hd, a)).size) for a in FACINGS.values())
         top = min(ship_scale(uqm, ship_dir, stem, hd) * LEVEL_GROWTH, fit)
         colour = glow_colour(hd)
@@ -329,22 +355,26 @@ def build_ships(uqm, out):
             if uid in FILL_HEX and level == 1:
                 scale = hex_filling_scale(trim(hd))
             for facing, angle in FACINGS.items():
-                r = trim(rotated(hd, angle))
+                r, (cx, cy) = turned(hd, angle)
                 w = max(1, round(r.width * scale))
                 h = max(1, round(r.height * scale))
-                img = centred(r.resize((w, h), Image.LANCZOS), max(HEX, w + w % 2, h + h % 2))
+                img, origin = on_centre(r.resize((w, h), Image.LANCZOS), cx * w / r.width, cy * h / r.height)
                 if glow:
                     img = with_glow(img, colour, *glow)
                 save(img, out, f"images/units/sc/{uid}-l{level}-{facing}.png", True)
                 if facing == "ne":
                     save(img, out, f"images/units/sc/{uid}-l{level}.png", True)
                 if uid in SHIELDS:
-                    img = shielded(uqm, ship_dir, stem, SHIELDS[uid], hd, angle, (w, h), img)
+                    img = shielded(uqm, ship_dir, stem, SHIELDS[uid], hd, angle, (w, h), img, origin)
                     save(img, out, f"images/units/sc/{uid}-l{level}-shield-{facing}.png", True)
 
 
 # unit image id -> stem of the UQM sprite drawn while the ship's shield is up
 SHIELDS = {"yehat-terminator": "shield"}
+
+# unit image id -> stem of a turret UQM draws on top of the hull, as its own
+# sprite (the Orz Nemesis: orz.c turns it on its own; here it faces ahead)
+TURRETS = {"orz-nemesis": "turret"}
 
 
 def ani_hotspot(uqm, ship_dir, stem):
@@ -354,13 +384,26 @@ def ani_hotspot(uqm, ship_dir, stem):
     return int(x), int(y)
 
 
-def shielded(uqm, ship_dir, ship_stem, stem, hd, angle, size, img):
+def with_turret(uqm, ship_dir, ship_stem, stem, hd):
+    """The HD hull with its turret's first (forward) frame on top, lined up
+    by the two sprites' hotspots."""
+    turret = hd_sprite(uqm, ship_dir, stem)
+    (tx, ty), (hx, hy) = ani_hotspot(uqm, ship_dir, stem), ani_hotspot(uqm, ship_dir, ship_stem)
+    x, y = hx - tx, hy - ty
+    assert x >= 0 and y >= 0 and x + turret.width <= hd.width and y + turret.height <= hd.height
+    out = hd.copy()
+    out.alpha_composite(turret, (x, y))
+    return out
+
+
+def shielded(uqm, ship_dir, ship_stem, stem, hd, angle, size, img, origin):
     """The ship with its shield up, as Star Control II draws the Yehat force
     shield: UQM swaps in a second sprite, the ship inside a white ring,
     lined up with the ship by its hotspot. The ring goes under the finished
-    sprite `img` (the ship `hd` rotated by `angle` and resized to `size`),
-    so the ship and its level glow stay exactly as they are; the canvas
-    grows evenly on all sides to fit the ring, keeping the ship centred."""
+    sprite `img` (the ship `hd` rotated by `angle`, resized to `size` and
+    put at `origin`), so the ship and its level glow stay exactly as they
+    are; the canvas grows evenly on all sides to fit the ring, keeping the
+    ship centred."""
     special = hd_sprite(uqm, ship_dir, stem)
     (sx, sy), (hx, hy) = ani_hotspot(uqm, ship_dir, stem), ani_hotspot(uqm, ship_dir, ship_stem)
     ship = Image.new("RGBA", special.size, (0, 0, 0, 0))
@@ -371,9 +414,9 @@ def shielded(uqm, ship_dir, ship_stem, stem, hd, angle, size, img):
     ring = ring.resize((round(ring.width * kx), round(ring.height * ky)), Image.LANCZOS)
     rbox = ring.getbbox()
     ring = ring.crop(rbox)
-    # where the ring lands on `img`, which centres the resized ship
-    rx = (img.width - size[0]) // 2 - round(box[0] * kx) + rbox[0]
-    ry = (img.height - size[1]) // 2 - round(box[1] * ky) + rbox[1]
+    # where the ring lands on `img`, which has the resized ship at `origin`
+    rx = origin[0] - round(box[0] * kx) + rbox[0]
+    ry = origin[1] - round(box[1] * ky) + rbox[1]
     pad = max(0, -rx, -ry, rx + ring.width - img.width, ry + ring.height - img.height)
     canvas = Image.new("RGBA", (img.width + 2 * pad, img.height + 2 * pad), (0, 0, 0, 0))
     canvas.alpha_composite(ring, (rx + pad, ry + pad))
@@ -406,7 +449,7 @@ ANIMATED_PROJECTILES = {
     "buzzsaw": ("kohrah", "buzzsaw", range(0, 2), 0.5),          # blackurq.c: spins on 0-1
     "limpet": ("vux", "limpets", range(0, 4), 0.8),              # vux.c: wriggles through 0-3
     "bubble": ("androsynth", "bubble", range(0, 3), 0.6),        # androsyn.c: wobbles through 0-2
-    "spit": ("zoqfotpik", "spit", range(0, 6), 1.4),             # zoqfot.c: shrinks as it flies
+    "spit": ("zoqfotpik", "spit", range(0, 6), 1.4),             # zoqfot.c: fades from white to red
     "confuser": ("melnorme", "confuse", range(0, 8), 0.6),       # melnorme.c: cycles 0-7
 }
 
@@ -423,6 +466,38 @@ def build_animated_projectiles(uqm, out):
                 save(img, out, f"images/projectiles/sc/{pid}-{k}-{facing}.png", True)
 
 
+# Weapons that fire several shots at once, drawn as one projectile: the shot
+# at each launch point, as a fraction of the HD hull's width from its centre
+# (sideways, ahead), so they line up on every level's sprite.
+# id -> (unit image id, HD hull width, shot id, launch points)
+VOLLEYS = {
+    # yehat.c: twin pulse cannons, LAUNCH_OFFS (32 HD px) to either side
+    "pulse-twin": ("yehat-terminator", 78, "pulse", [(-32, 0), (32, 0)]),
+    # utwig.c: six lances along the bow, LAUNCH_X/YOFFS0-2 mirrored
+    "lance-six": ("utwig-jugger", 133, "lance",
+                  [(sx * x, y) for x, y in ((20, 63), (48, 25), (64, 11)) for sx in (-1, 1)]),
+}
+
+
+def build_volleys(out):
+    for vid, (uid, hd_width, pid, points) in VOLLEYS.items():
+        shot = Image.open(os.path.join(out, f"images/projectiles/sc/{pid}-n.png")).convert("RGBA")
+        for level in LEVELS:
+            hull = Image.open(os.path.join(out, f"images/units/sc/{uid}-l{level}-n.png"))
+            box = hull.split()[3].point(lambda a: 255 if a >= 128 else 0).getbbox()
+            k = (box[2] - box[0]) / hd_width
+            xy = [(round(x * k), -round(y * k)) for x, y in points]
+            x0, y0 = min(x for x, _ in xy), min(y for _, y in xy)
+            w = max(x for x, _ in xy) - x0 + shot.width
+            h = max(y for _, y in xy) - y0 + shot.height
+            img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+            for x, y in xy:
+                img.alpha_composite(shot, (x - x0, y - y0))
+            for facing in ("n", "ne"):
+                save(trim(rotated(img, FACINGS[facing])), out,
+                     f"images/projectiles/sc/{vid}-l{level}-{facing}.png", True)
+
+
 def build_lasers(out):
     for lid, rgb in LASERS.items():
         w, h = 9, 30
@@ -435,6 +510,35 @@ def build_lasers(out):
         for facing in ("n", "ne"):
             save(trim(rotated(img, FACINGS[facing])), out,
                  f"images/projectiles/sc/{lid}-{facing}.png", False)
+
+
+def build_song(out):
+    """The Syreen song (original art; SC2 shows no song, only the crew it
+    lures): rings that ripple out from the Syreen, and the green dots of
+    crew floating across (misc.c draws an abandoning crewman as a green
+    point)."""
+    n, size = 10, 180
+    for t in range(n):
+        u = (t + 1) / n
+        r = 10 + u * 76
+        img = Image.new("RGBA", (size * 4, size * 4), (0, 0, 0, 0))
+        d = ImageDraw.Draw(img)
+        pts = []
+        for i in range(361):
+            a = math.radians(i)
+            rr = (r + 2.2 * math.sin(12 * a + 6 * u)) * 4
+            pts.append((size * 2 + rr * math.sin(a), size * 2 - rr * math.cos(a)))
+        alpha = round(230 * (1 - u) ** 0.7)
+        d.line(pts, fill=(230, 130, 255, alpha), width=10)
+        d.line(pts, fill=(255, 220, 255, alpha), width=4)
+        img = img.resize((size, size), Image.LANCZOS).filter(ImageFilter.GaussianBlur(0.5))
+        save(img, out, f"images/halo/sc/song-{t + 1}.png", False)
+    for t, dots in enumerate((((-5, -2), (3, -5), (5, 4)), ((-3, 4), (-6, -4), (4, -1)))):
+        img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+        d = ImageDraw.Draw(img)
+        for x, y in dots:
+            d.ellipse([6 + x, 6 + y, 9 + x, 9 + y], fill=(60, 230, 60, 255))
+        save(img, out, f"images/halo/sc/crew-{t + 1}.png", False)
 
 
 def build_effects(uqm, out):
@@ -456,6 +560,7 @@ def build_effects(uqm, out):
     build_glory(uqm, out)
     build_mycon_blast(uqm, out)
     build_hits(uqm, out)
+    build_crystal_shatter(uqm, out)
     # Ilwrath hellfire burst frames
     fdir = os.path.join(uqm, "addons/mm-hd/ships/ilwrath")
     frames = sorted(f for f in os.listdir(fdir) if f.startswith("fire-big-") and f.endswith(".png"))
@@ -486,6 +591,12 @@ HITS = {
     "blaster2-hit": ("flagship", "blaster", range(10, 16), 0.8),
     "blaster1-hit": ("flagship", "blaster", range(0, 1), 0.8),       # its first frame, 2 ticks
     "confuser-hit": ("melnorme", "confuse", range(8, 16), 0.6),      # melnorme.c: clings to the target
+    # chenjesu.c: the DOGI's crackle as it fizzles out, here where it saps
+    # a ship's energy (it does no damage, so no blast)
+    "dogi-drain": ("chenjesu", "doggy", range(1, 7), 0.7),
+    # chmmr.c: the ion sparks the megawatt laser leaves along its length
+    # (frames 32-40 of the muzzle sprite, one a battle frame)
+    "chmmr-ion": ("chmmr", "muzzle", range(32, 41), 0.5),
 }
 
 
@@ -504,6 +615,35 @@ def build_hits(uqm, out):
             canvas = Image.new("RGBA", (2 * half, 2 * half), (0, 0, 0, 0))
             canvas.alpha_composite(img, (half - x, half - y))
             save(canvas.resize((size, size), Image.LANCZOS), out, f"images/halo/sc/{hid}-{i + 1}.png", True)
+
+
+def build_crystal_shatter(uqm, out):
+    """The Chenjesu photon crystal bursting where it hits close up: chenjesu.c's eight
+    shards (frame 1 of the spark sprite) flying out from the sparkles
+    (frames 2-9), one battle frame (42 ms) apiece, on a shared canvas."""
+    sdir = os.path.join(uqm, "addons/mm-hd/ships/chenjesu")
+    with open(os.path.join(sdir, "spark-big.ani")) as f:
+        rows = [line.split() for line in f.read().splitlines()]
+    k, reach, n = 0.6, 54, 10
+    def frame(i):
+        img = Image.open(os.path.join(sdir, rows[i][0])).convert("RGBA")
+        img = img.resize((round(img.width * k), round(img.height * k)), Image.LANCZOS)
+        return img, round(int(rows[i][3]) * k), round(int(rows[i][4]) * k)
+    shard, sx, sy = frame(1)
+    half = reach + max(shard.size)
+    for t in range(n):
+        canvas = Image.new("RGBA", (2 * half, 2 * half), (0, 0, 0, 0))
+        if t < 8:
+            spark, x, y = frame(2 + t)
+            canvas.alpha_composite(spark, (half - x, half - y))
+        r = reach * (t + 1) / n
+        fade = min(1.0, (n - t) / 3)
+        piece = shard.copy()
+        piece.putalpha(piece.split()[3].point(lambda a: round(a * fade)))
+        for d in range(8):
+            a = math.radians(45 * d)
+            canvas.alpha_composite(piece, (half + round(r * math.sin(a)) - sx, half - round(r * math.cos(a)) - sy))
+        save(canvas, out, f"images/halo/sc/crystal-shatter-{t + 1}.png", True)
 
 
 def build_mycon_blast(uqm, out):
@@ -821,6 +961,7 @@ def build_sounds(uqm, out):
         shutil.copyfile(os.path.join(uqm, rel), os.path.join(out, dest))
         manifest.append(dest)
     build_chmmr_sounds(out)
+    build_held_sounds(out)
 
 
 def read_wav(path):
@@ -860,16 +1001,47 @@ def build_chmmr_sounds(out):
     long_laser = held(laser, rate, 0.6, 0.3)
     write_wav(os.path.join(snd, "chmmr-laser-long.wav"), long_laser, rate)
 
-    # The tractor beam hums under the whole shot, its sample looped end to
-    # end; the laser joins once the beam has locked on.
+    # The tractor beam hums under the whole shot, held down like the laser
+    # (chmmr.c plays its sound again every frame the special is held); the
+    # laser joins once the beam has locked on.
     lead = int(0.15 * rate)
     mix = np.zeros(lead + len(long_laser), np.float32)
-    hum = np.tile(tractor, len(mix) // len(tractor) + 1)[:len(mix)]
-    hum[-len(tractor):] *= np.linspace(1, 0, len(tractor))
-    mix += 1.2 * hum
+    tail = len(tractor) / rate
+    hum = held(tractor, rate, len(mix) / rate - tail, tail)
+    mix[:len(hum)] += 1.2 * hum[:len(mix)]
     mix[lead:] += 0.8 * long_laser
     write_wav(os.path.join(snd, "chmmr-tractor-laser.wav"), mix, rate)
     manifest.extend(["sounds/sc/chmmr-laser-long.wav", "sounds/sc/chmmr-tractor-laser.wav"])
+
+
+# sample -> (seconds held, seconds the last restart rings out): lasers that,
+# like the Chmmr's, fire every frame for as long as the button is held
+# (WEAPON_WAIT 0 in vux.c and mmrnmhrm.c)
+HELD = {"vux-laser": (0.6, 0.3), "mmrnmhrm-laser": (0.45, 0.15)}
+# sample -> (shots, seconds apart): quick bursts, `<sample>-burst.wav`, each
+# shot's sound stopping the last (the Arilou's three zaps)
+BURSTS = {"arilou-laser": (3, 0.09)}
+
+
+def build_held_sounds(out):
+    """A burst of laser fire per attack, `<sample>-long.wav` or
+    `<sample>-burst.wav`, from the single shot."""
+    snd = os.path.join(out, "sounds/sc")
+    for name, (seconds, tail) in HELD.items():
+        sample, rate = read_wav(os.path.join(snd, f"{name}.wav"))
+        write_wav(os.path.join(snd, f"{name}-long.wav"), held(sample, rate, seconds, tail), rate)
+        manifest.append(f"sounds/sc/{name}-long.wav")
+    for name, (shots, every) in BURSTS.items():
+        sample, rate = read_wav(os.path.join(snd, f"{name}.wav"))
+        step = round(every * rate)
+        # each shot cuts the last one off, as UQM restarting the sound on
+        # the ship's channel does, with a short fade so the cut doesn't click
+        fade = int(0.006 * rate)
+        cut = sample[:step].copy()
+        cut[-fade:] *= np.linspace(1, 0, fade)
+        mix = np.concatenate([cut] * (shots - 1) + [sample])
+        write_wav(os.path.join(snd, f"{name}-burst.wav"), mix, rate)
+        manifest.append(f"sounds/sc/{name}-burst.wav")
 
 
 # ------------------------------------------------------- original terrain
@@ -2135,7 +2307,9 @@ def main():
     build_alliance_starbase(args.out)    # original art
     build_projectiles(args.uqm, args.out)
     build_animated_projectiles(args.uqm, args.out)
+    build_volleys(args.out)
     build_lasers(args.out)
+    build_song(args.out)
     build_fried_plumes(args.out, save, rotated, DIAG, args.seed)   # original art
     build_attack_icons(args.out)
     nfire = build_effects(args.uqm, args.out)
