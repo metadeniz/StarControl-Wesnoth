@@ -1304,10 +1304,6 @@ function sc.planet_captured()
 	-- an ally's planet: the engine has already handed it over
 	if u and owner > 0 and not wesnoth.sides.is_enemy(u.side, owner) then return end
 	wesnoth.map.set_owner(c.x1, c.y1, 0, false)
-	if owner > 0 and locally_visible(c.x1, c.y1) then
-		wesnoth.interface.float_label(c.x1, c.y1,
-			"<span color='#ff8060'>" .. tostring(_ "Planet destroyed") .. "</span>")
-	end
 	if not u then return end
 	local claims = wml.array_access.get(CLAIMS)
 	claims[#claims + 1] = { x = c.x1, y = c.y1, side = u.side, id = u.id, wait = CLAIM_TURNS }
