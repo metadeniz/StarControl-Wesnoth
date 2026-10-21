@@ -142,9 +142,27 @@ end
 
 --------------------------------------------------------------- Mmrnmhrm X <-> Y
 
+-- A ship transforms only at the start of its turn, before it has moved or
+-- attacked, and then moves and attacks in its new shape. Its movement at the
+-- start of the turn is noted ("turn refresh") rather than compared with its
+-- full movement, so a slowed ship can still transform. Undoing a move gives
+-- the movement back, so it doesn't count as having moved.
+local function is_mmrnmhrm(u) return u.type:match("^SC_Mmrnmhrm_") ~= nil end
+
+function sc.note_transform_moves()
+	for _, u in ipairs(wesnoth.units.find_on_map { side = wesnoth.current.side }) do
+		if is_mmrnmhrm(u) then u.variables.sc_turn_moves = u.moves end
+	end
+end
+
+function sc_can_transform(u)
+	return u.moves > 0 and u.moves == (u.variables.sc_turn_moves or u.max_moves)
+		and u.attacks_left > 0 and u.attacks_left == u.max_attacks
+end
+
 function wesnoth.wml_actions.sc_transform(cfg)
 	local u = wesnoth.units.get(cfg.x, cfg.y)
-	if not u or u.attacks_left < 1 or u.moves < 1 then return end
+	if not u or not sc_can_transform(u) then return end
 	-- Same level, other shape: SC_Mmrnmhrm_XForm_L2 <-> SC_Mmrnmhrm_YWing_L2
 	local to
 	if u.type:match("^SC_Mmrnmhrm_XForm") then
@@ -156,6 +174,7 @@ function wesnoth.wml_actions.sc_transform(cfg)
 	end
 	count("transform")
 	local hp = u.hitpoints
+	local moves, max_moves = u.moves, u.max_moves
 	wesnoth.audio.play("sc/mmrnmhrm-transform.wav")
 	u:transform(to)
 	-- The two shapes have different hulls, and transforming adds the new
@@ -181,8 +200,10 @@ function wesnoth.wml_actions.sc_transform(cfg)
 	u = wesnoth.units.create(cfg)
 	u:to_map(x, y)
 	u.hitpoints = hp
-	u.moves = 0
-	u.attacks_left = 0
+	-- The new shape's movement, cut by the same share if the ship is slowed
+	u.moves = math.floor(u.max_moves * moves / max_moves)
+	u.variables.sc_turn_moves = u.moves
+	u.attacks_left = u.max_attacks
 end
 
 ---------------------------------------------------------------------- AI help
