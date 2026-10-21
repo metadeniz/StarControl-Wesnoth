@@ -1194,7 +1194,8 @@ function sc.update_planet_income()
 end
 
 -- Taking planets -------------------------------------------------------------
--- A ship that lands on a planet doesn't take it straight away. An enemy's
+-- A ship that lands on an ally's planet takes it straight away, as in
+-- plain Wesnoth. Otherwise it doesn't take it straight away: an enemy's
 -- planet is destroyed (it goes to nobody), and a free planet gets a colony,
 -- mine or outpost built on it, which takes CLAIM_TURNS of the ship's side's
 -- turns: the planet is that side's when the last of them starts, if the
@@ -1206,6 +1207,8 @@ function sc.planet_captured()
 	local c = wesnoth.current.event_context
 	local u = wesnoth.units.get(c.x1, c.y1)
 	local owner = wml.variables["owner_side"] or 0
+	-- an ally's planet: the engine has already handed it over
+	if u and owner > 0 and not wesnoth.sides.is_enemy(u.side, owner) then return end
 	wesnoth.map.set_owner(c.x1, c.y1, 0, false)
 	if owner > 0 and locally_visible(c.x1, c.y1) then
 		wesnoth.interface.float_label(c.x1, c.y1,
