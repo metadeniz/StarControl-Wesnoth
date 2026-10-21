@@ -43,18 +43,27 @@ def rgb15(r, g, b):
 BEAMS = {
     # vux.c: one green laser to LASER_BASE, the longest in the game
     "vux-intruder": ("laser", [rgb15(0x0A, 0x1F, 0x0A)], 2, [0.0], 2.5, None),
-    # mmrnmhrm.c: twin red lasers from the emitters on the wingtips,
-    # WING_OFFS (48 HD px) either side of a point CENTER_OFFS (16) ahead of
-    # the hotspot, which sits 21 px behind the middle of the 104 x 84 sprite
-    "mmrnmhrm-xform": ("laser", [rgb15(0x1F, 0x0A, 0x0A)], 2, [-48 / 104, 48 / 104], 2.0, -5 / 84),
+    # mmrnmhrm.c: twin red lasers from the red emitters on the wingtips,
+    # WING_OFFS (48 HD px) either side of the hull, starting at the
+    # emitters' tips (row 43 of the 84 px HD sprite, 1 px ahead of its middle)
+    "mmrnmhrm-xform": ("laser", [rgb15(0x1F, 0x0A, 0x0A)], 2, [-48 / 104, 48 / 104], 2.0, 1 / 84),
     # chmmr.c: the megawatt laser cycles its colour every frame (cycle_array)
     "chmmr-avatar": ("laser", [rgb15(0x17, 0, 0), rgb15(0x1F, 0x03, 0), rgb15(0x1F, 0x11, 0),
                                rgb15(0x1F, 0x03, 0)], 4, [0.0], 3.5, None),
+    # human.c: point-defense lasers, white zaps from the middle of the ship
+    "earthling-cruiser": ("laser", [rgb15(0x1F, 0x1F, 0x1F)], 2, [0.0], 2.0, 0.0),
+    "alliance-starbase": ("laser", [rgb15(0x1F, 0x1F, 0x1F)], 2, [0.0], 2.0, 0.0),
+    # ...and the Precursor ship's, in red
+    "precursor-flagship": ("laser", [rgb15(0x1F, 0x05, 0x05)], 2, [0.0], 2.0, 0.0),
     # slylandr.c: a crooked chain of short segments, each bolt white or one
     # of three blues
     "slylandro-probe": ("lightning", [rgb15(0x1F, 0x1F, 0x1F), rgb15(0x16, 0x17, 0x1F),
                                       rgb15(0x06, 0x07, 0x1F), rgb15(0, 0, 0x18)], 4, [0.0], 2.0, None),
 }
+
+
+# ships whose sprites are not drawn per level, or not for every level
+SPRITES = {"alliance-starbase": [""], "precursor-flagship": ["-l1"]}
 
 
 def hull_size(path):
@@ -119,8 +128,8 @@ def main():
         "",
     ]
     for ship, (kind, colours, frames, laterals, width, start) in BEAMS.items():
-        for level in (1, 2, 3):
-            stem = f"{ship}-l{level}"
+        for suffix in SPRITES.get(ship, ["-l1", "-l2", "-l3"]):
+            stem = f"{ship}{suffix}"
             w, h = hull_size(os.path.join(units, f"{stem}-n.png"))
             for facing, angle in (("n", 0.0), ("ne", DIAG)):
                 if start is None:
