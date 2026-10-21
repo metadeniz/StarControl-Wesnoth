@@ -54,6 +54,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | 2p — The Freelands (Deep Space) | 1 vs 1 |
 | 2p — Weldyn Channel (Deep Space) | 1 vs 1 |
 | 2p — Fallenstar Lake (Deep Space) | 1 vs 1 |
+| 2p — Isar’s Cross (Deep Space) | 1 vs 1, north vs south; the west and east starbases start empty |
 | 2p — Caves of the Basilisk (Deep Space) | 1 vs 1; black holes stand where the statues were |
 | 2p — Silverhead Crossing (Deep Space) | 1 vs 1 |
 | 2p — Ruphus Isle (Deep Space) | 1 vs 1 |
