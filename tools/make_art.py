@@ -635,12 +635,12 @@ def build_ship_death(uqm, out):
     out) and drifting 0-4 pixels a frame; each plays boom-big's 9 frames,
     one a battle frame. Here a battle frame lasts 70 ms, not SC2's 42, so
     the cloud plays slower, in step with the big boom. The cloud is the HD
-    art at 0.5 scale, booms, spread and drift alike; a fixed seed keeps it
+    art at 0.35 scale, booms, spread and drift alike; a fixed seed keeps it
     the same every build."""
     battle = os.path.join(uqm, "addons/mm-hd/battle")
     small = [Image.open(os.path.join(battle, f"boom-big-{i:03d}.png")).convert("RGBA") for i in range(9)]
     big = [img.resize((img.width * 3, img.height * 3), Image.LANCZOS) for img in small]
-    k = 0.5
+    k = 0.35
     small = [img.resize((max(1, round(img.width * k)), max(1, round(img.height * k))), Image.LANCZOS)
              for img in small]
     rng = np.random.default_rng(1994)
