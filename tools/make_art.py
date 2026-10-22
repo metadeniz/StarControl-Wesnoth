@@ -305,9 +305,9 @@ LEVEL_GROWTH = 1.12
 FILL_HEX = {"precursor-flagship"}
 # Ships whose blue hull is drawn darker than in UQM: unit image id ->
 # (brightness factor, how far the hue moves toward deep blue, saturation
-# factor). The Precursor Flagship reads as a deep navy, as remembered from
-# Star Control II. Its glow keeps the original hull's lighter blue.
-DARKER_HULL = {"precursor-flagship": (0.55, 0.5, 1.15)}
+# factor). The Precursor Flagship's hull is a darker blue than UQM's; its
+# glow keeps the original hull's lighter blue.
+DARKER_HULL = {"precursor-flagship": (0.7, 0.0, 1.0)}
 
 
 def hex_filling_scale(img):
