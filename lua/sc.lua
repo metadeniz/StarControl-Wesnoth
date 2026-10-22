@@ -961,6 +961,12 @@ local COLONY_DESTROYED_HALO = planet_anim_halo("colony-destroyed", 57, 67, 67)
 -- 54 frames at 15 fps, the white held for half a second before fading out.
 local MINE_DESTROYED_ANIM = "sc_mine_destroyed_anim"
 local MINE_DESTROYED_HALO = planet_anim_halo("mine-destroyed", 58, 67, 500)
+-- The fortification on a dead world shot to pieces, then the ships parked
+-- on the asteroids around it (SC1's own frames, from TACTICS.PKG): 27
+-- frames at 7.5 fps, the last held half a second before fading out, about
+-- as long as the colony's and the mine's scenes.
+local OUTPOST_DESTROYED_ANIM = "sc_outpost_destroyed_anim"
+local OUTPOST_DESTROYED_HALO = planet_anim_halo("outpost-destroyed", 31, 133, 500)
 -- A Syreen taking an enemy's colony: her captain's scene, then the colony,
 -- emptied of its colonists, blown up (one halo, so they play one after the
 -- other in the same place).
@@ -974,6 +980,7 @@ local PLANET_ANIMS = {
 	[SYREEN_CAPTURE_ANIM] = "sc_syreen_capture_anims",
 	[COLONY_DESTROYED_ANIM] = "sc_colony_destroyed_anims",
 	[MINE_DESTROYED_ANIM] = "sc_mine_destroyed_anims",
+	[OUTPOST_DESTROYED_ANIM] = "sc_outpost_destroyed_anims",
 }
 
 local function play_planet_anim(x, y, side, name, halo)
@@ -999,6 +1006,11 @@ end
 local function is_mineral_world(x, y)
 	local overlay = planet_overlay(x, y)
 	return overlay == "Vym" or overlay == "Vysm"
+end
+
+local function is_dead_world(x, y)
+	local overlay = planet_overlay(x, y)
+	return overlay == "Vyd" or overlay == "Vysd"
 end
 
 -- Whether ship u landing on a planet taken from side owner is a Syreen
@@ -1293,13 +1305,16 @@ function sc.planet_captured()
 	claims[#claims + 1] = { x = c.x1, y = c.y1, side = u.side, id = u.id, wait = CLAIM_TURNS }
 	wml.array_access.set(CLAIMS, claims)
 	-- an enemy's colony blown up (after her own scene, if a Syreen is taking
-	-- its colonists: see sc.syreen_captured), or an enemy's mine: its scene (with "Colony destroyed" or "Mine
-	-- destroyed" in it, gone when the scene is)
+	-- its colonists: see sc.syreen_captured), an enemy's mine or outpost: its
+	-- scene (with "Colony destroyed", "Mine destroyed" or "Outpost destroyed"
+	-- in it, gone when the scene is)
 	if owner > 0 and wesnoth.sides.is_enemy(u.side, owner) then
 		if is_life_world(c.x1, c.y1) and not syreen_fills_crew(u, owner) then
 			play_planet_anim(c.x1, c.y1, u.side, COLONY_DESTROYED_ANIM, COLONY_DESTROYED_HALO)
 		elseif is_mineral_world(c.x1, c.y1) then
 			play_planet_anim(c.x1, c.y1, u.side, MINE_DESTROYED_ANIM, MINE_DESTROYED_HALO)
+		elseif is_dead_world(c.x1, c.y1) then
+			play_planet_anim(c.x1, c.y1, u.side, OUTPOST_DESTROYED_ANIM, OUTPOST_DESTROYED_HALO)
 		end
 	end
 end
