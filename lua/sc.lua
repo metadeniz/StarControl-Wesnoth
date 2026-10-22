@@ -68,7 +68,10 @@ function sc.note_attacker()
 	attacker_id = u and u.id
 end
 
-function sc.glory_revenge()
+-- Last breath: decide whether the dying scout sets its Device off, and if
+-- so mark it sc_glory so its death animation is the charge and glory blast
+-- (see SC_GLORY_ANIM) instead of the usual explosion.
+function sc.glory_revenge_roll()
 	local c = wesnoth.current.event_context
 	local u = wesnoth.units.get(c.x1, c.y1)
 	local killer = c.x2 and wesnoth.units.get(c.x2, c.y2)
@@ -77,17 +80,20 @@ function sc.glory_revenge()
 	local glory
 	for _, a in ipairs(u.attacks) do if a.name == "glory_device" then glory = a end end
 	if not glory or mathx.random(100) > GLORY_REVENGE_CHANCE then return end
+	u.status.sc_glory = true
+	u.variables.sc_glory_damage = glory.damage
+end
+
+-- Die: once the blast has played, it hurts the killer.
+function sc.glory_revenge()
+	local c = wesnoth.current.event_context
+	local u = wesnoth.units.get(c.x1, c.y1)
+	local killer = c.x2 and wesnoth.units.get(c.x2, c.y2)
+	if not u or not u.status.sc_glory or not killer then return end
 	count("glory_revenge")
-	local damage = mathx.random(math.floor(glory.damage * 2 / 3 + 0.5), math.floor(glory.damage * 4 / 3 + 0.5))
+	local full = u.variables.sc_glory_damage
+	local damage = mathx.random(math.floor(full * 2 / 3 + 0.5), math.floor(full * 4 / 3 + 0.5))
 	damage = math.floor(damage / 2 + 0.5)
-	-- The Glory Device's own blast (see SC_GLORY_ANIM), over the killer.
-	wesnoth.audio.play("sc/shofixti-glory.wav")
-	for i = 1, 8 do
-		local halo = "halo/sc/glory-" .. i .. ".png"
-		wesnoth.wml_actions.item { x = killer.x, y = killer.y, halo = halo }
-		wesnoth.interface.delay(70)
-		wesnoth.wml_actions.remove_item { x = killer.x, y = killer.y, image = halo }
-	end
 	wesnoth.wml_actions.harm_unit {
 		T.filter { x = killer.x, y = killer.y },
 		amount = damage, damage_type = "fire",
