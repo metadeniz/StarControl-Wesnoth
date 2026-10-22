@@ -17,7 +17,8 @@ kept, at 15 fps, then the last picture fades out over a few frames.
 
 Scenes with no recording are read from the game's own files instead
 (tools/sc1_pkg.py): the 54x36 picture, shown at twice the size (108x72),
-still for LEAD frames, then one frame of its animation each 15 fps frame.
+still for LEAD frames, then its animation; lua/sc.lua plays these at half
+the recordings' rate (7.5 fps), to last about as long as the recorded scenes.
   outpost-destroyed the fortification on a dead world shot to pieces, then
                     the ships parked on the asteroids around it
 
@@ -62,7 +63,7 @@ SCENES = {
 }
 # scenes read from TACTICS.PKG: planet scene, animation (see sc1_pkg.scene)
 PKG_SCENES = {"outpost-destroyed": (0, 2)}
-LEAD = 7                       # still frames before the animation, as in colony-destroyed's recording
+LEAD = 4                       # still frames before the animation (about colony-destroyed's half second)
 CUTOUT = {"artifact"}           # scenes cut out of a dark background
 TEXT = {"colony-destroyed": "Colony destroyed", "mine-destroyed": "Mine destroyed",
         "outpost-destroyed": "Outpost destroyed"}
