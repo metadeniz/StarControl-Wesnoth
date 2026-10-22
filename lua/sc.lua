@@ -381,7 +381,7 @@ local VICTORY_PICTURE = {
 	SC_DeathMarch = {
 		caption = _ "Agents of Death Victory",
 		image = "portraits/sc/agents-of-death-victory.png",
-		message = _ "The forces of death have prevailed. The cleansing continues...",
+		message = _ "The forces of destruction have prevailed. The cleansing continues...",
 	},
 }
 
