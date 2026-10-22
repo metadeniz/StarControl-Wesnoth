@@ -2,7 +2,7 @@
 
 A total conversion of Battle for Wesnoth into the wars of Star Control: the
 Alliance of Free Stars against the Ur-Quan Hierarchy (Star Control 1), and
-the New Alliance of Free Stars against the Agents of Chaos (Star
+the New Alliance of Free Stars against the Agents of Death (Star
 Control II), fought over space maps with nebulae, asteroid fields, planets
 and stars. Any faction can fight any other.
 
@@ -54,6 +54,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | 2p — The Freelands (Deep Space) | 1 vs 1 |
 | 2p — Weldyn Channel (Deep Space) | 1 vs 1 |
 | 2p — Fallenstar Lake (Deep Space) | 1 vs 1 |
+| 2p — Isar’s Cross (Deep Space) | 1 vs 1, north vs south; the 4p map with the west and east arms cut away |
 | 2p — Caves of the Basilisk (Deep Space) | 1 vs 1; black holes stand where the statues were |
 | 2p — Silverhead Crossing (Deep Space) | 1 vs 1 |
 | 2p — Ruphus Isle (Deep Space) | 1 vs 1 |
@@ -95,7 +96,7 @@ right-click menu, which goes through the three in turn. The remixes are:
   has no original track in the list). The orchestral Ur-Quan cover has no remix
   and stays.
 
-The New Alliance and the Agents of Chaos have one playlist each:
+The New Alliance and the Agents of Death have one playlist each:
 
 - **New Alliance:** Ramen Rider's cover of the Syreen theme, the Melnorme
   theme re-imagined by DJ Yan Yan Lipavsky, and the
@@ -106,18 +107,21 @@ The New Alliance and the Agents of Chaos have one playlist each:
   Falayalaralfali"), Melnorme ("Turning Purple"), Syreen ("Close Encounters of the Seventh Kind"),
   quasispace ("Mystic Shadows", "Through the Angles of Space"), hyperspace ("Across the Galaxy") and Starbase ("Under a Red
   Sky").
-- **Agents of Chaos:** modern versions only, the Precursors' remixes: Kohr-Ah ("Cleansing
+- **Agents of Death:** modern versions only, the Precursors' remixes: Kohr-Ah ("Cleansing
   Required", "The Eternal Doctrine", "Kohr-Ah" battle remix), Druuge
   ("Property of the Crimson Corporation"), Thraddash ("Culture 19"),
   Slylandro Probes ("We Come In Peace"), Orz ("Squeezing the Juice"), Mycon
   ("Rebirth"), Ilwrath ("All Evil"), "The Battle of the Sa-Matra", hyperspace ("Across the
   Galaxy") and Starbase ("Under a Red Sky").
 
-When you win, the old Alliance and the Hierarchy hear Star Control 1's
-victory theme for their side, the New Alliance hears Star Control II's
-victory fanfare, and the Agents of Chaos the opening of Chopin's Funeral
-March. An Alliance win also shows Star Control 1's victory picture, Earth
-ringed by the Alliance races, as a story screen while its theme plays. When a ship destroys
+When you win, the old Alliance hears a 44-second cut of Star Control II's
+ending theme, the Hierarchy Star Control 1's Hierarchy victory theme, the New
+Alliance Star Control II's victory fanfare, and the Agents of Death the opening of Chopin's Funeral
+March. The game's music stops for it, and each side's victory picture shows in
+a message window while its theme plays: Star Control 1's Earth ringed by the
+Alliance races, or an Ur-Quan reaching out its tentacles; Star Control II's
+free, blue Earth; and a Kohr-Ah standing over its pit of bones (the HD comm
+screen, with the HD Game Over screen's nebula behind it). When a ship destroys
 another, its race's victory ditty plays over the music (the Sa-Matra, which has
 none in Star Control II, plays the Precursors' remix of the Kohr-Ah ditty), which keeps going at
 full volume. A Pkunk that is reborn gets Star Control II's "hallelujah"
@@ -138,15 +142,15 @@ explosion, and the game waits for it to finish.
 | Chenjesu Broodhome | photon crystal (ranged; lighter shards close up), DOGI (slows) | Mycon Podship | homing plasmoids at range, heavier plasmoids close up (both half damage against Yehat and Utwig shields); regrows crew |
 | Mmrnmhrm X-Wing / Y-Wing | recruit either; lasers or torpedoes, transforms; X-Wing cures (heals +8 and cures poison), Y-Wing cures +4 | Spathi Eluder | howitzer (**backstab**), B.U.T.T. (**backstab**) |
 | Yehat Terminator | Attack with Shields (pulse cannons), Attack Only (rail cannons, pierce); armored hull (resists blade 40%, pierce 30%, impact 20%, arcane 10%); force shield (+40% with Attack with Shields, attacking or defending; +50% against ranged; down with Attack Only; no help against fighters or the Syreen song) | Umgah Drone | antimatter cone, skirmisher |
-| Syreen Penetrator | crew capacity as big as the Ur-Quan's (64 / 80 / 96) but always starts low (28 / 36 / 44 HP); her max HP shows the crew she can hold right now (her starting HP, or her HP while stolen crew takes her above it), so her bar is green when full, and the sidebar shows her capacity after her HP (e.g. 28/28 (64)); promotion adds +8 HP instead of a full heal, or raises it to the new level's 36 / 44 if still below; planets, healers and resting only repair it up to that starting HP: only stolen crew (the song's drain, or capturing an enemy's life world, which fills it to max) takes it higher; ranged particle dagger (**backstab**: double damage and one extra strike when flanking); close range: one-shot Syreen song (**lures crew**: heals the full damage dealt; **backstab**: one extra strike when flanking); doesn't work on the unmanned Slylandro Probe | VUX Intruder | close-range laser (**first strike**); long-range limpets (slow) |
+| Syreen Penetrator | crew capacity as big as the Ur-Quan's (max HP 64 / 80 / 96) but always starts low (28 / 36 / 44 HP); promotion adds +8 HP instead of a full heal, or raises it to the new level's 36 / 44 if still below; planets, healers and resting only repair it up to that starting HP: only stolen crew (the song's drain, or capturing an enemy's life world, which fills it to max) takes it higher; ranged particle dagger (**backstab**: double damage and one extra strike when flanking); close range: one-shot Syreen song (**lures crew**: heals the full damage dealt; **backstab**: one extra strike when flanking); doesn't work on the unmanned Slylandro Probe | VUX Intruder | close-range laser (**first strike**); long-range limpets (slow) |
 | Arilou Skiff | auto-aim laser, hyperjump | Androsynth Guardian | acid bubbles (poison, **backstab**), Blazer ram (**charge**, **backstab**) |
 | Shofixti Scout | dart gun; **Glory Device**: one unavoidable fire strike of 8–16 / 10–20 / 12–24 by level on one ship, destroying the Scout; a Scout destroyed by a close-range attack has a 50% chance to set it off as it dies, hitting its attacker for half that | Ilwrath Avenger | Hellfire, cloaking device |
 
-| New Alliance of Free Stars | | Agents of Chaos | |
+| New Alliance of Free Stars | | Agents of Death | |
 |---|---|---|---|
 | **Precursor Flagship** (leader only) | 4 moves, a Precursor drive (like the Chmmr's) and **hyperjump** between planets; fusion blaster, point-defense, self-repair, heals +4, leadership | **Sa-Matra** (leader only) | 4 moves and a stronger Precursor drive (1 move through nebulae, dust, badlands and asteroids); yellow comets (near and far), slowing green blobs, self-repair +8, cures and heals +8, leadership |
 | Earthling Cruiser | as in the Alliance | Kohr-Ah Marauder | 4 moves; spinning blades; F.R.I.E.D. plasma ring (**magical**) |
-| Chmmr Avatar | 4 moves, and a drive that handles nebulae, dust, badlands and asteroids better than other large hulls; close-range tractor beam + laser and Tractor + ZapSats (**first strike**, **auto-targeting** 70% on offense and defense, **swarm**, +1 damage vs. small and tiny hulls); ranged megawatt laser (**marksman**, **slows**); point-defense | Druuge Mauler | 4 moves; long-range mass driver (**marksman**); nothing up close |
+| Chmmr Avatar | 4 moves, and a drive that handles nebulae, dust, badlands and asteroids better than other large hulls; close-range tractor beam + laser; ranged megawatt laser (**marksman**); point-defense | Druuge Mauler | 4 moves; long-range mass driver (**marksman**); nothing up close |
 | Zoq-Fot-Pik Stinger | cheap; acid spit, hard-hitting tongue | Thraddash Torch | fast; afterburner (**charge**, **backstab**), horn blasters (**backstab**) |
 | Pkunk Fury | fast triple gun; **reincarnation**: reborn at full HP when destroyed, 80% the first time, halving with each rebirth | Slylandro Probe | 7 moves; seeking lightning (**magical**); repairs 8 HP a turn in asteroid fields |
 | Supox Blade | **skirmisher**; globs of goo | Orz Nemesis | hard-hitting space marines (**boarding**: ignore armour and shields); light howitzer |
@@ -256,8 +260,8 @@ on the planet through its side's next turn, and when the turn after that
 starts, the planet is that side's and pays that turn.
 Every planet repairs a ship on it by 8 HP a turn (and cures poison),
 whoever owns it: a free planet, an enemy's, or one the ship is still
-building on. A side's own colonies (life worlds) repair its ships by 16
-instead, and a ship that stays on one through another turn is fully
+building on. A side's own colonies (life worlds) repair its ships by 8
+too, and a ship that stays on one through another turn is fully
 repaired (a Syreen only up to her starting HP). Moving off, even to come
 back, starts that over.
 An enemy's colony (life world) blown up this way plays the colony destroyed

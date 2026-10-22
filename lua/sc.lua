@@ -13,7 +13,7 @@ local function count(name)
 end
 
 -- Every ship comes in levels 1-3: SC_X, SC_X_L2, SC_X_L3. The New Alliance
--- and the Agents of Chaos recruit their own level-1 copies of some older
+-- and the Agents of Death recruit their own level-1 copies of some older
 -- ships, SC_X_NA and SC_X_AC.
 local function base_type(t) return (t:gsub("_L[23]$", ""):gsub("_NA$", ""):gsub("_AC$", "")) end
 local function is_a(u, base) return u and base_type(u.type) == base end
@@ -302,7 +302,7 @@ local PLAYLISTS = {   -- faction -> mode -> tracks
 		"3. remix-utwig-ultron", "0. remix-commander", "0. remix-arilou", "3. remix-melnorme", "3. melnorme-lipavsky", "0. remix-syreen", "3. syreen-ramen-rider",
 		"0. remix-mystic-shadows", "0. remix-quasispace", "0. remix-hyperspace",
 		"0. remix-starbase" },
-	-- the Agents of Chaos hear modern versions: the Precursors' remixes
+	-- the Agents of Death hear modern versions: the Precursors' remixes
 	SC_DeathMarch = { "4. kohrah-cleansing-required", "4. kohrah-eternal-doctrine", "4. kohrah-battle",
 		"4. druuge-crimson-corporation", "0. thraddash-culture-19", "4. slylandro-we-come-in-peace",
 		"4. orz-squeezing-the-juice", "0. mycon-rebirth", "0. ilwrath-all-evil", "4. samatra-battle",
@@ -328,10 +328,12 @@ for faction, entries in pairs(VERSIONS) do
 end
 
 -- Theme played when you win. It is a sound effect, not music, so it follows
--- the sound volume like the victory ditties; the music stops for it (the
--- engine "plays" a silent victory track).
+-- the sound volume like the victory ditties; the music stops for it. The
+-- engine only switches to the scenario's silent victory track once the
+-- victory picture is closed, so the game's music is swapped for that silence
+-- here, before the theme starts.
 local VICTORY_THEME = {
-	SC_Alliance = "sc/alliance-victory.ogg",     -- Star Control 1's Alliance victory theme
+	SC_Alliance = "sc/alliance-victory.ogg",     -- a cut of Star Control II's ending theme
 	SC_Hierarchy = "sc/hierarchy-victory.ogg",   -- Star Control 1's Hierarchy victory theme
 	SC_NewAlliance = "sc/victory-fanfare.ogg",   -- Star Control II's victory fanfare
 	SC_DeathMarch = "sc/funeral-march.ogg",      -- Chopin's Funeral March (Sonata No. 2), opening phrase
@@ -346,14 +348,18 @@ end
 function sc.victory_theme()
 	local side = local_human_side()
 	local theme = side and VICTORY_THEME[side.__cfg.faction]
+	wesnoth.audio.music_list.clear()
+	wesnoth.audio.music_list.add("sc/0. silence.ogg", true)
 	if theme then wesnoth.audio.play(theme) end
 	if side then sc.victory_picture(side.__cfg.faction) end
 end
 
--- Star Control 1's victory pictures, shown in a narrator's message window
--- like a scripted scenario event while the victory theme plays: Earth ringed
--- by the Alliance races, or an Ur-Quan reaching out its tentacles. The
--- pictures are made by tools/make_victory_portraits.py.
+-- Victory pictures, shown in a narrator's message window like a scripted
+-- scenario event while the victory theme plays: Star Control 1's Earth ringed
+-- by the Alliance races, or an Ur-Quan reaching out its tentacles
+-- (tools/make_victory_portraits.py); Star Control II's free, blue Earth
+-- (tools/make_new_alliance_victory.py); the HD Kohr-Ah standing over its pit
+-- of bones (tools/make_agents_of_death_victory.py).
 local VICTORY_PICTURE = {
 	SC_Alliance = {
 		caption = _ "Alliance Victory",
@@ -367,11 +373,22 @@ local VICTORY_PICTURE = {
 		winner = _ "Hierarchy",
 		loser = _ "Alliance",
 	},
+	SC_NewAlliance = {
+		caption = _ "New Alliance Victory",
+		image = "portraits/sc/new-alliance-victory.png",
+		message = _ "The New Alliance has prevailed! Freedom and liberation will soon follow...",
+	},
+	SC_DeathMarch = {
+		caption = _ "Agents of Death Victory",
+		image = "portraits/sc/agents-of-death-victory.png",
+		message = _ "The forces of destruction have prevailed. The cleansing continues...",
+	},
 }
 
 -- Star Control 1's caption picks one of these at random each time, for
 -- either side: "The Hierarchy creams the Alliance". The list is the game's
--- own, from its string table in TACTICS.PKG.
+-- own, from its string table in TACTICS.PKG. A picture with a message of its
+-- own shows that instead.
 local VICTORY_VERBS = {
 	_ "destroys", _ "squashes", _ "defeats", _ "demolishes", _ "humbles",
 	_ "annihilates", _ "vanquishes", _ "roasts 'n' toasts", _ "crushes",
@@ -387,7 +404,7 @@ function sc.victory_picture(faction)
 		speaker = "narrator",
 		caption = picture.caption,
 		image = picture.image,
-		message = stringx.vformat(_ "The $winner $verb the $loser", {
+		message = picture.message or stringx.vformat(_ "The $winner $verb the $loser", {
 			winner = picture.winner,
 			verb = VICTORY_VERBS[mathx.random(#VICTORY_VERBS)],
 			loser = picture.loser,
@@ -804,7 +821,7 @@ end)()
 
 -- The Alliance and the Hierarchy lose their starbase; the New Alliance's
 -- leaders go by their captains' names (the Vindicator), and the Agents of
--- Chaos' by their ship (the Sa-Matra).
+-- Death's by their ship (the Sa-Matra).
 local function leader_caption(u)
 	local faction = wesnoth.sides[u.side].__cfg.faction
 	if STARBASE_CAPTIONS[faction] then return STARBASE_CAPTIONS[faction] end
@@ -831,38 +848,10 @@ end
 -- placed at the start and freshly promoted ships all start at these HP.
 local SYREEN_START_HP = { 28, 36, 44 }
 
--- Her max HP follows her crew, so a Syreen holding all the crew she can get
--- back by repair, or all she has stolen, shows a full, green bar: it is her
--- level's starting HP or her HP, whichever is more, up to her crew capacity
--- (the type's max HP). An object takes the rest off the type's max. Her song
--- has to be able to fill her up to capacity (Wesnoth drains only up to max
--- HP), so the object comes off for each fight ("attack") and is fitted again
--- after it ("attack end").
-local SYREEN_CREW_OBJECT = "sc_syreen_crew"
-
-local function syreen_full_capacity(u)
-	u:remove_modifications({ id = SYREEN_CREW_OBJECT }, "object")
-end
-
-local function syreen_fit_max(u)
-	if not u or not is_a(u, "SC_Syreen_Penetrator") then return end
-	local hp = u.hitpoints
-	syreen_full_capacity(u)
-	u.variables.sc_crew_capacity = u.max_hitpoints
-	local cut = u.max_hitpoints - math.max(by_level(SYREEN_START_HP, u), hp)
-	if cut > 0 then
-		u:add_modification("object", { id = SYREEN_CREW_OBJECT,
-			T.effect { apply_to = "hitpoints", increase_total = -cut } })
-	end
-	u.hitpoints = math.min(hp, u.max_hitpoints)
-end
-
 local function syreen_low_start(u, floor)
 	if not is_a(u, "SC_Syreen_Penetrator") then return end
-	syreen_full_capacity(u)
 	local hp = math.max(by_level(SYREEN_START_HP, u), floor or 0)
 	u.hitpoints = math.min(hp, u.max_hitpoints)
-	syreen_fit_max(u)
 end
 
 -- How much crew her song lures varies: the listed damage is the average,
@@ -884,26 +873,23 @@ local function syreen_roll_song(u)
 	end
 end
 
--- attack: the Syreens in the fight get their whole capacity back, and
--- one singing rolls her song.
+-- attack: a Syreen singing rolls her song.
 function sc.syreen_attack()
 	local c = wesnoth.current.event_context
 	local weapons = { wml.variables["weapon.name"], wml.variables["second_weapon.name"] }
 	for i, u in ipairs { wesnoth.units.get(c.x1, c.y1), wesnoth.units.get(c.x2, c.y2) } do
-		if is_a(u, "SC_Syreen_Penetrator") then
-			syreen_full_capacity(u)
-			if weapons[i] == "syreen_song" then syreen_roll_song(u) end
+		if is_a(u, "SC_Syreen_Penetrator") and weapons[i] == "syreen_song" then
+			syreen_roll_song(u)
 		end
 	end
 end
 
--- attack end: and lose what they don't hold, and the roll.
+-- attack end: and loses the roll.
 function sc.syreen_attack_end()
 	local c = wesnoth.current.event_context
 	for _, u in ipairs { wesnoth.units.get(c.x1, c.y1), wesnoth.units.get(c.x2, c.y2) } do
 		if is_a(u, "SC_Syreen_Penetrator") then
 			u:remove_modifications({ id = SYREEN_SONG_ROLL_OBJECT }, "object")
-			syreen_fit_max(u)
 		end
 	end
 end
@@ -947,7 +933,6 @@ end
 -- fires before a side heals and "turn refresh" after.
 function sc.syreen_before_healing()
 	for _, u in ipairs(wesnoth.units.find_on_map { side = wesnoth.current.side, race = "sc_syreen" }) do
-		syreen_fit_max(u)
 		u.variables.sc_hp_before_healing = u.hitpoints
 	end
 end
@@ -1040,7 +1025,6 @@ function sc.syreen_captured()
 	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
 	local owner = wml.variables["owner_side"] or 0
 	if syreen_fills_crew(u, owner) then
-		syreen_full_capacity(u)
 		u.hitpoints = u.max_hitpoints
 		play_planet_anim(u.x, u.y, u.side, SYREEN_CAPTURE_ANIM, SYREEN_CAPTURE_DESTROYED_HALO)
 		-- and a label on the planet for the rest of the Syreen side's turn
@@ -1370,13 +1354,11 @@ function sc.hold_ai_builders()
 end
 
 -- Colonies -------------------------------------------------------------------
--- A ship on its own side's colony (life world) is repaired 16 HP a turn
--- instead of a planet's 8, and fully if it was already there at its last
--- repair. "side turn" notes the ships on their colonies before the side
--- heals; "turn refresh" adds the colony's extra after Wesnoth's own +8. This
--- runs before sc.syreen_after_healing, so a Syreen still stops at its cap.
-local COLONY_HEAL = 16
-local PLANET_HEAL = 8
+-- A ship on its own side's colony (life world) is repaired 8 HP a turn like
+-- on any planet, and fully if it was already there at its last repair.
+-- "side turn" notes the ships on their colonies before the side heals;
+-- "turn refresh" tops them up after Wesnoth's own +8. This runs before
+-- sc.syreen_after_healing, so a Syreen still stops at its cap.
 
 local function on_own_colony(u)
 	return is_life_world(u.x, u.y) and wesnoth.map.get_owner(u.x, u.y) == u.side
@@ -1385,7 +1367,7 @@ end
 function sc.colony_before_healing()
 	for _, u in ipairs(wesnoth.units.find_on_map { side = wesnoth.current.side }) do
 		if on_own_colony(u) and not u.status.unhealable and not u.status.petrified then
-			u.variables.sc_colony_repair = { hp = u.hitpoints, poisoned = u.status.poisoned }
+			u.variables.sc_colony_repair = true
 		else
 			u.variables.sc_colony_stay = nil
 		end
@@ -1395,16 +1377,12 @@ end
 function sc.colony_after_healing()
 	local turn = wesnoth.current.turn
 	for _, u in ipairs(wesnoth.units.find_on_map { side = wesnoth.current.side }) do
-		local saved = u.variables.sc_colony_repair
-		if saved then
+		if u.variables.sc_colony_repair then
 			u.variables.sc_colony_repair = nil
 			local stay = u.variables.sc_colony_stay
 			local hp = u.hitpoints
 			if stay and stay.x == u.x and stay.y == u.y and stay.turn == turn - 1 then
 				hp = u.max_hitpoints
-			elseif not saved.poisoned then
-				-- Poison is cured instead of repaired, as on any planet.
-				hp = math.min(u.max_hitpoints, hp + COLONY_HEAL - PLANET_HEAL)
 			end
 			if hp > u.hitpoints and locally_visible(u.x, u.y) then
 				wesnoth.interface.float_label(u.x, u.y,

@@ -303,6 +303,11 @@ LEVEL_GROWTH = 1.12
 # Flagship leads with it, so it should look huge): facing north, its sides
 # touch the hex's slanted edges and its nose and tail poke out top and bottom.
 FILL_HEX = {"precursor-flagship"}
+# Ships whose blue hull is drawn darker than in UQM: unit image id ->
+# (brightness factor, how far the hue moves toward deep blue, saturation
+# factor). The Precursor Flagship's hull is a darker blue than UQM's; its
+# glow keeps the original hull's lighter blue.
+DARKER_HULL = {"precursor-flagship": (0.7, 0.0, 1.0)}
 
 
 def hex_filling_scale(img):
@@ -342,6 +347,22 @@ def with_glow(img, colour, radius, strength):
     return out
 
 
+def darker_hull(img, brightness, deepen, saturation):
+    """`img` with its blue hull plates darker and a deeper blue; the lights,
+    struts and pods (other hues, or grey) stay as they are."""
+    a = np.array(img)
+    hsv = np.array(img.convert("RGB").convert("HSV")).astype(float) / 255
+    h, s, v = hsv[..., 0], hsv[..., 1], hsv[..., 2]
+    blue = (h > 0.5) & (h < 0.72) & (s > 0.25)
+    h = np.where(blue, h + (0.62 - h) * deepen, h)
+    s = np.where(blue, np.minimum(1.0, s * saturation), s)
+    v = np.where(blue, v * brightness, v)
+    rgb = Image.fromarray((np.stack([h, s, v], axis=-1) * 255).round().astype(np.uint8), "HSV").convert("RGB")
+    out = np.array(rgb)
+    a[..., :3] = np.where(blue[..., None], out, a[..., :3])
+    return Image.fromarray(a, "RGBA")
+
+
 def build_ships(uqm, out):
     for uid, (ship_dir, stem) in SHIPS.items():
         hd = hd_sprite(uqm, ship_dir, stem)
@@ -350,6 +371,8 @@ def build_ships(uqm, out):
         fit = min(70.0 / max(trim(rotated(hd, a)).size) for a in FACINGS.values())
         top = min(ship_scale(uqm, ship_dir, stem, hd) * LEVEL_GROWTH, fit)
         colour = glow_colour(hd)
+        if uid in DARKER_HULL:
+            hd = darker_hull(hd, *DARKER_HULL[uid])
         for level, (size, glow) in LEVELS.items():
             scale = top * size
             if uid in FILL_HEX and level == 1:
@@ -664,8 +687,10 @@ HITS = {
     "crystal-hit": ("chenjesu", "spark", range(2, 10), 0.6),         # chenjesu.c: 8 sparkles
     "buzzsaw-hit": ("kohrah", "buzzsaw", range(2, 7), 0.5),          # blackurq.c: the saw splinters
     "charge-hit": ("melnorme", "pumpup", range(20, 26), 0.8),        # melnorme.c: 3 + charge frames
-    # sis_ship.c's blaster by power: 3 for the Flagship; 2 and 1 for level-2
-    # and level-1 Precursor ships, should the add-on ever have them
+    # sis_ship.c's blaster by power: 3 for the Flagship, about a hex across;
+    # 2 and 1 for the level-2 and level-1 Precursor ships
+    "blaster3-hit": ("flagship", "blaster", range(20, 27), 0.35),
+    # ...and the power-3 burst bigger, under the Shofixti Glory Device's cloud
     "blaster-hit": ("flagship", "blaster", range(20, 27), 0.55),
     "blaster2-hit": ("flagship", "blaster", range(10, 16), 0.8),
     "blaster1-hit": ("flagship", "blaster", range(0, 1), 0.8),       # its first frame, 2 ticks
@@ -791,10 +816,10 @@ def build_samatra(uqm, out):
     rgb = a[..., :3]
     mx, mn = rgb.max(axis=2), rgb.min(axis=2)
     sat = (mx - mn) / np.maximum(mx, 1)
-    h, w = mx.shape
-    yy, xx = np.mgrid[0:h, 0:w]
-    inside = ((xx - w / 2) / 250) ** 2 + ((yy - 138) / 105) ** 2 < 1
-    keep = (sat > 0.35) & (mx > 30) & inside & (yy < 235)   # grey rocks and the shield bar go
+    yy = np.mgrid[0:mx.shape[0], 0:mx.shape[1]][0]
+    # The grey rocks fail the saturation test; the shield bar starts at y=271.
+    # Cut no tighter, or the lower jaw at the bottom left goes too.
+    keep = (sat > 0.35) & (mx > 30) & (yy < 262)
     a[..., 3] = np.where(keep, a[..., 3], 0)
     body = trim(Image.fromarray(a.astype("uint8")))
     # Over twice a hex wide: it is huge, and spills over its neighbours.
@@ -2424,8 +2449,9 @@ def main():
     # Added by hand, not built here: Chenjesu and Mmrnmhrm themes by Titus
     # (supplied as MP3s, loudness-matched to the other music).
     manifest.extend(["music/sc/1. chenjesu-titus.ogg", "music/sc/1. mmrnmhrm-titus.ogg"])
-    # ...and Star Control 1's Alliance and Hierarchy victory themes (MP3s;
-    # played as sound effects).
+    # ...and the victory themes, played as sound effects: Star Control 1's
+    # Hierarchy theme (MP3), and for the Alliance the finale of Star Control
+    # II's ending theme (tools/make_alliance_victory_music.py).
     manifest.extend(["sounds/sc/alliance-victory.ogg", "sounds/sc/hierarchy-victory.ogg"])
     # ...an Androsynth theme by TheMisterCat (DUOLED), and the Melnorme theme
     # re-imagined by DJ Yan Yan Lipavsky (MP3s).
