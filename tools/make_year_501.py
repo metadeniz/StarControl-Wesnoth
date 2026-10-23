@@ -324,6 +324,9 @@ def edits(m):
         clear(*at(*h))
     m.put(*at(18, 3), "p")
     m.put(*at(9, 16), "c")                # a second ring for the small base
+    # the plasma storms' suns become 3-hex supergiants, white in the west
+    # and yellow in the east, on a triangle with the old sun its east point
+    m.big_object([at(14, 2), at(14, 3), at(15, 3)], ("Ytu4", "Ytu1"), "S")
 
 
 def pixel(x, y):
