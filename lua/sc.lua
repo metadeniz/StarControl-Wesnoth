@@ -1425,7 +1425,6 @@ end
 -- dying: the hex of a ship being destroyed (still on the map in "die").
 function sc.check_planet_claims(side, dying)
 	local keep = {}
-	local changed = false
 	for _, a in ipairs(wml.array_access.get(CLAIMS)) do
 		local u = wesnoth.units.get(a.x, a.y)
 		local here = u and u.id == a.id and u.side == a.side
@@ -1435,16 +1434,12 @@ function sc.check_planet_claims(side, dying)
 		end
 		if here and (a.wait or 1) <= 0 then
 			wesnoth.map.set_owner(a.x, a.y, a.side, false)
-			changed = true
 		elseif here then
 			keep[#keep + 1] = a
-		else
-			changed = true
 		end
 	end
 	wml.array_access.set(CLAIMS, keep)
 	sc.update_planet_income()
-	return changed
 end
 
 -- The AI doesn't know about building on planets and would fly its ships
@@ -1465,6 +1460,8 @@ end
 -- "side turn" notes the ships on their colonies before the side heals;
 -- "turn refresh" tops them up after Wesnoth's own +8. This runs before
 -- sc.syreen_after_healing, so a Syreen still stops at its cap.
+-- Only where the ship is at each repair counts (so a move off can be
+-- undone): one that flies off and back within a turn still gets it.
 
 local function on_own_colony(u)
 	return is_life_world(u.x, u.y) and wesnoth.map.get_owner(u.x, u.y) == u.side
@@ -1500,10 +1497,3 @@ function sc.colony_after_healing()
 	end
 end
 
--- A ship that moves off has to stay a whole turn again for the full repair.
-function sc.colony_moveto()
-	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
-	if not u or not u.variables.sc_colony_stay then return false end
-	u.variables.sc_colony_stay = nil
-	return true
-end
