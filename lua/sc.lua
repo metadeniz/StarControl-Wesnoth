@@ -827,17 +827,19 @@ end
 
 --------------------------------------------------------- Starbase destroyed
 
--- When a side's leader is destroyed, Star Control's "starbase destroyed"
--- scene plays in the sidebar box above End Turn (lua/panel.lua) once the
--- death explosion is over (the "die" event comes after the death
--- animation): the starbase blown apart, then its embers dying out, with
--- "... destroyed!" under it, on two lines to fit the box. Frames made by
--- tools/make_starbase_destroyed_anim.py: 46 frames at 15 fps, the last held
--- half a second, 4 fading. The game waits for it, so it plays out in full
--- even when that leader's death ends the game. Every player sees it.
+-- When an Alliance or Hierarchy Starbase is destroyed, Star Control's
+-- "starbase destroyed" scene plays in the sidebar box above End Turn
+-- (lua/panel.lua) once the death explosion is over (the "die" event comes
+-- after the death animation): the starbase blown apart, then its embers
+-- dying out, with "... destroyed!" under it, on two lines to fit the box.
+-- Other leaders (ships, the Sa-Matra, the Precursor Flagship) get no
+-- scene. Frames made by tools/make_starbase_destroyed_anim.py: 46 frames at
+-- 15 fps, the last held half a second, 4 fading. The game waits for it, so
+-- it plays out in full even when that starbase's death ends the game. Every
+-- player sees it.
 local STARBASE_CAPTIONS = {
-	SC_Alliance = _ "Alliance starbase\ndestroyed!",
-	SC_Hierarchy = _ "Hierarchy starbase\ndestroyed!",
+	SC_Alliance_Starbase = _ "Alliance starbase\ndestroyed!",
+	SC_Hierarchy_Starbase = _ "Hierarchy starbase\ndestroyed!",
 }
 local STARBASE_DESTROYED_FRAMES, STARBASE_DESTROYED_MS, STARBASE_DESTROYED_HOLD = 50, 67, 500
 local STARBASE_DESTROYED_SCENE = (function()
@@ -849,25 +851,15 @@ local STARBASE_DESTROYED_SCENE = (function()
 	return f
 end)()
 
--- The Alliance and the Hierarchy lose their starbase; the New Alliance's
--- leaders go by their captains' names (the Vindicator), and the Agents of
--- Death's by their ship (the Sa-Matra).
-local function leader_caption(u)
-	local faction = wesnoth.sides[u.side].__cfg.faction
-	if STARBASE_CAPTIONS[faction] then return STARBASE_CAPTIONS[faction] end
-	local name = faction == "SC_NewAlliance" and tostring(u.name) ~= "" and u.name
-		or wesnoth.unit_types[u.type].name
-	return stringx.vformat(_ "$name\ndestroyed!", { name = name })
-end
-
 function sc.starbase_destroyed()
 	local c = wesnoth.current.event_context
 	local u = wesnoth.units.get(c.x1, c.y1)
-	if not u or not u.canrecruit then return end
-	-- The dead leader stays on the map until the event is over, and would
+	local caption = u and STARBASE_CAPTIONS[u.type]
+	if not caption then return end
+	-- The dead starbase stays on the map until the event is over, and would
 	-- be drawn again, whole, while the scene plays.
 	u.hidden = true
-	sc.panel_play(STARBASE_DESTROYED_SCENE, leader_caption(u))
+	sc.panel_play(STARBASE_DESTROYED_SCENE, caption)
 end
 
 --------------------------------------------------------------- Syreen crew
