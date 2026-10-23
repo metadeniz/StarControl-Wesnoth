@@ -327,6 +327,10 @@ def edits(m):
     # the plasma storms' suns become 3-hex supergiants, white in the west
     # and yellow in the east, on a triangle with the old sun its east point
     m.big_object([at(14, 2), at(14, 3), at(15, 3)], ("Ytu4", "Ytu1"), "S")
+    # planets at 6,21 and 8,7, and the one at 9,14 moved to 14,15
+    m.put(*at(9, 14), ".")
+    for h in [(6, 21), (8, 7), (14, 15)]:
+        m.put(*at(*h), "p")
 
 
 def pixel(x, y):
