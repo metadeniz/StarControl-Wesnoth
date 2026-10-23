@@ -1,7 +1,7 @@
-"""Victory themes from Star Control II's ending music.
+"""New Alliance victory theme from Star Control II's ending music.
 
-The Alliance's is the finale of the ending theme; the New Alliance's is the
-victory fanfare that opens SC2's ending, going straight into that finale.
+It is the victory fanfare that opens SC2's ending, going straight into the
+finale of the ending theme.
 
 The ending theme ("Final Victory Theme", base/cutscene/ending/victoryf.mod in
 the UQM content) is a tracker module whose patterns are 7.68 s each. The cut
@@ -26,8 +26,7 @@ fanfare's last ring-out.
 
     python3 tools/make_victory_music.py path/to/recording.mp3 path/to/victoryf.mod path/to/victory1.mod
 
-Needs ffmpeg and openmpt123. Writes sounds/sc/alliance-victory.ogg and
-sounds/sc/new-alliance-victory.ogg.
+Needs ffmpeg and openmpt123. Writes sounds/sc/new-alliance-victory.ogg.
 """
 
 import os
@@ -39,8 +38,7 @@ import wave
 
 import numpy as np
 
-OUT = "sounds/sc/alliance-victory.ogg"
-OUT_NEW_ALLIANCE = "sounds/sc/new-alliance-victory.ogg"
+OUT = "sounds/sc/new-alliance-victory.ogg"
 RATE = 44100
 PATTERN = 7.68         # seconds per pattern
 LEAD = 0.0797          # the recording starts this much later than the module
@@ -150,9 +148,7 @@ def main():
         tail[:x] = head[-x:] * (1 - ramp) + tail[:x] * ramp
         out = np.concatenate([head[:-x], tail])
 
-        write_ogg(tmp, out, OUT)
-
-        # New Alliance: the fanfare, then the finale on the next downbeat.
+        # The fanfare, then the finale on the next downbeat.
         with open(fanfare_path, "rb") as f:
             fanfare = to_loudness(tmp, render(f.read(), tmp, "fanfare"), loudness(tmp, out))
         at = round(2 * PATTERN * RATE)
@@ -162,9 +158,9 @@ def main():
         peak = np.abs(both).max()
         if peak > 1:
             both /= peak
-        write_ogg(tmp, both, OUT_NEW_ALLIANCE)
-    print(f"ok: {OUT}, {OUT_NEW_ALLIANCE}; closing chord gain {20 * np.log10(gain):+.1f} dB, "
-          f"New Alliance peak {20 * np.log10(peak):+.1f} dB")
+        write_ogg(tmp, both, OUT)
+    print(f"ok: {OUT}, closing chord gain {20 * np.log10(gain):+.1f} dB, "
+          f"peak {20 * np.log10(peak):+.1f} dB")
 
 
 if __name__ == "__main__":

@@ -114,9 +114,9 @@ The New Alliance and the Agents of Death have one playlist each:
   ("Rebirth"), Ilwrath ("All Evil"), "The Battle of the Sa-Matra", hyperspace ("Across the
   Galaxy") and Starbase ("Under a Red Sky").
 
-When you win, the old Alliance hears a 44-second cut of Star Control II's
-ending theme, the Hierarchy Star Control 1's Hierarchy victory theme, the New
-Alliance Star Control II's victory fanfare going into that same cut, and the Agents of Death the opening of Chopin's Funeral
+When you win, the old Alliance and the Hierarchy hear Star Control 1's
+victory theme for their side, the New Alliance Star Control II's victory
+fanfare going into a 44-second cut of its ending theme, and the Agents of Death the opening of Chopin's Funeral
 March. The game's music stops for it, and each side's victory picture shows in
 a message window while its theme plays: Star Control 1's Earth ringed by the
 Alliance races, or an Ur-Quan reaching out its tentacles; Star Control II's
