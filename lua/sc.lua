@@ -363,9 +363,10 @@ end
 -- Victory pictures, shown in a narrator's message window like a scripted
 -- scenario event while the victory theme plays: Star Control 1's Earth ringed
 -- by the Alliance races, or an Ur-Quan reaching out its tentacles
--- (tools/make_victory_portraits.py); Star Control II's free, blue Earth
--- (tools/make_new_alliance_victory.py); the HD Kohr-Ah standing over its pit
--- of bones (tools/make_agents_of_death_victory.py).
+-- (tools/make_victory_portraits.py); Star Control II's free, blue Earth,
+-- after its slave shield falls (tools/make_new_alliance_victory.py); the HD
+-- Kohr-Ah standing over its pit of bones
+-- (tools/make_agents_of_death_victory.py).
 local VICTORY_PICTURE = {
 	SC_Alliance = {
 		caption = _ "Alliance Victory",
@@ -383,6 +384,8 @@ local VICTORY_PICTURE = {
 		caption = _ "New Alliance Victory",
 		image = "portraits/sc/new-alliance-victory.png",
 		message = _ "The New Alliance has prevailed! Freedom and liberation will soon follow...",
+		-- the slave shield falling first: the red Earth held, then a white flash
+		flash = { dir = "misc/sc/new-alliance-victory/", frames = 19, hold_ms = 1500, frame_ms = 100 },
 	},
 	SC_DeathMarch = {
 		caption = _ "Agents of Death Victory",
@@ -403,9 +406,30 @@ local VICTORY_VERBS = {
 	_ "terminates", _ "creams", _ "overruns", _ "pastes", _ "blitzes",
 }
 
+-- A message window can't animate its portrait, so a picture's flash plays
+-- before it opens, the same size, as a halo in the middle of the map, each
+-- frame put up before the last comes down. A halo's own animation doesn't
+-- run during wesnoth.interface.delay, so the frames are swapped by hand. The
+-- last frame hands over to the portrait.
+local function play_flash(flash)
+	local map = wesnoth.current.map
+	local x, y = (map.playable_width + 1) // 2, (map.playable_height + 1) // 2
+	wesnoth.interface.scroll_to_hex(x, y, false, true)
+	local shown
+	for i = 0, flash.frames - 1 do
+		local frame = string.format("%s%02d.png", flash.dir, i)
+		wesnoth.interface.add_item_halo(x, y, frame)
+		if shown then wesnoth.interface.remove_item(x, y, shown) end
+		shown = frame
+		wesnoth.interface.delay(i == 0 and flash.hold_ms or flash.frame_ms)
+	end
+	wesnoth.interface.remove_item(x, y, shown)
+end
+
 function sc.victory_picture(faction)
 	local picture = VICTORY_PICTURE[faction]
 	if not picture then return end
+	if picture.flash then play_flash(picture.flash) end
 	wesnoth.wml_actions.message {
 		speaker = "narrator",
 		caption = picture.caption,
