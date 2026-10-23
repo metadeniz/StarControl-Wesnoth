@@ -12,6 +12,15 @@ local function count(name)
 	wml.variables["sc_stats." .. name] = (wml.variables["sc_stats." .. name] or 0) + 1
 end
 
+-- Undo. Wesnoth won't undo a move or recruit once any event handler has run
+-- for it, unless the handler allows it. Ours allow it whenever they changed
+-- nothing that an undo would leave behind (undo only puts the ship back).
+-- Recomputing the planet income doesn't count: it is worked out again
+-- before it is paid.
+function sc.allow_undo(changed)
+	if not changed then wesnoth.wml_actions.allow_undo {} end
+end
+
 -- Every ship comes in levels 1-3: SC_X, SC_X_L2, SC_X_L3. The New Alliance
 -- and the Agents of Death recruit their own level-1 copies of some older
 -- ships, SC_X_NA and SC_X_AC.
@@ -828,9 +837,9 @@ end
 
 function sc.check_artifact()
 	local x, y = wml.variables["x1"], wml.variables["y1"]
-	if not wml.variables[artifact_key(x, y)] then return end
+	if not wml.variables[artifact_key(x, y)] then return false end
 	local u = wesnoth.units.get(x, y)
-	if not u then return end
+	if not u then return false end
 	wml.variables[artifact_key(x, y)] = nil
 	count("artifacts")
 
@@ -865,6 +874,7 @@ function sc.check_artifact()
 
 	u.experience = u.experience + ARTIFACT_XP
 	if u.experience >= u.max_experience then u:advance(true, true) end
+	return true
 end
 
 -- Start of a side's turn: clear the artifact labels (and animations) it put
@@ -1289,10 +1299,16 @@ local function uncover_hidden(u)
 		T.filter_side { T.enemy_of { side = u.side } },
 		T.filter_adjacent { id = u.id },
 	}
-	for _, e in ipairs(enemies) do
-		if e:ability("hides") then e.status.uncovered = true end
+	local changed = false
+	local function uncover(x)
+		if x:ability("hides") and not x.status.uncovered then
+			x.status.uncovered = true
+			changed = true
+		end
 	end
-	if #enemies > 0 and u:ability("hides") then u.status.uncovered = true end
+	for _, e in ipairs(enemies) do uncover(e) end
+	if #enemies > 0 then uncover(u) end
+	return changed
 end
 
 function sc.ambush_moveto()
@@ -1300,11 +1316,15 @@ function sc.ambush_moveto()
 	ambush = nil
 	local c = wesnoth.current.event_context
 	local mover = wesnoth.units.get(c.x1, c.y1)
-	if mover then uncover_hidden(mover) end
-	if not a or not a.moves or a.x ~= c.x1 or a.y ~= c.y1 then return end
-	if a.zoc or a.capture then return end
+	local changed = mover and uncover_hidden(mover) or false
+	if not a or not a.moves or a.x ~= c.x1 or a.y ~= c.y1 then return changed end
+	if a.zoc or a.capture then return changed end
 	local u = wesnoth.units.get(c.x1, c.y1)
-	if u and u.id == a.id and u.moves == 0 then u.moves = a.moves end
+	if u and u.id == a.id and u.moves == 0 then
+		u.moves = a.moves
+		changed = true
+	end
+	return changed
 end
 
 -- Planet types --------------------------------------------------------------
@@ -1405,6 +1425,7 @@ end
 -- dying: the hex of a ship being destroyed (still on the map in "die").
 function sc.check_planet_claims(side, dying)
 	local keep = {}
+	local changed = false
 	for _, a in ipairs(wml.array_access.get(CLAIMS)) do
 		local u = wesnoth.units.get(a.x, a.y)
 		local here = u and u.id == a.id and u.side == a.side
@@ -1414,12 +1435,16 @@ function sc.check_planet_claims(side, dying)
 		end
 		if here and (a.wait or 1) <= 0 then
 			wesnoth.map.set_owner(a.x, a.y, a.side, false)
+			changed = true
 		elseif here then
 			keep[#keep + 1] = a
+		else
+			changed = true
 		end
 	end
 	wml.array_access.set(CLAIMS, keep)
 	sc.update_planet_income()
+	return changed
 end
 
 -- The AI doesn't know about building on planets and would fly its ships
@@ -1478,5 +1503,7 @@ end
 -- A ship that moves off has to stay a whole turn again for the full repair.
 function sc.colony_moveto()
 	local u = wesnoth.units.get(wml.variables["x1"], wml.variables["y1"])
-	if u then u.variables.sc_colony_stay = nil end
+	if not u or not u.variables.sc_colony_stay then return false end
+	u.variables.sc_colony_stay = nil
+	return true
 end
