@@ -876,6 +876,7 @@ end
 -- Ur-Quan Dreadnought's) but always leaves port with a small one, and fills
 -- the rest by luring enemy crew across with its song. Recruits, leaders
 -- placed at the start and freshly promoted ships all start at these HP.
+-- SC_ABILITY_SYREEN_HEALED in Syreen_Penetrator.cfg repeats these for the AI.
 local SYREEN_START_HP = { 28, 36, 44 }
 
 local function syreen_low_start(u, floor)
