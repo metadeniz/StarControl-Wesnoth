@@ -39,8 +39,8 @@ and must stay non-commercial.
 - Orchestral Ur-Quan theme cover by Idan Schneider
 - Hyperspace theme refresh (2014) by Anamnesis
 - Star Control 1's Hierarchy victory theme
-- Alliance victory theme: the finale of Star Control II's ending theme, from
-  SC2MusicHomage's recording of the original PC module
+- Alliance and New Alliance victory themes: the finale of Star Control II's
+  ending theme, from SC2MusicHomage's recording of the original PC module
 - Death March victory theme: the opening of Chopin's Funeral March (public domain)
 
 ## Original work

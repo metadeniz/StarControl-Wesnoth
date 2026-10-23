@@ -962,7 +962,6 @@ MUSIC = {
     "1. shofixti": "base/comm/shofixti/shofixti.mod",
     "1. intro": "base/cutscene/intro/introx.mod",          # SC2 opening
     "1. ending": "base/cutscene/ending/victoryf.mod",      # SC2 ending (final slideshow)
-    "victory-fanfare": "base/cutscene/ending/victory1.mod",
     "1. quasispace": "base/nav/quasispace.mod",
     # Alliance and Hierarchy
     "0. starbase": "base/ui/starbase.mod",
@@ -1037,13 +1036,8 @@ THREEDO = {
 }
 
 
-# Victory themes are played as sound effects (they follow the sound volume,
-# not the music volume), so they go with the sounds.
-VICTORY_THEMES = {"victory-fanfare"}
-
-
 def music_dest(name):
-    return f"{'sounds' if name in VICTORY_THEMES else 'music'}/sc/{name}.ogg"
+    return f"music/sc/{name}.ogg"
 
 
 def build_remixes(remix, out, only=None, table=None):
@@ -2450,9 +2444,10 @@ def main():
     # (supplied as MP3s, loudness-matched to the other music).
     manifest.extend(["music/sc/1. chenjesu-titus.ogg", "music/sc/1. mmrnmhrm-titus.ogg"])
     # ...and the victory themes, played as sound effects: Star Control 1's
-    # Hierarchy theme (MP3), and for the Alliance the finale of Star Control
-    # II's ending theme (tools/make_alliance_victory_music.py).
-    manifest.extend(["sounds/sc/alliance-victory.ogg", "sounds/sc/hierarchy-victory.ogg"])
+    # Hierarchy theme (MP3), and for the Alliance and the New Alliance Star
+    # Control II's ending music (tools/make_victory_music.py).
+    manifest.extend(["sounds/sc/alliance-victory.ogg", "sounds/sc/hierarchy-victory.ogg",
+                     "sounds/sc/new-alliance-victory.ogg"])
     # ...an Androsynth theme by TheMisterCat (DUOLED), and the Melnorme theme
     # re-imagined by DJ Yan Yan Lipavsky (MP3s).
     manifest.extend(["music/sc/2. androsynth-duoled.ogg", "music/sc/3. melnorme-lipavsky.ogg"])
