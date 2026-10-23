@@ -324,9 +324,12 @@ def edits(m):
         clear(*at(*h))
     m.put(*at(18, 3), "p")
     m.put(*at(9, 16), "c")                # a second ring for the small base
-    # the plasma storms' suns become 3-hex supergiants, white in the west
-    # and yellow in the east, on a triangle with the old sun its east point
-    m.big_object([at(14, 2), at(14, 3), at(15, 3)], ("Ytu4", "Ytu1"), "S")
+    # the 4-hex supergiants become 3-hex ones (blue in the west, yellow in
+    # the east) on 16,9, 17,9 and 17,10; 16,10 goes back to nebula
+    for h in [at(16, 10), mirror(*at(16, 10))]:
+        m.big.pop(h, None)
+    m.put(*at(16, 10), "n")
+    m.big_object([at(16, 9), at(17, 9), at(17, 10)], ("Ytu2", "Ytu1"), "n")
     # planets at 6,21 and 8,7, and the one at 9,14 moved to 14,15
     m.put(*at(9, 14), ".")
     for h in [(6, 21), (8, 7), (14, 15)]:
