@@ -288,7 +288,7 @@ Terrain, by hull size (moves to enter / defense):
 | Dense asteroids | 4 / 60% | 3 / 70% | 3 / 70% | 2 / 70% |
 
 **Badlands runners** cross the badlands more easily: Arilou, Shofixti and
-Zoq-Fot-Pik need 1 move there (50% defense); Umgah, Androsynth, Supox,
+Zoq-Fot-Pik need 1 move there (50% defense); Umgah, Androsynth, Yehat, Supox,
 Slylandro and Thraddash need 2 (with their hull's light-badlands defense), and light
 badlands cost all of them 1 move.
 
