@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Write maps/6p_Year_501.map.
+"""Write maps/2p_Year_501.map.
+
+For now a 1 vs. 1 map: D's edits (see edits()) cut the north-west and
+south-west corners (and their mirrors) off the map with their starts, so
+only the middle starts, on the west and east edges, are left. The layout below is still the team map
+it was.
 
 Year 501: an original space map for 2 vs. 2 (or 3 vs. 3), west against
 east, with three starting starbases on each side so a 2 vs. 2 game can
@@ -43,8 +48,9 @@ T = {".": "Ys", "n": "Yn", "r": "Yr", "d": "Yd", "B": "Yi", "b": "Yis",
      "x": "Ys^Yx",
      # impassable clouds, and what sits at their hearts
      "D": "Yqd", "R": "Yqr", "S": "Yqp", "E": "Yqe",
-     "s": "Yqp^Yx", "u": "Yqr^Yxp", "h": "Yqe^Yxb"}
-BARRIER = "wxDRSEsuhZ"        # Z: a hex of a four-hex object, see BIG
+     "s": "Yqp^Yx", "u": "Yqr^Yxp", "h": "Yqe^Yxb",
+     " ": "_off^_usr"}          # off the map
+BARRIER = "wxDRSEsuhZ "       # Z: a hex of a four-hex object, see BIG
 
 # a medium ship's moves into each terrain (README), for the balance check
 COST = {".": 1, "n": 2, "r": 3, "d": 2, "B": 3, "b": 2, "f": 1, "a": 3,
@@ -284,7 +290,56 @@ def build():
         m.put(x, y, "K")
         m.put(*ring, "c")
     half_fields(m)
+    edits(m)
     return m
+
+
+def edits(m):
+    """D's hand edits, in Wesnoth's 1-based coordinates (each mirrored)."""
+    def at(X, Y):
+        return X - 1, Y - 1
+
+    def clear(x, y, ch="."):
+        m.put(x, y, ch)
+        for h in [(x, y), mirror(x, y)]:
+            m.big.pop(h, None)
+    # cut the north-west and south-west corners off the map, from a line
+    # between two hexes outwards
+    for a, b, corner in [((1, 8), (15, 1), (1, 1)),
+                         ((14, 29), (1, 22), (1, 29))]:
+        a, b, corner = at(*a), at(*b), at(*corner)
+        (ax, ay), (bx, by) = pixel(*a), pixel(*b)
+
+        def side(h):
+            hx, hy = pixel(*h)
+            return (bx - ax) * (hy - ay) - (by - ay) * (hx - ax)
+        out = side(corner) > 0
+        for x in range(W):
+            for y in range(H):
+                if (side((x, y)) > 0) == out:
+                    clear(x, y, " ")
+        for h in path([a, b]):
+            clear(*h, " ")
+    for h in [(13, 3), (16, 3), (16, 4), (17, 2), (20, 27), (23, 5)]:
+        clear(*at(*h))
+    m.put(*at(18, 3), "p")
+    m.put(*at(9, 16), "c")                # a second ring for the small base
+    # the 4-hex supergiants become 3-hex ones (blue in the west, yellow in
+    # the east) on 16,9, 17,9 and 17,10; 16,10 goes back to nebula
+    for h in [at(16, 10), mirror(*at(16, 10))]:
+        m.big.pop(h, None)
+    m.put(*at(16, 10), "n")
+    m.big_object([at(16, 9), at(17, 9), at(17, 10)], ("Ytu2", "Ytu1"), "n")
+    # planets at 6,21 and 8,7, and the one at 9,14 moved to 14,15
+    m.put(*at(9, 14), ".")
+    for h in [(6, 21), (8, 7), (14, 15)]:
+        m.put(*at(*h), "p")
+    # the pulsar's radiation zone one hex south: 14,27, 15,28 (the pulsar)
+    # and 16,28 move down (14,28 stays, its own move would leave the map)
+    for h in [(14, 27), (15, 28), (16, 28)]:
+        m.put(*at(*h), ".")
+    for h, ch in [((14, 28), "R"), ((15, 29), "u"), ((16, 29), "R")]:
+        m.put(*at(*h), ch)
 
 
 def pixel(x, y):
@@ -323,7 +378,7 @@ def half_fields(m):
         m.g[y][x] = "."
 
 
-STARTS = [(4, 3), (1, 14), (4, 25)]        # west: sides 1, 3, 5
+STARTS = [(1, 14)]                         # west: side 1
 
 
 def moves(m, start):
@@ -344,8 +399,8 @@ def moves(m, start):
 def write(m, path):
     side = {}
     for n, (x, y) in enumerate(STARTS):
-        side[x, y] = 2 * n + 1                     # west: 1, 3, 5
-        side[mirror(x, y)] = 2 * n + 2             # east: 2, 4, 6
+        side[x, y] = 2 * n + 1                     # west: 1
+        side[mirror(x, y)] = 2 * n + 2             # east: 2
     rows = []
     for Y in range(H + 2):
         row = []
@@ -362,7 +417,7 @@ def write(m, path):
                 # planets, starbases or objects
                 code = {"K": "Yc", "p": "Ys", "o": "Yn", "q": "Yis"}.get(
                     ch, code)
-                if "^" in code and ch not in "amA":
+                if "^" in code and ch not in "amA ":
                     code = code.split("^")[0]
             elif (x, y) in side:
                 code = f"{side[x, y]} {code}"
@@ -390,7 +445,7 @@ def report(m):
 
 if __name__ == "__main__":
     m = build()
-    write(m, os.path.join(sys.argv[1], "maps/6p_Year_501.map"))
+    write(m, os.path.join(sys.argv[1], "maps/2p_Year_501.map"))
     report(m)
     if "-v" in sys.argv:
         for row in m.g:
