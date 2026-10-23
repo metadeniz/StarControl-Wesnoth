@@ -431,8 +431,7 @@ local function play_flash(flash)
 end
 
 -- The losers named in the caption: the factions of the winner's enemies, each
--- once, in side order, as "the Hierarchy and the Agents of Death". A faction
--- beaten by its own kind is "a rival Alliance".
+-- once, in side order, as "the Hierarchy and the Agents of Death".
 local function losers_text(side)
 	local names, seen = {}, {}
 	for i = 1, #wesnoth.sides do
@@ -442,8 +441,7 @@ local function losers_text(side)
 		if short and not seen[faction] and other.controller ~= "null"
 			and wesnoth.sides.is_enemy(side.side, other.side) then
 			seen[faction] = true
-			local pattern = faction == side.__cfg.faction and _ "a rival $name" or _ "the $name"
-			table.insert(names, tostring(stringx.vformat(pattern, { name = short })))
+			table.insert(names, tostring(stringx.vformat(_ "the $name", { name = short })))
 		end
 	end
 	if #names == 0 then return nil end
