@@ -331,6 +331,12 @@ def edits(m):
     m.put(*at(9, 14), ".")
     for h in [(6, 21), (8, 7), (14, 15)]:
         m.put(*at(*h), "p")
+    # the pulsar's radiation zone one hex south: 14,27, 15,28 (the pulsar)
+    # and 16,28 move down (14,28 stays, its own move would leave the map)
+    for h in [(14, 27), (15, 28), (16, 28)]:
+        m.put(*at(*h), ".")
+    for h, ch in [((14, 28), "R"), ((15, 29), "u"), ((16, 29), "R")]:
+        m.put(*at(*h), ch)
 
 
 def pixel(x, y):
