@@ -994,10 +994,9 @@ local MINE_DESTROYED_ANIM = "sc_mine_destroyed_anim"
 local MINE_DESTROYED_HALO = planet_anim_halo("mine-destroyed", 58, 67, 500)
 -- The fortification on a dead world shot to pieces, then the ships parked
 -- on the asteroids around it (SC1's own frames, from TACTICS.PKG): 27
--- frames at 7.5 fps, the last held half a second before fading out, about
--- as long as the colony's and the mine's scenes.
+-- frames at about 8.6 fps, the last held half a second before fading out.
 local OUTPOST_DESTROYED_ANIM = "sc_outpost_destroyed_anim"
-local OUTPOST_DESTROYED_HALO = planet_anim_halo("outpost-destroyed", 31, 133, 500)
+local OUTPOST_DESTROYED_HALO = planet_anim_halo("outpost-destroyed", 31, 116, 500)
 -- A Syreen taking an enemy's colony: her captain's scene, then the colony,
 -- emptied of its colonists, blown up (one halo, so they play one after the
 -- other in the same place).
