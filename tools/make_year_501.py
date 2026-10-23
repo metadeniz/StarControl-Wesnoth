@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Write maps/6p_Year_501.map.
+"""Write maps/2p_Year_501.map.
+
+For now a 1 vs. 1 map: D's edits (see edits()) cleared the north-west
+and south-west corners with their starts, so only the middle starts, on
+the west and east edges, are left. The layout below is still the team map
+it was.
 
 Year 501: an original space map for 2 vs. 2 (or 3 vs. 3), west against
 east, with three starting starbases on each side so a 2 vs. 2 game can
@@ -356,7 +361,7 @@ def half_fields(m):
         m.g[y][x] = "."
 
 
-STARTS = [(4, 3), (1, 14), (4, 25)]        # west: sides 1, 3, 5
+STARTS = [(1, 14)]                         # west: side 1
 
 
 def moves(m, start):
@@ -377,8 +382,8 @@ def moves(m, start):
 def write(m, path):
     side = {}
     for n, (x, y) in enumerate(STARTS):
-        side[x, y] = 2 * n + 1                     # west: 1, 3, 5
-        side[mirror(x, y)] = 2 * n + 2             # east: 2, 4, 6
+        side[x, y] = 2 * n + 1                     # west: 1
+        side[mirror(x, y)] = 2 * n + 2             # east: 2
     rows = []
     for Y in range(H + 2):
         row = []
@@ -423,7 +428,7 @@ def report(m):
 
 if __name__ == "__main__":
     m = build()
-    write(m, os.path.join(sys.argv[1], "maps/6p_Year_501.map"))
+    write(m, os.path.join(sys.argv[1], "maps/2p_Year_501.map"))
     report(m)
     if "-v" in sys.argv:
         for row in m.g:
