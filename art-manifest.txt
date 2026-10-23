@@ -1980,6 +1980,7 @@ sounds/sc/mmrnmhrm-torpedo.wav
 sounds/sc/mmrnmhrm-transform.wav
 sounds/sc/mycon-plasmoid.wav
 sounds/sc/mycon-regrow.wav
+sounds/sc/new-alliance-victory.ogg
 sounds/sc/orz-go.wav
 sounds/sc/orz-howitzer.wav
 sounds/sc/orz-marines.wav
@@ -2020,7 +2021,6 @@ sounds/sc/urquan-fusion.wav
 sounds/sc/urquan-launch.wav
 sounds/sc/utwig-lance.wav
 sounds/sc/utwig-shield.wav
-sounds/sc/victory-fanfare.ogg
 sounds/sc/vux-laser-long.wav
 sounds/sc/vux-laser.wav
 sounds/sc/vux-limpet-bite.wav

@@ -341,7 +341,7 @@ end
 local VICTORY_THEME = {
 	SC_Alliance = "sc/alliance-victory.ogg",     -- a cut of Star Control II's ending theme
 	SC_Hierarchy = "sc/hierarchy-victory.ogg",   -- Star Control 1's Hierarchy victory theme
-	SC_NewAlliance = "sc/victory-fanfare.ogg",   -- Star Control II's victory fanfare
+	SC_NewAlliance = "sc/new-alliance-victory.ogg", -- SC2's victory fanfare, then the ending theme's finale
 	SC_DeathMarch = "sc/funeral-march.ogg",      -- Chopin's Funeral March (Sonata No. 2), opening phrase
 }
 

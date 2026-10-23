@@ -116,7 +116,7 @@ The New Alliance and the Agents of Death have one playlist each:
 
 When you win, the old Alliance hears a 44-second cut of Star Control II's
 ending theme, the Hierarchy Star Control 1's Hierarchy victory theme, the New
-Alliance Star Control II's victory fanfare, and the Agents of Death the opening of Chopin's Funeral
+Alliance Star Control II's victory fanfare going into that same cut, and the Agents of Death the opening of Chopin's Funeral
 March. The game's music stops for it, and each side's victory picture shows in
 a message window while its theme plays: Star Control 1's Earth ringed by the
 Alliance races, or an Ur-Quan reaching out its tentacles; Star Control II's
