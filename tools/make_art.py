@@ -2444,7 +2444,7 @@ def main():
     # (supplied as MP3s, loudness-matched to the other music).
     manifest.extend(["music/sc/1. chenjesu-titus.ogg", "music/sc/1. mmrnmhrm-titus.ogg"])
     # ...and the victory themes, played as sound effects: Star Control 1's
-    # Hierarchy theme (MP3), and for the Alliance and the New Alliance Star
+    # Alliance and Hierarchy themes (MP3s), and for the New Alliance Star
     # Control II's ending music (tools/make_victory_music.py).
     manifest.extend(["sounds/sc/alliance-victory.ogg", "sounds/sc/hierarchy-victory.ogg",
                      "sounds/sc/new-alliance-victory.ogg"])
