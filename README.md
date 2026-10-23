@@ -120,7 +120,8 @@ Alliance Star Control II's victory fanfare, and the Agents of Death the opening 
 March. The game's music stops for it, and each side's victory picture shows in
 a message window while its theme plays: Star Control 1's Earth ringed by the
 Alliance races, or an Ur-Quan reaching out its tentacles; Star Control II's
-free, blue Earth; and a Kohr-Ah standing over its pit of bones (the HD comm
+free, blue Earth, after its red slave shield falls in a white flash over the
+map; and a Kohr-Ah standing over its pit of bones (the HD comm
 screen, with the HD Game Over screen's nebula behind it). When a ship destroys
 another, its race's victory ditty plays over the music (the Sa-Matra, which has
 none in Star Control II, plays the Precursors' remix of the Kohr-Ah ditty), which keeps going at
