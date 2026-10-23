@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Write maps/2p_Year_501.map.
 
-For now a 1 vs. 1 map: D's edits (see edits()) cleared the north-west
-and south-west corners with their starts, so only the middle starts, on
-the west and east edges, are left. The layout below is still the team map
+For now a 1 vs. 1 map: D's edits (see edits()) cut the north-west and
+south-west corners (and their mirrors) off the map with their starts, so
+only the middle starts, on the west and east edges, are left. The layout below is still the team map
 it was.
 
 Year 501: an original space map for 2 vs. 2 (or 3 vs. 3), west against
@@ -48,8 +48,9 @@ T = {".": "Ys", "n": "Yn", "r": "Yr", "d": "Yd", "B": "Yi", "b": "Yis",
      "x": "Ys^Yx",
      # impassable clouds, and what sits at their hearts
      "D": "Yqd", "R": "Yqr", "S": "Yqp", "E": "Yqe",
-     "s": "Yqp^Yx", "u": "Yqr^Yxp", "h": "Yqe^Yxb"}
-BARRIER = "wxDRSEsuhZ"        # Z: a hex of a four-hex object, see BIG
+     "s": "Yqp^Yx", "u": "Yqr^Yxp", "h": "Yqe^Yxb",
+     " ": "_off^_usr"}          # off the map
+BARRIER = "wxDRSEsuhZ "       # Z: a hex of a four-hex object, see BIG
 
 # a medium ship's moves into each terrain (README), for the balance check
 COST = {".": 1, "n": 2, "r": 3, "d": 2, "B": 3, "b": 2, "f": 1, "a": 3,
@@ -298,12 +299,12 @@ def edits(m):
     def at(X, Y):
         return X - 1, Y - 1
 
-    def clear(x, y):
-        m.put(x, y, ".")
+    def clear(x, y, ch="."):
+        m.put(x, y, ch)
         for h in [(x, y), mirror(x, y)]:
             m.big.pop(h, None)
-    # clear the north-west and south-west corners, from a line between two
-    # hexes outwards
+    # cut the north-west and south-west corners off the map, from a line
+    # between two hexes outwards
     for a, b, corner in [((1, 8), (15, 1), (1, 1)),
                          ((14, 29), (1, 22), (1, 29))]:
         a, b, corner = at(*a), at(*b), at(*corner)
@@ -316,9 +317,9 @@ def edits(m):
         for x in range(W):
             for y in range(H):
                 if (side((x, y)) > 0) == out:
-                    clear(x, y)
+                    clear(x, y, " ")
         for h in path([a, b]):
-            clear(*h)
+            clear(*h, " ")
     for h in [(13, 3), (16, 3), (16, 4), (17, 2), (20, 27), (23, 5)]:
         clear(*at(*h))
     m.put(*at(18, 3), "p")
@@ -400,7 +401,7 @@ def write(m, path):
                 # planets, starbases or objects
                 code = {"K": "Yc", "p": "Ys", "o": "Yn", "q": "Yis"}.get(
                     ch, code)
-                if "^" in code and ch not in "amA":
+                if "^" in code and ch not in "amA ":
                     code = code.split("^")[0]
             elif (x, y) in side:
                 code = f"{side[x, y]} {code}"
