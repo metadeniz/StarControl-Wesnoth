@@ -284,7 +284,40 @@ def build():
         m.put(x, y, "K")
         m.put(*ring, "c")
     half_fields(m)
+    edits(m)
     return m
+
+
+def edits(m):
+    """D's hand edits, in Wesnoth's 1-based coordinates (each mirrored)."""
+    def at(X, Y):
+        return X - 1, Y - 1
+
+    def clear(x, y):
+        m.put(x, y, ".")
+        for h in [(x, y), mirror(x, y)]:
+            m.big.pop(h, None)
+    # clear the north-west and south-west corners, from a line between two
+    # hexes outwards
+    for a, b, corner in [((1, 8), (15, 1), (1, 1)),
+                         ((14, 29), (1, 22), (1, 29))]:
+        a, b, corner = at(*a), at(*b), at(*corner)
+        (ax, ay), (bx, by) = pixel(*a), pixel(*b)
+
+        def side(h):
+            hx, hy = pixel(*h)
+            return (bx - ax) * (hy - ay) - (by - ay) * (hx - ax)
+        out = side(corner) > 0
+        for x in range(W):
+            for y in range(H):
+                if (side((x, y)) > 0) == out:
+                    clear(x, y)
+        for h in path([a, b]):
+            clear(*h)
+    for h in [(13, 3), (16, 3), (16, 4), (17, 2), (20, 27), (23, 5)]:
+        clear(*at(*h))
+    m.put(*at(18, 3), "p")
+    m.put(*at(9, 16), "c")                # a second ring for the small base
 
 
 def pixel(x, y):
