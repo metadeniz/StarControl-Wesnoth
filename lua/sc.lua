@@ -464,12 +464,26 @@ local function losers_text(side)
 	})
 end
 
+-- More than two teams on the map: a free-for-all, which gets no text under
+-- the caption.
+local function free_for_all()
+	local teams, count = {}, 0
+	for i = 1, #wesnoth.sides do
+		local s = wesnoth.sides[i]
+		if s.controller ~= "null" and not teams[s.team] then
+			teams[s.team] = true
+			count = count + 1
+		end
+	end
+	return count > 2
+end
+
 function sc.victory_picture(side)
 	local faction = side.__cfg.faction
 	local picture = VICTORY_PICTURE[faction]
 	if not picture then return end
 	if picture.flash then play_flash(picture.flash) end
-	local losers = losers_text(side)
+	local losers = not free_for_all() and losers_text(side)
 	local message = ""
 	if losers then
 		message = picture.message or stringx.vformat(_ "The $winner $verb $losers", {
