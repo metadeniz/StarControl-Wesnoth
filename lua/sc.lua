@@ -357,7 +357,7 @@ function sc.victory_theme()
 	wesnoth.audio.music_list.clear()
 	wesnoth.audio.music_list.add("sc/0. silence.ogg", true)
 	if theme then wesnoth.audio.play(theme) end
-	if side then sc.victory_picture(side.__cfg.faction) end
+	if side then sc.victory_picture(side) end
 end
 
 -- Victory pictures, shown in a narrator's message window like a scripted
@@ -371,14 +371,10 @@ local VICTORY_PICTURE = {
 	SC_Alliance = {
 		caption = _ "Alliance Victory",
 		image = "portraits/sc/alliance-victory.png",
-		winner = _ "Alliance",
-		loser = _ "Hierarchy",
 	},
 	SC_Hierarchy = {
 		caption = _ "Hierarchy Victory",
 		image = "portraits/sc/hierarchy-victory.png",
-		winner = _ "Hierarchy",
-		loser = _ "Alliance",
 	},
 	SC_NewAlliance = {
 		caption = _ "New Alliance Victory",
@@ -392,6 +388,14 @@ local VICTORY_PICTURE = {
 		image = "portraits/sc/agents-of-death-victory.png",
 		message = _ "The forces of destruction have prevailed. The cleansing continues...",
 	},
+}
+
+-- What the caption calls each faction, as winner or loser.
+local FACTION_SHORT_NAME = {
+	SC_Alliance = _ "Alliance",
+	SC_Hierarchy = _ "Hierarchy",
+	SC_NewAlliance = _ "New Alliance",
+	SC_DeathMarch = _ "Agents of Death",
 }
 
 -- Star Control 1's caption picks one of these at random each time, for
@@ -426,19 +430,49 @@ local function play_flash(flash)
 	wesnoth.interface.remove_item(x, y, shown)
 end
 
-function sc.victory_picture(faction)
+-- The losers named in the caption: the factions of the winner's enemies, each
+-- once, in side order, as "the Hierarchy and the Agents of Death". A faction
+-- beaten by its own kind is "a rival Alliance".
+local function losers_text(side)
+	local names, seen = {}, {}
+	for i = 1, #wesnoth.sides do
+		local other = wesnoth.sides[i]
+		local faction = other.__cfg.faction
+		local short = FACTION_SHORT_NAME[faction]
+		if short and not seen[faction] and other.controller ~= "null"
+			and wesnoth.sides.is_enemy(side.side, other.side) then
+			seen[faction] = true
+			local pattern = faction == side.__cfg.faction and _ "a rival $name" or _ "the $name"
+			table.insert(names, tostring(stringx.vformat(pattern, { name = short })))
+		end
+	end
+	if #names == 0 then return nil end
+	if #names == 1 then return names[1] end
+	return stringx.vformat(_ "$list and $last", {
+		list = table.concat(names, ", ", 1, #names - 1),
+		last = names[#names],
+	})
+end
+
+function sc.victory_picture(side)
+	local faction = side.__cfg.faction
 	local picture = VICTORY_PICTURE[faction]
 	if not picture then return end
 	if picture.flash then play_flash(picture.flash) end
+	local message = picture.message
+	if not message then
+		local losers = losers_text(side)
+		message = losers and stringx.vformat(_ "The $winner $verb $losers", {
+			winner = FACTION_SHORT_NAME[faction],
+			verb = VICTORY_VERBS[mathx.random(#VICTORY_VERBS)],
+			losers = losers,
+		}) or stringx.vformat(_ "The $winner has prevailed!", { winner = FACTION_SHORT_NAME[faction] })
+	end
 	wesnoth.wml_actions.message {
 		speaker = "narrator",
 		caption = picture.caption,
 		image = picture.image,
-		message = picture.message or stringx.vformat(_ "The $winner $verb the $loser", {
-			winner = picture.winner,
-			verb = VICTORY_VERBS[mathx.random(#VICTORY_VERBS)],
-			loser = picture.loser,
-		}),
+		message = message,
 	}
 end
 
