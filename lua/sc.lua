@@ -430,15 +430,27 @@ local function play_flash(flash)
 	wesnoth.interface.remove_item(x, y, shown)
 end
 
--- The losers named in the caption: the factions of the winner's enemies, each
--- once, in side order, as "the Hierarchy and the Agents of Death".
+-- Which side of the war each faction fights on: both Alliances are one
+-- side. A win over your own side gets no text under the caption.
+local FACTION_CAMP = {
+	SC_Alliance = "alliance",
+	SC_NewAlliance = "alliance",
+	SC_Hierarchy = "hierarchy",
+	SC_DeathMarch = "death",
+}
+
+-- The losers named in the caption: the factions of the winner's enemies on
+-- other sides of the war, each once, in side order, as "the Hierarchy and
+-- the Agents of Death".
 local function losers_text(side)
+	local camp = FACTION_CAMP[side.__cfg.faction]
 	local names, seen = {}, {}
 	for i = 1, #wesnoth.sides do
 		local other = wesnoth.sides[i]
 		local faction = other.__cfg.faction
 		local short = FACTION_SHORT_NAME[faction]
-		if short and not seen[faction] and other.controller ~= "null"
+		if short and not seen[faction] and FACTION_CAMP[faction] ~= camp
+			and other.controller ~= "null"
 			and wesnoth.sides.is_enemy(side.side, other.side) then
 			seen[faction] = true
 			table.insert(names, tostring(stringx.vformat(_ "the $name", { name = short })))
@@ -457,14 +469,14 @@ function sc.victory_picture(side)
 	local picture = VICTORY_PICTURE[faction]
 	if not picture then return end
 	if picture.flash then play_flash(picture.flash) end
-	local message = picture.message
-	if not message then
-		local losers = losers_text(side)
-		message = losers and stringx.vformat(_ "The $winner $verb $losers", {
+	local losers = losers_text(side)
+	local message = ""
+	if losers then
+		message = picture.message or stringx.vformat(_ "The $winner $verb $losers", {
 			winner = FACTION_SHORT_NAME[faction],
 			verb = VICTORY_VERBS[mathx.random(#VICTORY_VERBS)],
 			losers = losers,
-		}) or stringx.vformat(_ "The $winner has prevailed!", { winner = FACTION_SHORT_NAME[faction] })
+		})
 	end
 	wesnoth.wml_actions.message {
 		speaker = "narrator",
