@@ -167,6 +167,7 @@ SOUNDS = {
     "spathi-missile": "base/ships/spathi/primary.wav",
     "spathi-butt": "base/ships/spathi/secondary.wav",
     "umgah-cone": "base/ships/umgah/primary.wav",
+    "umgah-bakzip": "base/ships/umgah/secondary.wav",  # the retro-zip, played when the cone hits
     "vux-laser": "base/ships/vux/primary.wav",
     "vux-limpets": "base/ships/vux/secondary.wav",
     "vux-limpet-bite": "base/ships/vux/limpet_bite.wav",   # a limpet sticks to a hull

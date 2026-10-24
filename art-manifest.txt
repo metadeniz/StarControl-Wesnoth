@@ -2014,6 +2014,7 @@ sounds/sc/syreen-dagger.wav
 sounds/sc/syreen-song.wav
 sounds/sc/thraddash-afterburner.wav
 sounds/sc/thraddash-horn.wav
+sounds/sc/umgah-bakzip.wav
 sounds/sc/umgah-cone.wav
 sounds/sc/urquan-fighter-dock.wav
 sounds/sc/urquan-fighter-laser.wav
