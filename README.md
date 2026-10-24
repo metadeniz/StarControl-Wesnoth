@@ -59,6 +59,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | 2p — Caves of the Basilisk (Deep Space) | 1 vs 1; black holes stand where the statues were |
 | 2p — Silverhead Crossing (Deep Space) | 1 vs 1 |
 | 2p — Ruphus Isle (Deep Space) | 1 vs 1 |
+| 2p — Howling Ghost Badlands (Deep Space) | 1 vs 1 |
 | 2p — Fred’s Fjord (psydev) | 1 vs 1 |
 | 2p — Flashy Chorus (psydev) | 1 vs 1 |
 | 2p — Necessary Illusions | 1 vs 1 |
