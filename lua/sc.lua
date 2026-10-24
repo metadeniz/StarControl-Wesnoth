@@ -479,8 +479,8 @@ local function free_for_all()
 	local teams, count = {}, 0
 	for i = 1, #wesnoth.sides do
 		local s = wesnoth.sides[i]
-		if s.controller ~= "null" and not teams[s.team] then
-			teams[s.team] = true
+		if s.controller ~= "null" and not teams[s.team_name] then
+			teams[s.team_name] = true
 			count = count + 1
 		end
 	end
