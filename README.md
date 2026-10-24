@@ -59,6 +59,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | 2p — Caves of the Basilisk (Deep Space) | 1 vs 1; black holes stand where the statues were |
 | 2p — Silverhead Crossing (Deep Space) | 1 vs 1 |
 | 2p — Ruphus Isle (Deep Space) | 1 vs 1 |
+| 2p — Swamp of Dread (Deep Space) | 1 vs 1 |
 | 2p — Fred’s Fjord (psydev) | 1 vs 1 |
 | 2p — Flashy Chorus (psydev) | 1 vs 1 |
 | 2p — Necessary Illusions | 1 vs 1 |
@@ -360,7 +361,7 @@ Broodhome and the Sa-Matra also cross nebulae, dust clouds and badlands for 1 mo
   badlands, ford → thin badlands, castles → docking rings (sunken and
   swamp ruins → docking rings out in the badlands), villages → planets,
   impassable → star (touching impassable hexes → debris disk). Isar's Cross, The Freelands, Weldyn Channel, Fallenstar
-  Lake, Caves of the Basilisk, Silverhead Crossing and Ruphus Isle were made
+  Lake, Caves of the Basilisk, Silverhead Crossing, Ruphus Isle and Swamp of Dread were made
   this way, and so were psydev's custom maps Fred's Fjord and Flashy Chorus (a fake map edge, `^_fme`, is kept). Extra `X,Y=CODE`
   arguments place terrain afterwards; the Caves' statues became black
   holes: `27,14=Ys^Yxb 40,8=Ys^Yxb 39,8=Ys^Yxb 2,11=Ys^Yxb 8,18=Ys^Yxb
