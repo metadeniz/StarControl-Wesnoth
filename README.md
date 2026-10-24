@@ -63,6 +63,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | 2p — Swamp of Dread (Deep Space) | 1 vs 1 |
 | 2p — Hornshark Island (Deep Space) | 1 vs 1 |
 | 2p — Thousand Stings Garrison (Deep Space) | 1 vs 1, south vs north; gravity eddies and black holes stand where the scorpion statues were |
+| 2p — Howling Ghost Badlands (Deep Space) | 1 vs 1 |
 | 2p — Fred’s Fjord (psydev) | 1 vs 1 |
 | 2p — Flashy Chorus (psydev) | 1 vs 1 |
 | 2p — Necessary Illusions | 1 vs 1 |

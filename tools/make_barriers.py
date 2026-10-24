@@ -11,7 +11,7 @@ Two kinds:
 * Single objects, drawn as overlays: black hole (four of them, picked per
   hex), pulsar, and five that span four hexes: brown dwarf, supergiant,
   supermassive black hole, globular cluster and red supergiant (in its
-  debris disk).
+  debris disk); and the protostar in its protoplanetary disk.
 """
 import math
 
@@ -995,6 +995,142 @@ def _violet(img):
     return Image.fromarray(np.dstack([rgb, px[..., 3]]).clip(0, 255).astype(np.uint8), "RGBA")
 
 
+# Protostars in their protoplanetary disks (^Ypd, four hexes; ^Ytpd, three),
+# on a canvas big enough for the dust cloud to spill well past the diamond:
+# an amber one, a young red one deep in its cocoon, and a hot white one in
+# cold grey dust.
+PROTOSTAR_SIZE = 252
+PROTOSTARS = [
+    dict(),
+    dict(dust=((40, 10, 8), (115, 35, 20), (190, 75, 40), (240, 140, 85), (255, 220, 190)), haze=(140, 55, 40), haze_lit=(255, 170, 120),
+         glare=(255, 205, 170), rim=(255, 160, 110), tilt=0.42, angle=-12, star_r=8,
+         gaps=((0.45, 0.05, 0.7), (0.75, 0.04, 0.55))),
+    dict(dust=((25, 25, 32), (80, 78, 88), (150, 145, 155), (210, 210, 225), (250, 252, 255)), haze=(105, 100, 115), haze_lit=(220, 222, 238),
+         glare=(235, 242, 255), jet=(170, 200, 255), rim=(225, 232, 255), tilt=0.28, angle=-26, star_r=10,
+         gaps=((0.33, 0.04, 0.8), (0.55, 0.04, 0.65), (0.74, 0.03, 0.55), (0.9, 0.03, 0.4))),
+]
+
+
+def protostar(rng, size=PROTOSTAR_SIZE, A=106, tilt=0.34, angle=-20, star_r=9,
+              dust=((40, 20, 10), (120, 62, 28), (200, 120, 55), (245, 195, 120), (255, 245, 215)),
+              haze=(150, 85, 45), haze_lit=(255, 205, 140), glare=(255, 240, 205), jet=(150, 190, 255), rim=(255, 200, 130),
+              n_rocks=380, gaps=((0.38, 0.05, 0.75), (0.62, 0.04, 0.6), (0.82, 0.03, 0.5))):
+    """A protostar in its protoplanetary disk: a newborn star, still
+    wrapped in the dusty cocoon it formed from, with jets blown out of its
+    poles. The disk round it is seen tilted, ringed with the gaps young
+    planets sweep clear and strewn with rocks; its near half crosses in
+    front of the star as a dark lane of dust, and the star's glare shines
+    through over everything."""
+    S = 3
+    W = size * S
+    x, y = _grid(W)
+    a = math.radians(angle)
+    u = x * math.cos(a) + y * math.sin(a)          # along the disk
+    v = -x * math.sin(a) + y * math.cos(a)         # across it (down = near side)
+    R = A * S
+    rho = np.hypot(u, v / tilt) / R                 # 1 at the disk's rim
+    r = np.hypot(x, y) / R
+    dust = np.array(dust, np.float32)
+
+    def ramp(t):
+        idx = np.clip(t * (len(dust) - 1), 0, len(dust) - 1.001); lo = np.floor(idx).astype(int)
+        f = (idx - lo)[..., None]
+        return dust[lo] * (1 - f) + dust[lo + 1] * f
+
+    # the envelope: a dusty cocoon, thicker along the disk, a cavity blown
+    # out along the poles
+    n1 = _noise(rng, W, 5, 3)
+    n2 = _noise(rng, W, 5, 6)
+    env_r = np.hypot(u / 1.12, v / 0.78) / R
+    pole = np.exp(-(u / (0.16 * R + 0.45 * np.abs(v))) ** 2) * np.clip(np.abs(v) / (0.12 * R), 0, 1)
+    wisp = 1 - np.abs(2 * _noise(rng, W, 5, 4) - 1)          # ridged: filaments
+    env = np.exp(-env_r ** 2 * 1.1) * (0.3 + 0.6 * n1 + 0.5 * wisp ** 3) * (1 - 0.7 * pole)
+    edge = np.clip((W / 2 - np.hypot(x, y)) / (0.12 * W), 0, 1) ** 1.5
+    env_a = np.clip(env * 1.4, 0, 0.95) * edge
+    light = np.exp(-r * 2.0)
+    env_rgb = _mix(np.array(haze, np.float32) * 0.45, np.array(haze_lit, np.float32), np.clip(light * 1.2 + 0.35 * wisp ** 2 * light ** 0.3, 0, 1))
+    out = np.zeros((W, W, 3), np.float32); al = np.zeros((W, W), np.float32)
+
+    def over(rgb, a_):
+        nonlocal out, al
+        a_ = np.clip(a_, 0, 1)
+        out = rgb * a_[..., None] + out * (1 - a_[..., None])
+        al = a_ + al * (1 - a_)
+
+    over(env_rgb, env_a)
+    # jets: thin bipolar beams out of the poles
+    along = np.abs(v) / R
+    jet_a = np.exp(-(u / (0.025 * R + 0.05 * np.abs(v))) ** 2) * np.exp(-along / 0.45) * np.clip(along / 0.08, 0, 1) * (0.5 + 0.5 * n2) * 0.8
+    over(np.broadcast_to(np.array(jet, np.float32), out.shape), jet_a * edge * 1.3)
+
+    # the disk: rings and gaps, mottled, lit by the star
+    warp = (_noise(rng, W, 4, 5) - 0.5) * 0.05
+    q = rho + warp
+    dens = np.clip((1 - q) / 0.18, 0, 1) * np.clip((q - 0.13) / 0.06, 0, 1)
+    for c, w, g in gaps:
+        dens *= 1 - g * np.exp(-((q - c) / w) ** 2)
+    mott = _noise(rng, W, 5, 8)
+    dens *= 0.75 + 0.45 * mott
+    heat = np.clip(np.exp(-q * 1.6) * 1.1 + 0.15 * mott, 0, 1)
+    disk_rgb = ramp(heat)
+    front = v > 0
+    back_a = np.clip(dens * 1.15, 0, 1) * (~front)
+    over(disk_rgb, back_a)
+
+    # the protostar and its glare
+    rs = star_r * S
+    rr = np.hypot(x, y)
+    core = np.clip(rs - rr + 1, 0, 1)
+    glow = np.exp(-rr / (rs * 1.4)) * 1.0 + np.exp(-rr / (rs * 4)) * 0.55
+    star_rgb = _mix(np.array((255, 170, 80), np.float32), np.array((255, 252, 235), np.float32), np.clip(np.exp(-rr / (rs * 1.8)), 0, 1))
+    over(star_rgb, np.clip(glow + core, 0, 1))
+
+    # the near half of the disk passes in front of the star: dark dust,
+    # silhouetted against its glare near the middle, lit further out
+    sil = np.exp(-(q / 0.4) ** 2)
+    front_rgb = _mix(disk_rgb, dust[0] * 0.6, np.clip(sil * 0.9, 0, 1))
+    front_a = np.clip(dens * (1.1 + 0.4 * sil), 0, 1) * front
+    over(front_rgb, front_a)
+
+    img = _rgba(out, al)
+    # rocks, strewn through the disk: lit on the side facing the star
+    d = ImageDraw.Draw(img)
+    c0 = W / 2
+    rocks = []
+    for i in range(n_rocks):
+        t = rng.uniform(0, 2 * math.pi)
+        qq = 0.16 + 0.9 * rng.beta(1.6, 1.4)
+        if rng.random() < 0.25:
+            qq = rng.uniform(0.16, 1.08)
+        pu, pv = qq * R * math.cos(t), qq * R * math.sin(t) * tilt + rng.normal(0, 0.025 * R)
+        px = pu * math.cos(a) - pv * math.sin(a)
+        py = pu * math.sin(a) + pv * math.cos(a)
+        rocks.append((pv, px, py, qq))
+    rocks.sort()                                   # far side first
+    for pv, px, py, qq in rocks:
+        size_ = S * min(0.5 + rng.pareto(2.8) * 0.9, 3.6) * (1.15 - 0.4 * qq)
+        k = int(rng.integers(6, 10))
+        pts = [(px + math.cos(2 * math.pi * j / k) * size_ * rng.uniform(0.6, 1.25),
+                py + math.sin(2 * math.pi * j / k) * size_ * rng.uniform(0.6, 1.25)) for j in range(k)]
+        dist = math.hypot(px, py)
+        to_star = (-px / dist, -py / dist) if dist > 1 else (0.0, -1.0)
+        lit = max(0.25, min(1.0, 1.25 - qq))
+        shade = rng.uniform(0.75, 1.15)
+        rim_c = tuple(int(min(255, cc * lit * shade)) for cc in rim)
+        body_c = tuple(int(cc * shade) for cc in (38, 26, 20))
+        sh = size_ * 0.35
+        d.polygon([(c0 + X + to_star[0] * sh, c0 + Y + to_star[1] * sh) for X, Y in pts], fill=rim_c + (255,))
+        d.polygon([(c0 + X - to_star[0] * sh * 0.5, c0 + Y - to_star[1] * sh * 0.5) for X, Y in pts], fill=body_c + (255,))
+    # the star's glare shines through, over the rocks too
+    gl = np.exp(-rr / (rs * 0.9)) * 0.9 + np.exp(-rr / (rs * 3)) * 0.18
+    arr = np.asarray(img, np.float32)
+    add = np.array(glare, np.float32) * gl[..., None]
+    rgb = np.clip(arr[..., :3] + add * (1 - arr[..., :3] / 255), 0, 255)
+    a2 = np.clip(arr[..., 3] / 255 + gl, 0, 1)
+    img = _rgba(rgb, a2)
+    return img.resize((size, size), Image.LANCZOS)
+
+
 def build_objects(rng, out, save, apply_mask, starfield, mask):
     for name, make in [("black-hole", black_hole), ("pulsar", pulsar)]:
         img = make(rng)
@@ -1107,6 +1243,8 @@ def build_objects(rng, out, save, apply_mask, starfield, mask):
             save(apply_mask(tile, mask), out, "images/terrain/sc/supergiant-tile.png", False)
     # The three-hex objects, with their own seed.
     build_small_objects(np.random.default_rng(rng.bit_generator.seed_seq.entropy + 11), out, save, apply_mask, starfield, mask)
+    # The protostars, added later with their own seed.
+    build_protostars(np.random.default_rng(rng.bit_generator.seed_seq.entropy + 14), out, save, apply_mask, starfield, mask)
 
 
 # ---------------------------------------------------------------- three-hex objects
@@ -1172,3 +1310,15 @@ def build_small_objects(rng, out, save, apply_mask, starfield, mask):
             tile(img, "dark-star-small")
     grng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 13)
     put(red_supergiant(grng, **ROCKY_SUPERGIANT_GREEN), "rocky-supergiant-small6")
+
+
+def build_protostars(rng, out, save, apply_mask, starfield, mask):
+    for i, style in enumerate(PROTOSTARS):
+        img = protostar(rng, **style)
+        n = "" if i == 0 else i + 1
+        save(img, out, f"images/terrain/sc/protostar{n}.png", False)
+        save(_shrunk(img, SMALL), out, f"images/terrain/sc/protostar-small{n}.png", False)
+        if i == 0:
+            tile = apply_mask(starfield(rng), mask)
+            tile.alpha_composite(img.resize((HEX + 8, HEX + 8), Image.LANCZOS).crop((4, 4, HEX + 4, HEX + 4)))
+            save(apply_mask(tile, mask), out, "images/terrain/sc/protostar-tile.png", False)
