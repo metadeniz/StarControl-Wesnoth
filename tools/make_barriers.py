@@ -1014,7 +1014,8 @@ PROTOSTARS = [
 def protostar(rng, size=PROTOSTAR_SIZE, A=106, tilt=0.34, angle=-20, star_r=9,
               dust=((40, 20, 10), (120, 62, 28), (200, 120, 55), (245, 195, 120), (255, 245, 215)),
               haze=(150, 85, 45), haze_lit=(255, 205, 140), glare=(255, 240, 205), jet=(150, 190, 255), rim=(255, 200, 130),
-              n_rocks=380, gaps=((0.38, 0.05, 0.75), (0.62, 0.04, 0.6), (0.82, 0.03, 0.5))):
+              n_rocks=380, gaps=((0.38, 0.05, 0.75), (0.62, 0.04, 0.6), (0.82, 0.03, 0.5)), rock=1.0, cloud=1.0,
+              star_cols=((255, 170, 80), (255, 252, 235)), bright=1.0):
     """A protostar in its protoplanetary disk: a newborn star, still
     wrapped in the dusty cocoon it formed from, with jets blown out of its
     poles. The disk round it is seen tilted, ringed with the gaps young
@@ -1046,7 +1047,7 @@ def protostar(rng, size=PROTOSTAR_SIZE, A=106, tilt=0.34, angle=-20, star_r=9,
     wisp = 1 - np.abs(2 * _noise(rng, W, 5, 4) - 1)          # ridged: filaments
     env = np.exp(-env_r ** 2 * 1.1) * (0.3 + 0.6 * n1 + 0.5 * wisp ** 3) * (1 - 0.7 * pole)
     edge = np.clip((W / 2 - np.hypot(x, y)) / (0.12 * W), 0, 1) ** 1.5
-    env_a = np.clip(env * 1.4, 0, 0.95) * edge
+    env_a = np.clip(env * 1.4 * cloud, 0, 0.95) * edge
     light = np.exp(-r * 2.0)
     env_rgb = _mix(np.array(haze, np.float32) * 0.45, np.array(haze_lit, np.float32), np.clip(light * 1.2 + 0.35 * wisp ** 2 * light ** 0.3, 0, 1))
     out = np.zeros((W, W, 3), np.float32); al = np.zeros((W, W), np.float32)
@@ -1081,8 +1082,8 @@ def protostar(rng, size=PROTOSTAR_SIZE, A=106, tilt=0.34, angle=-20, star_r=9,
     rs = star_r * S
     rr = np.hypot(x, y)
     core = np.clip(rs - rr + 1, 0, 1)
-    glow = np.exp(-rr / (rs * 1.4)) * 1.0 + np.exp(-rr / (rs * 4)) * 0.55
-    star_rgb = _mix(np.array((255, 170, 80), np.float32), np.array((255, 252, 235), np.float32), np.clip(np.exp(-rr / (rs * 1.8)), 0, 1))
+    glow = (np.exp(-rr / (rs * 1.4)) * 1.0 + np.exp(-rr / (rs * 4)) * 0.55) * bright
+    star_rgb = _mix(np.array(star_cols[0], np.float32), np.array(star_cols[1], np.float32), np.clip(np.exp(-rr / (rs * 1.8)), 0, 1))
     over(star_rgb, np.clip(glow + core, 0, 1))
 
     # the near half of the disk passes in front of the star: dark dust,
@@ -1108,7 +1109,7 @@ def protostar(rng, size=PROTOSTAR_SIZE, A=106, tilt=0.34, angle=-20, star_r=9,
         rocks.append((pv, px, py, qq))
     rocks.sort()                                   # far side first
     for pv, px, py, qq in rocks:
-        size_ = S * min(0.5 + rng.pareto(2.8) * 0.9, 3.6) * (1.15 - 0.4 * qq)
+        size_ = S * rock * min(0.5 + rng.pareto(2.8) * 0.9, 3.6) * (1.15 - 0.4 * qq)
         k = int(rng.integers(6, 10))
         pts = [(px + math.cos(2 * math.pi * j / k) * size_ * rng.uniform(0.6, 1.25),
                 py + math.sin(2 * math.pi * j / k) * size_ * rng.uniform(0.6, 1.25)) for j in range(k)]
@@ -1122,7 +1123,7 @@ def protostar(rng, size=PROTOSTAR_SIZE, A=106, tilt=0.34, angle=-20, star_r=9,
         d.polygon([(c0 + X + to_star[0] * sh, c0 + Y + to_star[1] * sh) for X, Y in pts], fill=rim_c + (255,))
         d.polygon([(c0 + X - to_star[0] * sh * 0.5, c0 + Y - to_star[1] * sh * 0.5) for X, Y in pts], fill=body_c + (255,))
     # the star's glare shines through, over the rocks too
-    gl = np.exp(-rr / (rs * 0.9)) * 0.9 + np.exp(-rr / (rs * 3)) * 0.18
+    gl = (np.exp(-rr / (rs * 0.9)) * 0.9 + np.exp(-rr / (rs * 3)) * 0.18) * bright
     arr = np.asarray(img, np.float32)
     add = np.array(glare, np.float32) * gl[..., None]
     rgb = np.clip(arr[..., :3] + add * (1 - arr[..., :3] / 255), 0, 255)
@@ -1312,6 +1313,52 @@ def build_small_objects(rng, out, save, apply_mask, starfield, mask):
     put(red_supergiant(grng, **ROCKY_SUPERGIANT_GREEN), "rocky-supergiant-small6")
 
 
+# the one-hex protostar: the disk a little wider than the hex, as the
+# disk stars reach past theirs, and the cloud thicker so it still shows
+PROTOSTAR_ONE = dict(size=128, A=42, star_r=4.5, n_rocks=120, rock=0.7, cloud=1.6)
+
+# More one-hex looks (^Ypo4..): newborn stars are mostly seen through
+# the dust they formed from, which reddens their light, so these are
+# browns, reds, oranges and yellows, dim to bright. Two exceptions with a
+# basis in real ones: a hotter young star (Herbig Ae/Be) lighting its dust
+# blue, as reflection nebulae round young stars are; and jets glowing red
+# or pink (hydrogen-alpha), as Herbig-Haro jets do.
+_HALPHA = (255, 95, 120)
+PROTOSTARS_ONE_MORE = [
+    # 4: a dim, smoky brown one, deep in its cocoon
+    dict(dust=((22, 14, 10), (70, 45, 30), (125, 85, 55), (175, 130, 90), (215, 180, 140)), haze=(90, 60, 40), haze_lit=(185, 140, 100),
+         glare=(230, 170, 120), star_cols=((200, 90, 40), (255, 200, 150)), jet=_HALPHA, rim=(210, 160, 110), bright=0.6, cloud=2.2,
+         tilt=0.4, angle=-30, gaps=((0.5, 0.06, 0.6),)),
+    # 5: a bright golden yellow one, its cloud mostly blown away
+    dict(dust=((60, 40, 8), (160, 115, 25), (230, 185, 60), (252, 225, 125), (255, 252, 220)), haze=(170, 130, 50), haze_lit=(255, 230, 150),
+         glare=(255, 245, 200), star_cols=((255, 210, 90), (255, 255, 240)), jet=(255, 220, 160), rim=(255, 225, 140), bright=1.3, cloud=0.9, star_r=5.5,
+         tilt=0.3, angle=8),
+    # 6: a deep red one, glowing through thick dust, red jets
+    dict(dust=((30, 6, 4), (95, 20, 12), (165, 45, 25), (220, 95, 55), (250, 170, 130)), haze=(120, 30, 22), haze_lit=(230, 110, 80),
+         glare=(255, 150, 110), star_cols=((220, 50, 20), (255, 170, 120)), jet=_HALPHA, rim=(240, 120, 80), bright=0.85, cloud=2.0,
+         tilt=0.36, angle=-5, gaps=((0.42, 0.05, 0.75), (0.7, 0.04, 0.6))),
+    # 7: almost edge on, like HH 30: the disk a dark lane, the star a glow
+    # above and below it, its jets long
+    dict(dust=((30, 18, 10), (100, 60, 30), (180, 115, 55), (235, 175, 105), (255, 235, 200)), haze=(140, 90, 50), haze_lit=(255, 200, 140),
+         glare=(255, 225, 175), jet=_HALPHA, rim=(240, 180, 120), bright=0.9, tilt=0.14, angle=-18, gaps=((0.6, 0.05, 0.5),)),
+    # 8: a bright orange one with a wide, many-ringed disk
+    dict(dust=((55, 20, 5), (150, 60, 15), (225, 120, 40), (250, 180, 90), (255, 235, 190)), haze=(160, 80, 35), haze_lit=(255, 185, 110),
+         glare=(255, 225, 170), star_cols=((255, 140, 50), (255, 245, 215)), rim=(255, 185, 110), bright=1.2, star_r=5,
+         tilt=0.48, angle=-38, gaps=((0.3, 0.03, 0.8), (0.48, 0.03, 0.7), (0.64, 0.03, 0.65), (0.8, 0.03, 0.55), (0.93, 0.02, 0.4))),
+    # 9: a faint rust one, half hidden, few rocks left in its gaps
+    dict(dust=((35, 15, 8), (95, 42, 20), (150, 75, 38), (195, 120, 70), (230, 175, 130)), haze=(105, 50, 28), haze_lit=(200, 120, 75),
+         glare=(240, 175, 130), star_cols=((210, 100, 50), (255, 210, 165)), rim=(220, 140, 90), bright=0.5, cloud=2.4, n_rocks=80,
+         tilt=0.32, angle=25, gaps=((0.4, 0.07, 0.85), (0.72, 0.06, 0.75))),
+    # 10: an amber one, bright, with pink jets
+    dict(dust=((50, 28, 8), (140, 85, 25), (215, 150, 55), (245, 205, 120), (255, 245, 215)), haze=(150, 100, 45), haze_lit=(255, 215, 140),
+         glare=(255, 235, 190), jet=_HALPHA, rim=(255, 205, 130), bright=1.15, tilt=0.26, angle=-48),
+    # 11: a hot young star (Herbig Ae/Be): white, its dust lit blue
+    dict(dust=((20, 22, 40), (55, 70, 120), (110, 140, 200), (180, 205, 245), (240, 248, 255)), haze=(60, 80, 140), haze_lit=(150, 185, 255),
+         glare=(230, 240, 255), star_cols=((170, 200, 255), (250, 252, 255)), jet=(170, 200, 255), rim=(200, 220, 255), bright=1.2, star_r=5.5,
+         tilt=0.34, angle=14, gaps=((0.36, 0.04, 0.8), (0.6, 0.04, 0.65))),
+]
+
+
 def build_protostars(rng, out, save, apply_mask, starfield, mask):
     for i, style in enumerate(PROTOSTARS):
         img = protostar(rng, **style)
@@ -1322,3 +1369,20 @@ def build_protostars(rng, out, save, apply_mask, starfield, mask):
             tile = apply_mask(starfield(rng), mask)
             tile.alpha_composite(img.resize((HEX + 8, HEX + 8), Image.LANCZOS).crop((4, 4, HEX + 4, HEX + 4)))
             save(apply_mask(tile, mask), out, "images/terrain/sc/protostar-tile.png", False)
+    # and in one hex (^Ypo), drawn small on the 128 px canvas of the plain
+    # star rather than shrunk, so the star, gaps and rocks stay readable;
+    # with its own seed so the bigger ones stay the same
+    orng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 1)
+    for i, style in enumerate(PROTOSTARS):
+        img = protostar(orng, **{**style, **PROTOSTAR_ONE})
+        n = "" if i == 0 else i + 1
+        save(img, out, f"images/terrain/sc/protostar-one{n}.png", False)
+        if i == 0:
+            tile = apply_mask(starfield(orng), mask)
+            tile.alpha_composite(img.crop((28, 28, 100, 100)))
+            save(apply_mask(tile, mask), out, "images/terrain/sc/protostar-one-tile.png", False)
+    # the more varied ones, with their own seed again
+    mrng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 2)
+    for i, style in enumerate(PROTOSTARS_ONE_MORE):
+        img = protostar(mrng, **{**PROTOSTAR_ONE, **style})
+        save(img, out, f"images/terrain/sc/protostar-one{len(PROTOSTARS) + i + 1}.png", False)
