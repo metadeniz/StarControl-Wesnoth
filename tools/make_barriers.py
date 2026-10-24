@@ -1014,7 +1014,7 @@ PROTOSTARS = [
 def protostar(rng, size=PROTOSTAR_SIZE, A=106, tilt=0.34, angle=-20, star_r=9,
               dust=((40, 20, 10), (120, 62, 28), (200, 120, 55), (245, 195, 120), (255, 245, 215)),
               haze=(150, 85, 45), haze_lit=(255, 205, 140), glare=(255, 240, 205), jet=(150, 190, 255), rim=(255, 200, 130),
-              n_rocks=380, gaps=((0.38, 0.05, 0.75), (0.62, 0.04, 0.6), (0.82, 0.03, 0.5))):
+              n_rocks=380, gaps=((0.38, 0.05, 0.75), (0.62, 0.04, 0.6), (0.82, 0.03, 0.5)), rock=1.0, cloud=1.0):
     """A protostar in its protoplanetary disk: a newborn star, still
     wrapped in the dusty cocoon it formed from, with jets blown out of its
     poles. The disk round it is seen tilted, ringed with the gaps young
@@ -1046,7 +1046,7 @@ def protostar(rng, size=PROTOSTAR_SIZE, A=106, tilt=0.34, angle=-20, star_r=9,
     wisp = 1 - np.abs(2 * _noise(rng, W, 5, 4) - 1)          # ridged: filaments
     env = np.exp(-env_r ** 2 * 1.1) * (0.3 + 0.6 * n1 + 0.5 * wisp ** 3) * (1 - 0.7 * pole)
     edge = np.clip((W / 2 - np.hypot(x, y)) / (0.12 * W), 0, 1) ** 1.5
-    env_a = np.clip(env * 1.4, 0, 0.95) * edge
+    env_a = np.clip(env * 1.4 * cloud, 0, 0.95) * edge
     light = np.exp(-r * 2.0)
     env_rgb = _mix(np.array(haze, np.float32) * 0.45, np.array(haze_lit, np.float32), np.clip(light * 1.2 + 0.35 * wisp ** 2 * light ** 0.3, 0, 1))
     out = np.zeros((W, W, 3), np.float32); al = np.zeros((W, W), np.float32)
@@ -1108,7 +1108,7 @@ def protostar(rng, size=PROTOSTAR_SIZE, A=106, tilt=0.34, angle=-20, star_r=9,
         rocks.append((pv, px, py, qq))
     rocks.sort()                                   # far side first
     for pv, px, py, qq in rocks:
-        size_ = S * min(0.5 + rng.pareto(2.8) * 0.9, 3.6) * (1.15 - 0.4 * qq)
+        size_ = S * rock * min(0.5 + rng.pareto(2.8) * 0.9, 3.6) * (1.15 - 0.4 * qq)
         k = int(rng.integers(6, 10))
         pts = [(px + math.cos(2 * math.pi * j / k) * size_ * rng.uniform(0.6, 1.25),
                 py + math.sin(2 * math.pi * j / k) * size_ * rng.uniform(0.6, 1.25)) for j in range(k)]
@@ -1312,6 +1312,11 @@ def build_small_objects(rng, out, save, apply_mask, starfield, mask):
     put(red_supergiant(grng, **ROCKY_SUPERGIANT_GREEN), "rocky-supergiant-small6")
 
 
+# the one-hex protostar: the disk a little wider than the hex, as the
+# disk stars reach past theirs, and the cloud thicker so it still shows
+PROTOSTAR_ONE = dict(size=128, A=42, star_r=4.5, n_rocks=120, rock=0.7, cloud=1.6)
+
+
 def build_protostars(rng, out, save, apply_mask, starfield, mask):
     for i, style in enumerate(PROTOSTARS):
         img = protostar(rng, **style)
@@ -1322,3 +1327,15 @@ def build_protostars(rng, out, save, apply_mask, starfield, mask):
             tile = apply_mask(starfield(rng), mask)
             tile.alpha_composite(img.resize((HEX + 8, HEX + 8), Image.LANCZOS).crop((4, 4, HEX + 4, HEX + 4)))
             save(apply_mask(tile, mask), out, "images/terrain/sc/protostar-tile.png", False)
+    # and in one hex (^Ypo), drawn small on the 128 px canvas of the plain
+    # star rather than shrunk, so the star, gaps and rocks stay readable;
+    # with its own seed so the bigger ones stay the same
+    orng = np.random.default_rng(rng.bit_generator.seed_seq.entropy + 1)
+    for i, style in enumerate(PROTOSTARS):
+        img = protostar(orng, **{**style, **PROTOSTAR_ONE})
+        n = "" if i == 0 else i + 1
+        save(img, out, f"images/terrain/sc/protostar-one{n}.png", False)
+        if i == 0:
+            tile = apply_mask(starfield(orng), mask)
+            tile.alpha_composite(img.crop((28, 28, 100, 100)))
+            save(apply_mask(tile, mask), out, "images/terrain/sc/protostar-one-tile.png", False)
