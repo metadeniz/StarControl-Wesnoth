@@ -995,9 +995,11 @@ def _violet(img):
     return Image.fromarray(np.dstack([rgb, px[..., 3]]).clip(0, 255).astype(np.uint8), "RGBA")
 
 
-# Protostars in their protoplanetary disks (^Ypd, four hexes; ^Ytpd, three):
+# Protostars in their protoplanetary disks (^Ypd, four hexes; ^Ytpd, three),
+# on a canvas big enough for the dust cloud to spill well past the diamond:
 # an amber one, a young red one deep in its cocoon, and a hot white one in
 # cold grey dust.
+PROTOSTAR_SIZE = 252
 PROTOSTARS = [
     dict(),
     dict(dust=((40, 10, 8), (115, 35, 20), (190, 75, 40), (240, 140, 85), (255, 220, 190)), haze=(140, 55, 40), haze_lit=(255, 170, 120),
@@ -1009,7 +1011,7 @@ PROTOSTARS = [
 ]
 
 
-def protostar(rng, size=SUPERGIANT_SIZE, A=92, tilt=0.34, angle=-20, star_r=9,
+def protostar(rng, size=PROTOSTAR_SIZE, A=106, tilt=0.34, angle=-20, star_r=9,
               dust=((40, 20, 10), (120, 62, 28), (200, 120, 55), (245, 195, 120), (255, 245, 215)),
               haze=(150, 85, 45), haze_lit=(255, 205, 140), glare=(255, 240, 205), jet=(150, 190, 255), rim=(255, 200, 130),
               n_rocks=380, gaps=((0.38, 0.05, 0.75), (0.62, 0.04, 0.6), (0.82, 0.03, 0.5))):
@@ -1044,7 +1046,7 @@ def protostar(rng, size=SUPERGIANT_SIZE, A=92, tilt=0.34, angle=-20, star_r=9,
     wisp = 1 - np.abs(2 * _noise(rng, W, 5, 4) - 1)          # ridged: filaments
     env = np.exp(-env_r ** 2 * 1.1) * (0.3 + 0.6 * n1 + 0.5 * wisp ** 3) * (1 - 0.7 * pole)
     edge = np.clip((W / 2 - np.hypot(x, y)) / (0.12 * W), 0, 1) ** 1.5
-    env_a = np.clip(env * 1.25, 0, 0.95) * edge
+    env_a = np.clip(env * 1.4, 0, 0.95) * edge
     light = np.exp(-r * 2.0)
     env_rgb = _mix(np.array(haze, np.float32) * 0.45, np.array(haze_lit, np.float32), np.clip(light * 1.2 + 0.35 * wisp ** 2 * light ** 0.3, 0, 1))
     out = np.zeros((W, W, 3), np.float32); al = np.zeros((W, W), np.float32)
@@ -1069,7 +1071,7 @@ def protostar(rng, size=SUPERGIANT_SIZE, A=92, tilt=0.34, angle=-20, star_r=9,
         dens *= 1 - g * np.exp(-((q - c) / w) ** 2)
     mott = _noise(rng, W, 5, 8)
     dens *= 0.75 + 0.45 * mott
-    heat = np.clip(np.exp(-q * 2.0) * 1.1 + 0.15 * mott, 0, 1)
+    heat = np.clip(np.exp(-q * 1.6) * 1.1 + 0.15 * mott, 0, 1)
     disk_rgb = ramp(heat)
     front = v > 0
     back_a = np.clip(dens * 1.15, 0, 1) * (~front)
