@@ -62,6 +62,7 @@ maps below and the era **Star Control: The Ur-Quan War**.
 | 2p — The Hamlets (Deep Space) | 1 vs 1 |
 | 2p — Swamp of Dread (Deep Space) | 1 vs 1 |
 | 2p — Hornshark Island (Deep Space) | 1 vs 1 |
+| 2p — Thousand Stings Garrison (Deep Space) | 1 vs 1, south vs north; gravity eddies and black holes stand where the scorpion statues were |
 | 2p — Fred’s Fjord (psydev) | 1 vs 1 |
 | 2p — Flashy Chorus (psydev) | 1 vs 1 |
 | 2p — Necessary Illusions | 1 vs 1 |
@@ -362,12 +363,18 @@ Broodhome and the Sa-Matra also cross nebulae, dust clouds and badlands for 1 mo
   badlands, ford → thin badlands, castles → docking rings (sunken and
   swamp ruins → docking rings out in the badlands), villages → planets,
   impassable → star (touching impassable hexes → debris disk). Isar's Cross, The Freelands, Weldyn Channel, Fallenstar
-  Lake, Caves of the Basilisk, Silverhead Crossing, Ruphus Isle, The Hamlets, Swamp of Dread and Hornshark Island were made
+  Lake, Caves of the Basilisk, Silverhead Crossing, Ruphus Isle, The Hamlets, Swamp of Dread, Hornshark Island and Thousand Stings Garrison were made
   this way, and so were psydev's custom maps Fred's Fjord and Flashy Chorus (a fake map edge, `^_fme`, is kept). Extra `X,Y=CODE`
   arguments place terrain afterwards; the Caves' statues became black
   holes: `27,14=Ys^Yxb 40,8=Ys^Yxb 39,8=Ys^Yxb 2,11=Ys^Yxb 8,18=Ys^Yxb
   8,13=Ys^Yxb 22,12=Ys^Yxb 37,17=Ys^Yxb 5,8=Ys^Yxb 25,14=Ys^Yxb
   34,6=Ys^Yxb 34,11=Ys^Yxb 15,11=Ys^Yxb 20,12=Ys^Yxb 17,11=Ys^Yxb`.
+  Thousand Stings Garrison's 66 scorpion statues, all along the edges,
+  became gravity eddies (`X,Y=Yqe` for each statue's hex) with twelve black
+  holes, each with a set look so neighbours differ: `2,7=Yqe^Yxb1
+  1,9=Yqe^Yxb2 1,14=Yqe^Yxb4 1,19=Yqe^Yxb3 8,24=Yqe^Yxb1 12,24=Yqe^Yxb2
+  28,19=Yqe^Yxb1 29,18=Yqe^Yxb2 29,13=Yqe^Yxb4 29,8=Yqe^Yxb3
+  22,2=Yqe^Yxb1 18,2=Yqe^Yxb2`.
 - `tools/ai_battles.sh [games] [jobs] [faction] [faction] [first seed]`
   plays headless AI-vs-AI games and prints win rates. Factions:
   `SC_Alliance`, `SC_Hierarchy`, `SC_NewAlliance`, `SC_DeathMarch`.
