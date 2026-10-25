@@ -11,7 +11,8 @@ Two kinds:
 * Single objects, drawn as overlays: black hole (four of them, picked per
   hex), pulsar, and five that span four hexes: brown dwarf, supergiant,
   supermassive black hole, globular cluster and red supergiant (in its
-  debris disk); and the protostar in its protoplanetary disk.
+  debris disk); the protostar in its protoplanetary disk; and the ringed
+  black hole.
 """
 import math
 
@@ -1246,6 +1247,8 @@ def build_objects(rng, out, save, apply_mask, starfield, mask):
     build_small_objects(np.random.default_rng(rng.bit_generator.seed_seq.entropy + 11), out, save, apply_mask, starfield, mask)
     # The protostars, added later with their own seed.
     build_protostars(np.random.default_rng(rng.bit_generator.seed_seq.entropy + 14), out, save, apply_mask, starfield, mask)
+    # The ringed black holes, with their own seed.
+    build_ringed_black_holes(np.random.default_rng(rng.bit_generator.seed_seq.entropy + 15), out, save, apply_mask, starfield, mask)
 
 
 # ---------------------------------------------------------------- three-hex objects
@@ -1386,3 +1389,110 @@ def build_protostars(rng, out, save, apply_mask, starfield, mask):
     for i, style in enumerate(PROTOSTARS_ONE_MORE):
         img = protostar(mrng, **{**PROTOSTAR_ONE, **style})
         save(img, out, f"images/terrain/sc/protostar-one{len(PROTOSTARS) + i + 1}.png", False)
+
+
+# ---------------------------------------------------------------- ringed black hole
+# A black hole seen without a bright accretion disc: a dead-black globe in
+# a violet halo of light its gravity bends round it, crossed by one thin
+# tilted ring of glowing gas, cyan-white and fraying at the edges, with a
+# drift of golden dust trailing off below. Drawn for one hex (^Yrb) and
+# for a triangle of three (^Ytrb).
+
+def ringed_black_hole(rng, size=128, R=14, A=46, tilt=0.3, angle=28, ring_w=1.1,
+                      halo=(0.36, 0.3, 1.0), halo_hot=(0.85, 0.8, 1.0), ring=(0.35, 0.9, 1.0),
+                      dust=(1.0, 0.66, 0.16), dust_k=1.0, n_specks=60):
+    """`R` is the globe's radius and `A` the ring's (half its width), in
+    pixels of the finished `size` square; the ring is seen at `tilt` (1
+    face-on) and turned `angle` degrees, its near half crossing in front of
+    the globe low on the left."""
+    S = 3
+    W = size * S
+    x, y = _grid(W); x, y = x / S, y / S
+    d = np.hypot(x, y)
+    th = np.arctan2(y, x)
+    edge = np.clip((size / 2 - d) / (0.14 * size), 0, 1) ** 1.5      # fade out before the canvas edge
+
+    # the lensing halo: light bent into arcs round the globe, brightest
+    # just outside it, thinning out into a violet haze
+    swirl = th + 1.3 * np.log(np.maximum(d, 1) / R)          # the arcs wind in towards the globe
+    arcs = _polar_noise(rng, W, d * S, swirl, n_th=4, n_r=14, octaves=5)
+    arcs2 = _polar_noise(rng, W, d * S, swirl, n_th=8, n_r=9, octaves=4)
+    blot = _noise(rng, W, 4, 3)
+    out_r = np.clip(d - R, 0, None)
+    near = np.exp(-out_r / (0.4 * R)) * (d > R * 0.98)
+    far = np.exp(-out_r / (1.7 * R)) * (0.5 + 0.7 * blot)
+    streak = 0.45 + 0.8 * arcs ** 2 + 0.35 * arcs2 ** 3
+    lum = (far * 1.0 + near * 0.85) * streak
+    hue = _mix(halo, halo_hot, np.clip(near * 1.2, 0, 1))
+    back = hue * lum[..., None]
+    # the photon ring: a fine bright rim hugging the globe
+    rim = np.exp(-((d - R * 1.04) / (0.05 * R + 0.3)) ** 2) * (0.6 + 0.4 * arcs2)
+    back += np.array(halo_hot, np.float32) * rim[..., None] * 0.8
+
+    # golden dust trailing off low on the left, behind everything
+    dn = _noise(rng, W, 5, 3)
+    ca, sa = math.cos(math.radians(angle)), math.sin(math.radians(angle))
+    dx, dy = x + 0.3 * A, y - 0.68 * A
+    blob = np.exp(-((dx * ca + dy * sa) / (0.75 * A)) ** 2 - ((-dx * sa + dy * ca) / (0.26 * A)) ** 2)
+    gold = np.clip(blob * (0.2 + 1.2 * dn ** 1.5) * (0.6 + 0.6 * arcs) - 0.05, 0, None) * dust_k
+    back += np.array(dust, np.float32) * gold[..., None]
+
+    # the ring, with its own glow; in front of the globe on its near side
+    u, v, rho, ang = _ring_frame(x, y, tilt, angle)
+    gl = np.hypot(u, v / tilt ** 2) / np.maximum(np.hypot(u, v), 1e-3)
+    sd = (np.hypot(u, v) - A) / np.maximum(gl, 1e-3)        # signed distance to the ring, in pixels
+    wob = _polar_noise(rng, W, rho * S, ang, n_th=8, n_r=1, octaves=3)
+    fray = _polar_noise(rng, W, rho * S, ang, n_th=48, n_r=6, octaves=4)
+    jitter = (wob - 0.5) * ring_w * 1.6
+    s = sd - jitter
+    along = 0.55 + 0.45 * np.cos(ang - math.pi)                     # brightest at the far left end
+    along = along * (0.6 + 0.6 * _polar_noise(rng, W, rho * S, ang, n_th=8, n_r=1, octaves=3))
+    core = np.exp(-(s / (0.45 * ring_w)) ** 2) * along
+    glow = (np.exp(-(s / (2.2 * ring_w)) ** 2) * 0.55 + np.exp(-np.abs(s) / (5.5 * ring_w)) * 0.22) * along
+    fuzz = np.exp(-(np.abs(s) / (1.8 * ring_w))) * np.clip(fray - 0.4, 0, 1) * 1.3 * along
+    ring_light = np.array(ring, np.float32) * (glow + fuzz)[..., None] + np.array((1.0, 1.0, 1.0), np.float32) * (core * 1.6)[..., None]
+    front = v > 0
+    globe = np.clip(R - d + 0.5, 0, 1)
+    back += ring_light * (~front)[..., None] * (1 - globe)[..., None]
+    # over the globe only the ring itself shows, not its haze
+    ring_core = np.array(ring, np.float32) * (glow * 0.5)[..., None] + np.array((1.0, 1.0, 1.0), np.float32) * (core * 1.6)[..., None]
+    front_light = np.where(globe[..., None] > 0, ring_core, ring_light) * front[..., None]
+
+    # lensed stars: short bright arcs strung round the halo
+    specks = np.zeros((W, W), np.float32)
+    pil = Image.fromarray(specks, "F"); dr = ImageDraw.Draw(pil)
+    c0 = W / 2
+    for _ in range(n_specks):
+        rr = R * (1.08 + rng.gamma(1.6, 0.45))
+        if rr > size * 0.45:
+            continue
+        a0 = rng.uniform(0, 2 * math.pi)
+        span = rng.uniform(0.005, 0.07) * (R * 1.5 / rr)
+        b = float(rng.choice([0.4, 0.8, 1.5], p=[0.55, 0.3, 0.15]))
+        box = [c0 - rr * S, c0 - rr * S, c0 + rr * S, c0 + rr * S]
+        dr.arc(box, math.degrees(a0), math.degrees(a0 + span), fill=b, width=max(1, S - 1))
+    specks = _fblur(np.asarray(pil, np.float32), S * 0.4) * (d > R)
+    back += np.array((0.85, 0.85, 1.0), np.float32) * specks[..., None]
+
+    disc_rgb = np.zeros((W, W, 3), np.float32)
+    # the globe is not quite flat black: the ring's glow catches its lower left
+    disc_rgb += np.array((22, 24, 34), np.float32) * np.clip((-x + y) / (2 * R), 0, 1)[..., None]
+    img = _layers(back * edge[..., None], globe, disc_rgb, front_light * edge[..., None])
+    return img.resize((size, size), Image.LANCZOS)
+
+
+RINGED_ONE = dict()                                         # ^Yrb: 128 px, as the plain star
+RINGED_SMALL = dict(size=207, R=30, A=84, ring_w=1.6, n_specks=140)  # ^Ytrb: as the three-hex protostar
+
+
+def build_ringed_black_holes(rng, out, save, apply_mask, starfield, mask):
+    img = ringed_black_hole(rng, **RINGED_ONE)
+    save(img, out, "images/terrain/sc/ringed-black-hole.png", False)
+    tile = apply_mask(starfield(rng), mask)
+    tile.alpha_composite(img.crop((28, 28, 100, 100)))
+    save(apply_mask(tile, mask), out, "images/terrain/sc/ringed-black-hole-tile.png", False)
+    img = ringed_black_hole(rng, **RINGED_SMALL)
+    save(img, out, "images/terrain/sc/ringed-black-hole-small.png", False)
+    tile = apply_mask(starfield(rng), mask)
+    tile.alpha_composite(img.resize((HEX + 8, HEX + 8), Image.LANCZOS).crop((4, 4, HEX + 4, HEX + 4)))
+    save(apply_mask(tile, mask), out, "images/terrain/sc/ringed-black-hole-small-tile.png", False)
