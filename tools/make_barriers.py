@@ -1394,13 +1394,13 @@ def build_protostars(rng, out, save, apply_mask, starfield, mask):
 # ---------------------------------------------------------------- ringed black hole
 # A black hole seen without a bright accretion disc: a dead-black globe in
 # a violet halo of light its gravity bends round it, crossed by one thin
-# tilted ring of glowing gas, cyan-white and fraying at the edges, with a
-# drift of golden dust trailing off below. Drawn for one hex (^Yrb) and
-# for a triangle of three (^Ytrb).
+# tilted ring of glowing gas, cyan-white and fraying at the edges, fed
+# by a narrow stream of golden dust drifting in from below. Drawn for one
+# hex (^Yrb) and for a triangle of three (^Ytrb).
 
 def ringed_black_hole(rng, size=128, R=14, A=46, tilt=0.3, angle=28, ring_w=1.1,
                       halo=(0.36, 0.3, 1.0), halo_hot=(0.85, 0.8, 1.0), ring=(0.35, 0.9, 1.0),
-                      dust=(1.0, 0.66, 0.16), dust_k=1.0, n_specks=60):
+                      dust=(1.0, 0.66, 0.16), dust_k=1.0, n_specks=60, n_grains=90):
     """`R` is the globe's radius and `A` the ring's (half its width), in
     pixels of the finished `size` square; the ring is seen at `tilt` (1
     face-on) and turned `angle` degrees, its near half crossing in front of
@@ -1429,13 +1429,7 @@ def ringed_black_hole(rng, size=128, R=14, A=46, tilt=0.3, angle=28, ring_w=1.1,
     rim = np.exp(-((d - R * 1.04) / (0.05 * R + 0.3)) ** 2) * (0.6 + 0.4 * arcs2)
     back += np.array(halo_hot, np.float32) * rim[..., None] * 0.8
 
-    # golden dust trailing off low on the left, behind everything
-    dn = _noise(rng, W, 5, 3)
-    ca, sa = math.cos(math.radians(angle)), math.sin(math.radians(angle))
-    dx, dy = x + 0.3 * A, y - 0.68 * A
-    blob = np.exp(-((dx * ca + dy * sa) / (0.75 * A)) ** 2 - ((-dx * sa + dy * ca) / (0.26 * A)) ** 2)
-    gold = np.clip(blob * (0.2 + 1.2 * dn ** 1.5) * (0.6 + 0.6 * arcs) - 0.05, 0, None) * dust_k
-    back += np.array(dust, np.float32) * gold[..., None]
+    dn = _noise(rng, W, 5, 3)                                # mottles the stream of dust below
 
     # the ring, with its own glow; in front of the globe on its near side
     u, v, rho, ang = _ring_frame(x, y, tilt, angle)
@@ -1474,6 +1468,45 @@ def ringed_black_hole(rng, size=128, R=14, A=46, tilt=0.3, angle=28, ring_w=1.1,
     specks = _fblur(np.asarray(pil, np.float32), S * 0.4) * (d > R)
     back += np.array((0.85, 0.85, 1.0), np.float32) * specks[..., None]
 
+    # a narrow stream of golden dust drifting up from below and falling
+    # into the ring on its near side, joining it as it sweeps up and round
+    # on the left: a faint glow along the path, strewn with grains, each
+    # with a short trail behind it
+    t0 = math.radians(140)
+    ca, sa = math.cos(math.radians(angle)), math.sin(math.radians(angle))
+    ju, jv = -A * math.cos(math.pi - t0), A * tilt * math.sin(t0)
+    J = np.array((ju * ca - jv * sa, ju * sa + jv * ca))
+    tu, tv = -math.sin(t0), tilt * math.cos(t0)
+    T = np.array((tu * ca - tv * sa, tu * sa + tv * ca)); T /= np.linalg.norm(T)
+    P = [np.array((-0.1 * A, 0.92 * A)), np.array((-0.25 * A, 0.6 * A)), J - 0.35 * A * T, J]
+
+    def bez(t):
+        t = np.asarray(t)[..., None]
+        return ((1 - t) ** 3 * P[0] + 3 * (1 - t) ** 2 * t * P[1] + 3 * (1 - t) * t ** 2 * P[2] + t ** 3 * P[3])
+
+    ts = np.linspace(0, 1, 400)
+    path = bez(ts)
+    fade = lambda t: np.clip(t / 0.25, 0, 1) ** 1.5        # thins out into nothing far from the ring
+    sigma = lambda t: ring_w * (1.6 - 0.9 * t)              # and narrows as it falls in
+    pil = Image.fromarray(np.zeros((W, W), np.float32), "F"); dr = ImageDraw.Draw(pil)
+    for i in range(len(ts) - 1):                            # the glow along the path
+        (x0, y0), (x1, y1) = path[i], path[i + 1]
+        dr.line([(c0 + x0 * S, c0 + y0 * S), (c0 + x1 * S, c0 + y1 * S)], fill=float(fade(ts[i]) * (0.4 + 0.6 * ts[i])), width=S)
+    glow_s = _fblur(np.asarray(pil, np.float32), S * ring_w * 1.4) * (0.6 + 0.8 * dn)
+    pil = Image.fromarray(np.zeros((W, W), np.float32), "F"); dr = ImageDraw.Draw(pil)
+    for _ in range(n_grains):
+        t = rng.beta(1.8, 1.1)
+        p = bez(t); q = bez(min(t + 0.01, 1)); dirn = (q - p) / max(np.linalg.norm(q - p), 1e-6)
+        p = p + np.array((-dirn[1], dirn[0])) * rng.normal(0, sigma(t))
+        tail = p - dirn * rng.uniform(0.8, 2.2) * (0.6 + 0.8 * t)      # a trail behind, longer as it speeds up
+        b = float(rng.choice([0.5, 0.9, 1.6], p=[0.5, 0.35, 0.15])) * fade(t)
+        dr.line([(c0 + tail[0] * S, c0 + tail[1] * S), (c0 + p[0] * S, c0 + p[1] * S)], fill=b * 0.45, width=max(1, S - 1))
+        dr.ellipse([c0 + p[0] * S - S * 0.5, c0 + p[1] * S - S * 0.5, c0 + p[0] * S + S * 0.5, c0 + p[1] * S + S * 0.5], fill=b)
+    grains = _fblur(np.asarray(pil, np.float32), S * 0.35)
+    stream = np.array(dust, np.float32) * (glow_s * 1.1 * dust_k)[..., None] \
+        + np.array((1.0, 0.74, 0.32), np.float32) * (grains * 1.6 * dust_k)[..., None]
+    back += stream * (1 - globe)[..., None]
+
     disc_rgb = np.zeros((W, W, 3), np.float32)
     # the globe is not quite flat black: the ring's glow catches its lower left
     disc_rgb += np.array((22, 24, 34), np.float32) * np.clip((-x + y) / (2 * R), 0, 1)[..., None]
@@ -1482,7 +1515,7 @@ def ringed_black_hole(rng, size=128, R=14, A=46, tilt=0.3, angle=28, ring_w=1.1,
 
 
 RINGED_ONE = dict()                                         # ^Yrb: 128 px, as the plain star
-RINGED_SMALL = dict(size=207, R=30, A=84, ring_w=1.6, n_specks=140)  # ^Ytrb: as the three-hex protostar
+RINGED_SMALL = dict(size=207, R=30, A=84, ring_w=1.6, n_specks=140, n_grains=220)  # ^Ytrb: as the three-hex protostar
 
 
 def build_ringed_black_holes(rng, out, save, apply_mask, starfield, mask):
