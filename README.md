@@ -162,7 +162,7 @@ explosion, and the game waits for it to finish.
 | Zoq-Fot-Pik Stinger | cheap; acid spit, hard-hitting tongue | Thraddash Torch | fast; afterburner (**charge**, **backstab**), horn blasters (**backstab**) |
 | Pkunk Fury | fast triple gun; **reincarnation**: reborn at full HP when destroyed, 80% the first time, halving with each rebirth | Slylandro Probe | 7 moves; seeking lightning (**magical**); repairs 8 HP a turn in asteroid fields |
 | Supox Blade | **skirmisher**; globs of goo | Orz Nemesis | hard-hitting space marines (**boarding**: ignore armour and shields); light howitzer |
-| Utwig Jugger | six-lance volleys; absorbing shield (+30% resistance when attacked) | Mycon Podship | as in the Hierarchy |
+| Utwig Jugger | six-lance volleys; absorbing shield (+30% resistance when attacked; a ranged hit gives back half its damage as HP) | Mycon Podship | as in the Hierarchy |
 | Melnorme Trader | 4-shot blaster up close; one heavy charged shot and a confusion ray (**slows**) at range; heals +4 (Veteran and Elite cure) | | |
 
 **Hull size.** Every ship shows its hull class (large, medium, small or
