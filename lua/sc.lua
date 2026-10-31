@@ -927,6 +927,24 @@ function sc.starbase_destroyed()
 	sc.panel_play(STARBASE_DESTROYED_SCENE, caption)
 end
 
+---------------------------------------------------------- Utwig shield
+
+-- The Utwig Jugger's shield drinks the energy of incoming fire. When it is
+-- attacked from range, each shot that gets through the shield gives back
+-- half the damage it did (rounded down), up to the ship's max HP. The era's
+-- attacker hits event only fires for the shots the shield stops (see
+-- SC_ABILITY_ABSORB_SHIELD), and a shot that destroys the ship gives nothing.
+function sc.utwig_absorb()
+	local c = wesnoth.current.event_context
+	local u = wesnoth.units.get(c.x2, c.y2)
+	if not is_a(u, "SC_Utwig_Jugger") or u.hitpoints <= 0 then return end
+	local gain = math.min(math.floor((wml.variables["damage_inflicted"] or 0) / 2), u.max_hitpoints - u.hitpoints)
+	if gain <= 0 then return end
+	u.hitpoints = u.hitpoints + gain
+	count("utwig_absorb")
+	wesnoth.interface.float_label(u.x, u.y, "<span color='#00ff00'>+" .. gain .. "</span>")
+end
+
 --------------------------------------------------------------- Syreen crew
 
 -- The Syreen Penetrator has room for a huge crew (max HP as high as an
