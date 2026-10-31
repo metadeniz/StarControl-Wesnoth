@@ -111,6 +111,7 @@ PROJECTILES = {
     "horn": ("thraddash", "horn", 0, 0.6),
     "napalm": ("thraddash", "napalm", 0, 1.2),
     "howitzer": ("orz", "howitzer", 0, 0.9),
+    "marine": ("orz", "turret", 20, 1.4),             # orz.c: a space marine in flight
     "zapsat": ("chmmr", "satellite", 0, 0.4),
     "spit": ("zoqfotpik", "spit", 0, 1.4),
     "tongue": ("zoqfotpik", "proboscis", 0, 0.8),
@@ -2346,6 +2347,7 @@ def build_attack_icons(out):
     sources = {pid: (f"images/projectiles/sc/{pid}-ne.png", True) for pid in PROJECTILES}
     sources.update({lid: (f"images/projectiles/sc/{lid}-ne.png", False) for lid in LASERS})
     sources["blazer"] = ("images/units/sc/androsynth-blazer-l1-ne.png", True)
+    sources["marine"] = ("images/projectiles/sc/marine-n.png", True)  # upright reads as a figure
     sources["samatra-comet"] = ("images/projectiles/sc/samatra-comet-ne.png", False)
     sources["samatra-blob"] = ("images/projectiles/sc/samatra-blob-ne.png", False)
     for iid, (rel, uqm) in sources.items():

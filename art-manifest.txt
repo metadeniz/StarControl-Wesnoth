@@ -23,6 +23,7 @@ images/attacks/sc/horn.png
 images/attacks/sc/howitzer.png
 images/attacks/sc/lance.png
 images/attacks/sc/limpet.png
+images/attacks/sc/marine.png
 images/attacks/sc/mass-driver.png
 images/attacks/sc/napalm.png
 images/attacks/sc/nuke.png
@@ -1200,6 +1201,8 @@ images/projectiles/sc/limpet-4-n.png
 images/projectiles/sc/limpet-4-ne.png
 images/projectiles/sc/limpet-n.png
 images/projectiles/sc/limpet-ne.png
+images/projectiles/sc/marine-n.png
+images/projectiles/sc/marine-ne.png
 images/projectiles/sc/mass-driver-n.png
 images/projectiles/sc/mass-driver-ne.png
 images/projectiles/sc/napalm-n.png
