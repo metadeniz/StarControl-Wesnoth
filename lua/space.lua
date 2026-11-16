@@ -23,8 +23,13 @@
 --   village in water (not swamp)                -> sea planet          ^Vys
 --   castle / keep                               -> docking ring / base Yc / Yk
 --   castle in water or swamp                    -> docking ring in the badlands Yci
---   impassable, chasm                           -> star                Ys^Yx
---       ...but where impassable hexes touch     -> asteroid wall       Ys^Yw
+--   cave and stone walls, impassable mountains,
+--     the impassable overlay (^Xo)              -> debris disk         Ys^Yw
+--   void (Xv)                                   -> dark nebula         Yqd
+--   lava, volcano                               -> star                Ys^Yx
+--       ...but lava that touches more lava      -> plasma storm        Yqp
+--   chasm                                       -> black hole          Ys^Yxb
+--       ...but chasm that touches more chasm    -> gravity eddy        Yqe
 --   off-map                                     -> unchanged
 --   fake map edge (^_fme)                       -> kept, over the converted base
 --
@@ -39,15 +44,20 @@ local _ = wesnoth.textdomain "wesnoth-Star_Control_TC"
 local function convert(code)
 	if code:sub(1, 4) == "_off" or code:sub(1, 1) == "Y" then return code end
 	if code:sub(-5) == "^_fme" then           -- fake map edge: keep it over the new base
-		return convert(code:sub(1, -6)):match("^[^^]*") .. "^_fme"
+		local under = convert(code:sub(1, -6))
+		under = ({ ["#lava"] = "Yqp", ["#chasm"] = "Yqe" })[under] or under
+		return under:match("^[^^]*") .. "^_fme"
 	end
 	local base, overlay = code:match("^([^^]*)%^?(.*)$")
 	local b, o = base:sub(1, 1), overlay:sub(1, 1)
 
-	if o == "X" or o == "Q" or b == "X" or b == "Q" then
-		return "Ys^Yx"                         -- impassable, chasm
-	end
 	if o == "B" then return "Ys" end           -- bridges become open lanes
+	-- impassable terrain; lava and chasms are settled by what they touch
+	if base == "Xv" then return "Yqd" end      -- void
+	if o == "X" or b == "X" then return "Ys^Yw" end
+	if base:sub(1, 2) == "Ql" then return "#lava" end
+	if b == "Q" or o == "Q" then return "#chasm" end
+	if base == "Mv" then return "Ys^Yx" end    -- volcano
 	if b == "K" or overlay == "Kov" then return "Yk" end
 	if b == "C" or overlay == "Cov" then
 		-- sunken (Chw) and swamp (Chs) ruins, aquatic castles (Cm, Cme)
@@ -146,23 +156,29 @@ function sc.convert_to_space(again)
 	end
 	wml.variables["sc_space_converted"] = true
 
-	local new, star = {}, {}
+	local new, marked = {}, {}
 	for x = x0, x1 do
 		new[x] = {}
 		for y = y0, y1 do
 			local code = convert(map[{ x, y }])
 			new[x][y] = code
-			if code == "Ys^Yx" then star[#star + 1] = { x, y } end
+			if code:sub(1, 1) == "#" then marked[#marked + 1] = { x, y, code } end
 		end
 	end
-	-- impassable hexes that touch another one become an asteroid wall
-	local wall = {}
-	for _, s in ipairs(star) do
-		for _, n in ipairs(neighbours(s[1], s[2])) do
-			if new[n[1]] and new[n[1]][n[2]] == "Ys^Yx" then wall[#wall + 1] = s; break end
+	-- a lone lava hex is a star, a lone chasm a black hole; where they
+	-- touch more of the same they are a plasma storm or a gravity eddy,
+	-- so a lava field doesn't become a row of suns
+	local LONE = { ["#lava"] = "Ys^Yx", ["#chasm"] = "Ys^Yxb" }
+	local FIELD = { ["#lava"] = "Yqp", ["#chasm"] = "Yqe" }
+	for _, m in ipairs(marked) do
+		local x, y, kind = m[1], m[2], m[3]
+		local field = false
+		for _, n in ipairs(neighbours(x, y)) do
+			local c = new[n[1]] and new[n[1]][n[2]]
+			if c == kind or c == FIELD[kind] then field = true; break end
 		end
+		new[x][y] = field and FIELD[kind] or LONE[kind]
 	end
-	for _, s in ipairs(wall) do new[s[1]][s[2]] = "Ys^Yw" end
 
 	for x = x0, x1 do
 		for y = y0, y1 do
