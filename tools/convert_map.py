@@ -13,7 +13,7 @@ Terrain is translated by role, so a converted map plays like the original:
     mountains                              -> dense asteroids     Ys^Yad
     deep water                             -> badlands           Yi
     shallow water, reef, swamp             -> light badlands     Yis
-    ford                                   -> thin badlands      Yif
+    ford                                   -> deep space          Ys
     bridge                                 -> deep space (a lane) Ys
     village                                -> planet              ^Vyp
     village in water (not swamp)           -> sea planet          ^Vys
@@ -61,8 +61,8 @@ def convert(code):
         return "Yci" if re.match(r"C(h[ws]|me?)$", base) else "Yc"
     if base.startswith("Uh"):                  # rockbound cave (rough, like hills)
         return "Ys^Vyp" if overlay.startswith("V") else "Ys^Ya"
-    if base.startswith("Wwf"):                 # ford
-        return "Yif^Vyp" if overlay.startswith("V") else "Yif"
+    if base.startswith("Wwf"):                 # ford: open space, like a bridge
+        return "Ys^Vyp" if overlay.startswith("V") else "Ys"
 
     if base.startswith("Wo"):                  # deep water
         new_base = "Yi"
