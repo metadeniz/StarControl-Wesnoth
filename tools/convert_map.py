@@ -28,6 +28,9 @@ Terrain is translated by role, so a converted map plays like the original:
 
 Starting positions are kept.
 
+lua/space.lua does the same in-game, for any map played with the era;
+keep the two in step.
+
 Usage: convert_map.py <wesnoth .map> <output .map> [X,Y=CODE ...]
 
 Each X,Y=CODE puts that terrain on hex X,Y (game coordinates) afterwards,
