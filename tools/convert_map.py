@@ -31,6 +31,8 @@ Terrain is translated by role, so a converted map plays like the original:
     off-map                                -> unchanged, but holes cut into
                                               the play area -> dark nebula Yqd
     fake map edge (^_fme)                  -> kept, over the converted base
+    a big block of debris disk or dark     -> void                Yv
+      nebula that reaches the map's edge
 
 Starting positions are kept.
 
@@ -51,6 +53,7 @@ import sys
 from assign_planet_types import assign_file
 
 
+VOID_MIN = 6                                # play-area hexes in a block to void it
 LONE = {"#lava": "Ys^Yx", "#chasm": "Ys^Yxb"}
 FIELD = {"#lava": "Yqp", "#chasm": "Yqe"}
 
@@ -144,6 +147,28 @@ def main():
         xy, code = arg.split("=")
         x, y = (int(v) for v in xy.split(","))
         grid[y][x][1] = code
+    # Big blocks of debris disk or dark nebula that reach the edge of the
+    # map become void (cols, rows here include the border).
+    voidable = {"Ys^Yw", "Yqd", "Yv"}
+    h, w = len(grid), len(grid[0])
+    seen = set()
+    for sy in range(h):
+        for sx in range(w):
+            if grid[sy][sx][1] not in voidable or (sx, sy) in seen:
+                continue
+            block, edge, inside = [(sx, sy)], False, 0
+            seen.add((sx, sy))
+            for x, y in block:
+                edge |= x <= 1 or y <= 1 or x >= w - 2 or y >= h - 2
+                inside += 1 <= x <= w - 2 and 1 <= y <= h - 2
+                for nx, ny in neighbours(x, y):
+                    if 0 <= nx < w and 0 <= ny < h and (nx, ny) not in seen \
+                            and grid[ny][nx][1] in voidable:
+                        seen.add((nx, ny))
+                        block.append((nx, ny))
+            if edge and inside >= VOID_MIN:
+                for x, y in block:
+                    grid[y][x][1] = "Yv"
     rows = []
     counts = collections.Counter()
     for row in grid:

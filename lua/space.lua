@@ -33,6 +33,8 @@
 --   off-map                                     -> unchanged, but holes cut
 --                                                  into the play area -> Yqd
 --   fake map edge (^_fme)                       -> kept, over the converted base
+--   a big block of debris disk or dark nebula
+--     that reaches the edge of the map          -> void                Yv
 --
 -- The new planets are then given types (life, mineral, dead: 40/40/20, no
 -- more than 20% dead) following the map's symmetry, as the era's "Planets"
@@ -101,6 +103,41 @@ local function neighbours(x, y)
 		return { { x, y - 1 }, { x, y + 1 }, { x - 1, y - 1 }, { x + 1, y - 1 }, { x - 1, y }, { x + 1, y } }
 	end
 	return { { x, y - 1 }, { x, y + 1 }, { x - 1, y }, { x + 1, y }, { x - 1, y + 1 }, { x + 1, y + 1 } }
+end
+
+-- Big impassable blocks round the edge of the map (a cave map's rock, a
+-- void border) are nothing at all, not a wall of debris disks: every block
+-- of debris disk or dark nebula that reaches the edge and has at least
+-- VOID_MIN hexes in the play area becomes void.
+local VOID_MIN = 6
+local VOIDABLE = { ["Ys^Yw"] = true, ["Yqd"] = true, ["Yv"] = true }
+local function edge_void(new, x0, x1, y0, y1, w, h)
+	local seen = {}
+	local function key(x, y) return x * 10000 + y end
+	for sx = x0, x1 do
+		for sy = y0, y1 do
+			if VOIDABLE[new[sx][sy]] and not seen[key(sx, sy)] then
+				local block, edge, inside, i = { { sx, sy } }, false, 0, 1
+				seen[key(sx, sy)] = true
+				while i <= #block do
+					local x, y = block[i][1], block[i][2]
+					i = i + 1
+					if x <= 1 or y <= 1 or x >= w or y >= h then edge = true end
+					if x >= 1 and y >= 1 and x <= w and y <= h then inside = inside + 1 end
+					for _, n in ipairs(neighbours(x, y)) do
+						local nx, ny = n[1], n[2]
+						if new[nx] and new[nx][ny] and VOIDABLE[new[nx][ny]] and not seen[key(nx, ny)] then
+							seen[key(nx, ny)] = true
+							block[#block + 1] = { nx, ny }
+						end
+					end
+				end
+				if edge and inside >= VOID_MIN then
+					for _, b in ipairs(block) do new[b[1]][b[2]] = "Yv" end
+				end
+			end
+		end
+	end
 end
 
 -- Does the map already use space terrain?
@@ -185,6 +222,7 @@ function sc.convert_to_space(again)
 		end
 		new[x][y] = field and FIELD[kind] or LONE[kind]
 	end
+	edge_void(new, x0, x1, y0, y1, map.playable_width, map.playable_height)
 
 	for x = x0, x1 do
 		for y = y0, y1 do
