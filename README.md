@@ -368,7 +368,7 @@ Broodhome and the Sa-Matra also cross nebulae, dust clouds and badlands for 1 mo
   dense asteroids, deep water → badlands, shallow water and swamp → light
   badlands, ford → open space (like a bridge), castles → docking rings (sunken and
   swamp ruins → docking rings out in the badlands), villages → planets,
-  impassable → star (touching impassable hexes → debris disk). Isar's Cross, The Freelands, Weldyn Channel, Fallenstar
+  impassable → star (touching impassable hexes → debris disk). Big clumps of debris disk, gravity eddy, dark nebula or plasma storm get a matching centrepiece in the middle (a supergiant, a supermassive black hole, a dark star or a storm sun, on a full diamond of 4 hexes, a triangle of 3 or a single hex), only on hexes that were impassable already and following the map's symmetry; `lua/space.lua` does the same in-game. Isar's Cross, The Freelands, Weldyn Channel, Fallenstar
   Lake, Caves of the Basilisk, Silverhead Crossing, Ruphus Isle, The Hamlets, Swamp of Dread, Hornshark Island, Thousand Stings Garrison and Sablestone Delta were made
   this way, and so were psydev's custom maps Fred's Fjord and Flashy Chorus (a fake map edge, `^_fme`, is kept). Extra `X,Y=CODE`
   arguments place terrain afterwards; the Caves' statues became black

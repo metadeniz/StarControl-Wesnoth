@@ -33,6 +33,12 @@ Terrain is translated by role, so a converted map plays like the original:
     fake map edge (^_fme)                  -> kept, over the converted base
     a big block of debris disk or dark     -> void                Yv
       nebula that reaches the map's edge
+    a big clump of debris disk, gravity    -> its centrepiece in the middle: a
+      eddy, dark nebula or plasma storm       supergiant, a supermassive black
+                                              hole, a dark star or a storm sun
+                                              (4 hexes, or 3, or a one-hex star
+                                              or black hole), following the
+                                              map's symmetry (see centrepieces)
 
 Starting positions are kept.
 
@@ -47,6 +53,7 @@ statues became black holes (Ys^Yxb).
 """
 
 import collections
+import math
 import re
 import sys
 
@@ -120,6 +127,214 @@ def neighbours(x, y):
     return [(x, y - 1), (x, y + 1), (x - 1, y), (x + 1, y), (x - 1, y + 1), (x + 1, y + 1)]
 
 
+# Centrepieces. Every big clump of impassable cloud gets its matching object
+# in the middle, as on the hand-made maps: a supergiant behind a debris
+# disk, a supermassive black hole in a gravity eddy, a dark star in a dark
+# nebula, a big storm sun in a plasma storm. The object fills a diamond of
+# 4 hexes where one fits well inside the clump, else a triangle of 3, else
+# it is a one-hex star or black hole. It only takes hexes of the clump,
+# which are impassable either way, so the map plays the same. A clump of
+# 2 * PER_PIECE hexes or more gets one more piece for each PER_PIECE, at
+# least SPACING hexes apart. Void (Yv) is left alone, and so is a clump that
+# already has a piece. The pieces follow the map's symmetry: where a mirror
+# or a rotation maps the impassable hexes onto each other (to within a
+# hex), the clumps that match each other get the same piece in the same
+# look (each in its own kind of cloud), each at the matching place.
+CLOUDS = {"Ys^Yw": "w", "Yqe": "e", "Yqd": "d", "Yqp": "p"}
+PIECES = {                         # kind -> {hexes: looks}
+    "w": {4: ["^Ysg", "^Ysg2", "^Ysg3", "^Ysg4"],
+          3: ["^Ytd1", "^Ytd2", "^Ytd3", "^Ytd4", "^Ytd5", "^Ytd6"],
+          1: ["^Yxd1", "^Yxd2", "^Yxd3", "^Yxd4", "^Yxd5"]},
+    "e": {4: ["^Ybh1", "^Ybh2", "^Ybh3", "^Ybh4", "^Ybh5", "^Ybh6"],
+          3: ["^Ytbh"], 1: ["^Yxb1", "^Yxb2", "^Yxb3", "^Yxb4"]},
+    "d": {4: ["^Yds1", "^Yds2", "^Yds3", "^Yds4"], 3: ["^Ytds"], 1: ["^Yx"]},
+    "p": {4: ["^Ygg"], 1: ["^Yxs1", "^Yxs2", "^Yxs3", "^Yxs4", "^Yxs5", "^Yxs6"]},
+}
+SIZES = (4, 3, 1)
+MIN_CLUMP = {4: 8, 3: 6, 1: 5}     # clump hexes needed for each size of piece
+PER_PIECE, SPACING = 25, 4
+SYM_MIN = 0.7                      # share of impassable hexes a symmetry must match
+S3 = math.sqrt(3)
+# cos and sin of k * 60 degrees, exact (so the in-game copy rounds the same)
+COS = (1, 0.5, -0.5, -1, -0.5, 0.5)
+SIN = (0, S3 / 2, S3 / 2, 0, -S3 / 2, -S3 / 2)
+
+
+def cloud_kind(code):
+    """'w', 'e', 'd' or 'p' for an impassable cloud hex, or a piece already
+    in one, else None."""
+    if code in CLOUDS:
+        return CLOUDS[code]
+    base, _, overlay = code.partition("^")
+    if base == "Ys" and overlay[:3] in ("Ysg", "Ytd", "Yxd"):
+        return "w"
+    if base in ("Yqe", "Yqd", "Yqp") and overlay:
+        return CLOUDS[base]
+    return None
+
+
+def hex_distance(a, b):
+    def cube(x, y):                    # odd columns sit higher
+        return x, y - (x - (x & 1)) // 2
+    (ax, az), (bx, bz) = cube(*a), cube(*b)
+    return max(abs(ax - bx), abs(az - bz), abs(ax + az - bx - bz))
+
+
+def centre(p):
+    """A hex's middle, 1 = the distance between neighbours."""
+    return p[0] * S3 / 2, p[1] + (p[0] + 1) % 2 / 2
+
+
+def nearest_hex(px, py):
+    x = math.floor(px / (S3 / 2) + 0.5)
+    return x, math.floor(py - (x + 1) % 2 / 2 + 0.5)
+
+
+def symmetry(w, h, imp):
+    """The powers (but the identity) of the mirror or rotation of the play
+    area that best maps the impassable hexes `imp` onto or next to
+    impassable hexes, as functions (x, y) -> (x, y) on points; [] if none
+    matches SYM_MIN of them. w, h include the border."""
+    play = [(x, y) for y in range(1, h - 1) for x in range(1, w - 1)]
+    mx = sum(centre(p)[0] for p in play) / len(play)
+    my = sum(centre(p)[1] for p in play) / len(play)
+
+    def make(a, b, c, d):
+        return lambda px, py: (mx + a * (px - mx) + b * (py - my), my + c * (px - mx) + d * (py - my))
+    groups = []
+    for k in range(1, 6):              # rotations by k * 60 degrees
+        groups.append([make(COS[j * k % 6], -SIN[j * k % 6], SIN[j * k % 6], COS[j * k % 6])
+                       for j in range(1, 6 // math.gcd(k, 6))])
+    for k in range(6):                 # mirrors, the axis at k * 30 degrees
+        groups.append([make(COS[k], SIN[k], SIN[k], -COS[k])])
+    near = imp | {q for p in imp for q in neighbours(*p)}
+    best, best_score = [], SYM_MIN * len(imp)
+    for g in groups:
+        score = sum(1 for p in imp if nearest_hex(*g[0](*centre(p))) in near)
+        if score > best_score:
+            best, best_score = g, score
+    return best
+
+
+def shapes(clump, size):
+    """Every diamond (4), triangle (3) or single hex (1) inside a set of
+    hexes, each a tuple of hexes in reading order."""
+    def key(h):
+        return h[1], h[0]
+    if size == 1:
+        return sorted(((p,) for p in clump), key=lambda s: key(s[0]))
+    out = set()
+    for p in clump:
+        ns = [q for q in neighbours(*p) if q in clump]
+        for q in ns:
+            common = [r for r in neighbours(*q) if r in ns]
+            if size == 3:
+                out.update(tuple(sorted((p, q, r), key=key)) for r in common)
+            elif len(common) == 2:
+                out.add(tuple(sorted((p, q, *common), key=key)))
+    return sorted(out, key=lambda s: [key(h) for h in s])
+
+
+def centrepieces(grid):
+    h, w = len(grid), len(grid[0])
+
+    def playable(p):
+        return 1 <= p[0] <= w - 2 and 1 <= p[1] <= h - 2
+    kind = {}
+    for y in range(h):
+        for x in range(w):
+            k = cloud_kind(grid[y][x][1])
+            if k:
+                kind[x, y] = k
+    clump_of, clumps = {}, []
+    for y in range(h):
+        for x in range(w):
+            if (x, y) not in kind or (x, y) in clump_of:
+                continue
+            block = [(x, y)]
+            clump_of[x, y] = len(clumps)
+            for p in block:
+                for q in neighbours(*p):
+                    if q not in clump_of and kind.get(q) == kind[x, y]:
+                        clump_of[q] = len(clumps)
+                        block.append(q)
+            clumps.append(block)
+    maps = symmetry(w, h, {p for p in kind if playable(p)})
+    placed, looks = [], collections.Counter()
+
+    def candidates(i, size):
+        """Where a piece of this size can go in clump i, best first: well
+        inside the clump, near its middle, away from the other pieces."""
+        clump = clumps[i]
+        n = len(clump)
+        if n < MIN_CLUMP[size] or size not in PIECES[kind[clump[0]]]:
+            return []
+        sx = sum(x for x, y in clump)
+        sy = sum(2 * y + (x + 1) % 2 for x, y in clump)
+        out = []
+        for s in shapes({p for p in clump if playable(p)}, size):
+            if any(hex_distance(p, q) < SPACING for p in s for q in placed):
+                continue
+            ring = {q for p in s for q in neighbours(*p)} - set(s)
+            cover = sum(1 for q in ring if clump_of.get(q) == i)
+            if 2 * cover < len(ring) if size > 1 else cover < 2:
+                continue
+            mid = (3 * (n * sum(x for x, y in s) - size * sx) ** 2
+                   + (n * sum(2 * y + (x + 1) % 2 for x, y in s) - size * sy) ** 2)
+            out.append(((-cover, mid), s))
+        out.sort(key=lambda c: c[0])
+        return [s for _, s in out]
+
+    def put(s, look):
+        for x, y in s:
+            grid[y][x][1] = grid[y][x][1].partition("^")[0] + look
+        placed.extend(s)
+
+    # the clumps that match each other under the symmetry, biggest first
+    done = {i for i, c in enumerate(clumps) if any(grid[y][x][1] not in CLOUDS for x, y in c)}
+    for i in sorted(range(len(clumps)), key=lambda i: (-len(clumps[i]), clumps[i][0][1], clumps[i][0][0])):
+        if i in done:
+            continue
+        mates = []                    # (clump, map) for each image
+        for m in maps:
+            hits = collections.Counter(
+                clump_of.get(nearest_hex(*m(*centre(p)))) for p in clumps[i] if playable(p))
+            hits.pop(None, None)
+            j = min(hits, key=lambda j: (-hits[j], j)) if hits else None
+            if j is not None and j not in done:
+                mates.append((j, m))
+        done.add(i)
+        done.update(j for j, _ in mates)
+        for _ in range(max(1, len(clumps[i]) // PER_PIECE)):
+            for size in SIZES:
+                cands = candidates(i, size)
+                if not cands:
+                    continue
+                s = cands[0]
+                copies = []
+                for j, m in mates:
+                    # the mate's spot nearest the image of this piece's middle
+                    tx, ty = m(sum(centre(p)[0] for p in s) / size, sum(centre(p)[1] for p in s) / size)
+                    theirs = [c for c in candidates(j, size) if not set(c) & set(s)]
+                    if not theirs:
+                        break
+                    def miss(c):
+                        dx = sum(centre(p)[0] for p in c) / size - tx
+                        dy = sum(centre(p)[1] for p in c) / size - ty
+                        return dx * dx + dy * dy
+                    copies.append((kind[clumps[j][0]], min(theirs, key=miss)))
+                else:
+                    pieces = [(kind[clumps[i][0]], s)] + copies
+                    for k, c in pieces:
+                        if any(hex_distance(p, q) < SPACING for p in c for q in placed):
+                            continue          # a self-symmetric clump: one piece
+                        options = PIECES[k][size]
+                        put(c, options[looks[size] % len(options)])
+                    looks[size] += 1
+                    break
+            else:
+                break
+
 def main():
     src, dst = sys.argv[1], sys.argv[2]
     grid = []
@@ -169,6 +384,7 @@ def main():
             if edge and inside >= VOID_MIN:
                 for x, y in block:
                     grid[y][x][1] = "Yv"
+    centrepieces(grid)
     rows = []
     counts = collections.Counter()
     for row in grid:
