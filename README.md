@@ -29,7 +29,7 @@ folder:
 
 **With git (stays up to date):** open a terminal in the add-ons folder and run
 
-    git clone https://github.com/metadeniz/StarControl-Wesnoth.git The_Ur-Quan_Wars
+    git clone https://github.com/metadeniz/The-Ur-Quan-Wars.git The_Ur-Quan_Wars
 
 then `git pull` inside `The_Ur-Quan_Wars` to get new versions.
 
