@@ -91,7 +91,7 @@ def main():
             code, "Yv" if centre else "!,Yv", " ".join(f"({k})" for k in kinds)))
 
     with open(os.path.join(args.out, "terrain/void.cfg"), "w") as f:
-        f.write("""#textdomain wesnoth-Star_Control_TC
+        f.write("""#textdomain wesnoth-Star_Control_Wesnoth
 # The void (Yv): its black and its rim, one image per pattern of void
 # neighbours. Written by tools/make_void.py: don't edit by hand.
 

@@ -22,7 +22,7 @@ WESNOTH=$(command -v wesnoth-1.16 || command -v /usr/games/wesnoth-1.16 || comma
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 mkdir -p "$WORK/user/data/add-ons"
-ln -s "$HERE" "$WORK/user/data/add-ons/Star_Control_TC"
+ln -s "$HERE" "$WORK/user/data/add-ons/Star_Control_Wesnoth"
 
 # Warm the cache once so parallel games don't all rebuild it.
 "$WESNOTH" --userdata-dir "$WORK/user" --nogui --multiplayer --scenario SC_2p_Procyon_Front \

@@ -3,7 +3,7 @@
 -- Written against the Wesnoth 1.16 Lua API.
 
 local T = wml.tag
-local _ = wesnoth.textdomain "wesnoth-Star_Control_TC"
+local _ = wesnoth.textdomain "wesnoth-Star_Control_Wesnoth"
 
 sc = {}
 

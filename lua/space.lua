@@ -41,7 +41,7 @@
 -- option deals them (sc.deal_planet_types in planets.lua), and the
 -- scenario's day and night is replaced by the space maps' Deep Space time.
 
-local _ = wesnoth.textdomain "wesnoth-Star_Control_TC"
+local _ = wesnoth.textdomain "wesnoth-Star_Control_Wesnoth"
 
 -- One hex's terrain code, in space.
 local function convert(code)

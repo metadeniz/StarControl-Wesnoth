@@ -13,7 +13,7 @@
 -- Alliance (side 2) at the south.
 
 local T = wml.tag
-local _ = wesnoth.textdomain "wesnoth-Star_Control_TC"
+local _ = wesnoth.textdomain "wesnoth-Star_Control_Wesnoth"
 
 sc1 = {}
 
@@ -46,7 +46,7 @@ local deck = {
 	{ 5, "l", true }, { 7, "m", true },
 }
 
-local sc1_map = wesnoth.dofile("~add-ons/Star_Control_TC/lua/sc1_map.lua")
+local sc1_map = wesnoth.dofile("~add-ons/Star_Control_Wesnoth/lua/sc1_map.lua")
 
 function sc1.setup(mission_id)
 	local mission = sc1.missions[mission_id]

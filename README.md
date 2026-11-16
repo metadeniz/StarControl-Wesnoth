@@ -17,7 +17,7 @@ everyone whose work it uses.
 Tested with Wesnoth 1.16.11; it should also work on 1.18.
 
 This repository *is* the add-on: its root holds `_main.cfg`. Wesnoth
-needs the folder to be called `Star_Control_TC`, inside your add-ons
+needs the folder to be called `Star_Control_Wesnoth`, inside your add-ons
 folder:
 
 - Windows: `Documents\My Games\Wesnoth1.18\data\add-ons\`
@@ -29,12 +29,16 @@ folder:
 
 **With git (stays up to date):** open a terminal in the add-ons folder and run
 
-    git clone https://github.com/metadeniz/StarControl-Wesnoth.git Star_Control_TC
+    git clone https://github.com/metadeniz/StarControl-Wesnoth.git Star_Control_Wesnoth
 
-then `git pull` inside `Star_Control_TC` to get new versions.
+then `git pull` inside `Star_Control_Wesnoth` to get new versions.
+
+If you already have it installed as `Star_Control_TC`, rename that
+folder to `Star_Control_Wesnoth` (don't keep both, or the units and
+maps load twice).
 
 **Without git:** download the repository as a ZIP and unpack it into the
-add-ons folder as `Star_Control_TC`.
+add-ons folder as `Star_Control_Wesnoth`.
 
 Then restart Wesnoth, choose **Multiplayer → Local game**, pick one of the
 maps below and the era **Star Control: The Ur-Quan War**.

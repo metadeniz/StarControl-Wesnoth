@@ -13,7 +13,7 @@
 -- mineral and dead worlds it was drawn with, so its income stays the same;
 -- only where they are changes. Untyped planets (^Vyp, ^Vys) are left alone.
 
-local _ = wesnoth.textdomain "wesnoth-Star_Control_TC"
+local _ = wesnoth.textdomain "wesnoth-Star_Control_Wesnoth"
 
 local TYPES = { "l", "m", "d" }        -- life, mineral, dead
 local TOL = 0.5                        -- in hexes: an exact match
