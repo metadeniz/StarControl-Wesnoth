@@ -1,4 +1,4 @@
--- Star Control TC: Star Control 1's built-in missions (scenarios/scenarios_sc1.cfg).
+-- The Ur-Quan Wars: Star Control 1's built-in missions (scenarios/scenarios_sc1.cfg).
 -- Written against the Wesnoth 1.16 Lua API; loaded after sc.lua.
 --
 -- Star Control 1 drew a fresh star cluster for every game, and so do these:
@@ -13,7 +13,7 @@
 -- Alliance (side 2) at the south.
 
 local T = wml.tag
-local _ = wesnoth.textdomain "wesnoth-Star_Control_TC"
+local _ = wesnoth.textdomain "wesnoth-The_Ur-Quan_Wars"
 
 sc1 = {}
 
@@ -46,7 +46,7 @@ local deck = {
 	{ 5, "l", true }, { 7, "m", true },
 }
 
-local sc1_map = wesnoth.dofile("~add-ons/Star_Control_TC/lua/sc1_map.lua")
+local sc1_map = wesnoth.dofile("~add-ons/The_Ur-Quan_Wars/lua/sc1_map.lua")
 
 function sc1.setup(mission_id)
 	local mission = sc1.missions[mission_id]

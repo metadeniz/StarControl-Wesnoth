@@ -1,4 +1,4 @@
-# Star Control TC for Battle for Wesnoth
+# The Ur-Quan Wars for Battle for Wesnoth
 
 A total conversion of Battle for Wesnoth into the wars of Star Control: the
 Alliance of Free Stars against the Ur-Quan Hierarchy (Star Control 1), and
@@ -17,7 +17,7 @@ everyone whose work it uses.
 Tested with Wesnoth 1.16.11; it should also work on 1.18.
 
 This repository *is* the add-on: its root holds `_main.cfg`. Wesnoth
-needs the folder to be called `Star_Control_TC`, inside your add-ons
+needs the folder to be called `The_Ur-Quan_Wars`, inside your add-ons
 folder:
 
 - Windows: `Documents\My Games\Wesnoth1.18\data\add-ons\`
@@ -29,15 +29,19 @@ folder:
 
 **With git (stays up to date):** open a terminal in the add-ons folder and run
 
-    git clone https://github.com/metadeniz/StarControl-Wesnoth.git Star_Control_TC
+    git clone https://github.com/metadeniz/StarControl-Wesnoth.git The_Ur-Quan_Wars
 
-then `git pull` inside `Star_Control_TC` to get new versions.
+then `git pull` inside `The_Ur-Quan_Wars` to get new versions.
+
+If you already have it installed as `Star_Control_TC`, rename that
+folder to `The_Ur-Quan_Wars` (don't keep both, or the units and
+maps load twice).
 
 **Without git:** download the repository as a ZIP and unpack it into the
-add-ons folder as `Star_Control_TC`.
+add-ons folder as `The_Ur-Quan_Wars`.
 
 Then restart Wesnoth, choose **Multiplayer → Local game**, pick one of the
-maps below and the era **Star Control: The Ur-Quan War**.
+maps below and the era **The Ur-Quan Wars**.
 
 | Map | Players |
 |---|---|

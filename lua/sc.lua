@@ -1,9 +1,9 @@
--- Star Control TC: the right-click ship devices (Glory Device, Mmrnmhrm
+-- The Ur-Quan Wars: the right-click ship devices (Glory Device, Mmrnmhrm
 -- Transform), and the small amount of help the AI needs to use them.
 -- Written against the Wesnoth 1.16 Lua API.
 
 local T = wml.tag
-local _ = wesnoth.textdomain "wesnoth-Star_Control_TC"
+local _ = wesnoth.textdomain "wesnoth-The_Ur-Quan_Wars"
 
 sc = {}
 

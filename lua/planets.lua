@@ -1,4 +1,4 @@
--- Star Control TC: the era's "Planets" option (the sc_planets variable),
+-- The Ur-Quan Wars: the era's "Planets" option (the sc_planets variable),
 -- which deals the planet types out afresh when a game starts.
 -- Written against the Wesnoth 1.16 Lua API; loaded after sc.lua.
 --
@@ -13,7 +13,7 @@
 -- mineral and dead worlds it was drawn with, so its income stays the same;
 -- only where they are changes. Untyped planets (^Vyp, ^Vys) are left alone.
 
-local _ = wesnoth.textdomain "wesnoth-Star_Control_TC"
+local _ = wesnoth.textdomain "wesnoth-The_Ur-Quan_Wars"
 
 local TYPES = { "l", "m", "d" }        -- life, mineral, dead
 local TOL = 0.5                        -- in hexes: an exact match
