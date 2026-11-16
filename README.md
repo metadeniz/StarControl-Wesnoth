@@ -362,7 +362,7 @@ Broodhome and the Sa-Matra also cross nebulae, dust clouds and badlands for 1 mo
   Wesnoth map into a space map hex for hex: forest → nebula, mushroom
   grove → red nebula, sand → dust cloud, hills → asteroids, mountains →
   dense asteroids, deep water → badlands, shallow water and swamp → light
-  badlands, ford → thin badlands, castles → docking rings (sunken and
+  badlands, ford → open space (like a bridge), castles → docking rings (sunken and
   swamp ruins → docking rings out in the badlands), villages → planets,
   impassable → star (touching impassable hexes → debris disk). Isar's Cross, The Freelands, Weldyn Channel, Fallenstar
   Lake, Caves of the Basilisk, Silverhead Crossing, Ruphus Isle, The Hamlets, Swamp of Dread, Hornshark Island, Thousand Stings Garrison and Sablestone Delta were made
