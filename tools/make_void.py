@@ -6,13 +6,15 @@ soft, wavy rim of pale blue where it meets space.
 
 Writes images/terrain/sc/void/*.png and terrain/void.cfg.
 
-The void's outline is drawn like the badlands' banks (make_art.py): every
-void hex, and every hex next to one, draws its piece of a smooth field over
-its own and its neighbours' centres, and the void is where the field is
-positive. Two hexes agree on the field along the edge they share, so the
-outline runs on from hex to hex, rounded: one void hex is a disc, a row of
-them a sausage, a block a rounded blob. The rim's swirls repeat exactly
-from one hex to the next (lattice noise), so they have no seams either.
+The look is lifted from Dominion War Wesnoth's void() prototype
+(tileset/src/imp_ideas.py, idea 9, VOY "Night"): the void hexes' shapes
+blurred into a soft mask M (Gaussian, sigma 16 px), solid black where
+M > 0.7, a rim band round M = 0.33 in (80, 95, 135), made wavy by noise.
+That draws a whole map at once; here every void hex, and every hex next to
+one, draws its own piece of the same mask, worked out from itself and its
+six neighbours (a sigma of 16 px reaches no further), so the pieces join
+up. The noise is lattice noise, which repeats exactly from one hex to the
+next, in place of the prototype's fBm, so the rim has no seams.
 One image per pattern of void neighbours, picked by terrain/void.cfg.
 """
 
@@ -21,46 +23,51 @@ import os
 import sys
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 
 import make_art
-from make_art import (BANK_PAD, BANK_DIRS, HEX, _BankGeometry, _smoothstep, bank_code,
-                      bank_patterns, hex_mask, lattice_noise)
+from make_art import BANK_DIRS, BANK_OFFSETS, HEX, bank_code, bank_patterns, hex_mask, lattice_noise
 
 LAYER = -200              # over every gas cloud and bank, under planets and asteroids
-BLACK = (1, 1, 4)
-RIM = (150, 170, 215)      # the swirls
-GLOW = (55, 70, 115)       # the haze under them
-RIM_WIDTH = 7.0            # px either side of the outline
-SEED = 909
+COLOUR = (80, 95, 135)     # the rim (Dominion War's void())
+SIGMA = 16                 # px: how soft the outline is
+SEED = 9
+HEXV = [(18, 0), (54, 0), (72, 36), (54, 72), (18, 72), (0, 36)]
+PAD = 3 * HEX // 2         # room round the hex for its neighbours and the blur
 
 
-def void_layer(f, swirl, mask):
-    gy, gx = np.gradient(f)
-    d = f / np.maximum(np.sqrt(gx * gx + gy * gy), 1e-4)    # ~ px inside the void
-    p = BANK_PAD
-    d = d[p:-p, p:-p]
-    rgb = np.zeros(d.shape + (3,), np.float32)
-    a = np.zeros(d.shape, np.float32)
+def gaussian_filter(a, sigma):
+    """scipy.ndimage.gaussian_filter (mode reflect, truncate 4), in numpy."""
+    r = int(4 * sigma + 0.5)
+    k = np.exp(-0.5 * (np.arange(-r, r + 1) / sigma) ** 2)
+    k /= k.sum()
+    for axis in (0, 1):
+        a = np.apply_along_axis(lambda v: np.convolve(np.pad(v, r, mode="symmetric"), k, "valid"), axis, a)
+    return a
 
-    def over(colour, alpha):
-        nonlocal rgb, a
-        alpha = np.clip(alpha, 0, 1)
-        out_a = alpha + a * (1 - alpha)
-        rgb = (np.array(colour, np.float32) * alpha[..., None] + rgb * (a * (1 - alpha))[..., None]) \
-            / np.maximum(out_a, 1e-6)[..., None]
-        a = out_a
 
-    # black from just inside the outline in
-    over(BLACK, _smoothstep((d + 1.0) / 5.0))
-    # the rim: a band across the outline, wobbling in and out with the swirls
-    shift = 2.5 * swirl[1]
-    band = np.exp(-(((d + shift) / RIM_WIDTH) ** 2))
-    over(GLOW, 0.45 * band)
-    lines = (0.5 + 0.5 * np.cos(np.pi * (2.2 * swirl[0] + 0.12 * d))) ** 5
-    over(RIM, 0.95 * band * lines)
-    img = np.dstack([rgb, a * 255 * mask])
-    return Image.fromarray(img.clip(0, 255).astype(np.uint8), "RGBA")
+def void_mask(centre, neighbours):
+    """The prototype's membership(): the void hexes filled in, then blurred.
+    Returns M over the centre hex's 72x72 tile."""
+    size = HEX + 2 * PAD
+    im = Image.new("F", (size, size), 0.0)
+    d = ImageDraw.Draw(im)
+    spots = [(0, 0)] if centre else []
+    spots += [BANK_OFFSETS[k] for k, v in zip(BANK_DIRS, neighbours) if v]
+    for ox, oy in spots:
+        d.polygon([(PAD + ox + vx, PAD + oy + vy) for vx, vy in HEXV], fill=1.0)
+    m = gaussian_filter(np.asarray(im, np.float32), SIGMA)
+    return np.clip(m[PAD:PAD + HEX, PAD:PAD + HEX], 0, 1)
+
+
+def void_layer(m, noise, mask):
+    """The prototype's void(), on one tile."""
+    inner = np.clip((m - 0.35) / 0.35, 0, 1)
+    rim = np.exp(-((m - 0.33) / 0.12) ** 2)
+    ripple = 0.55 + 0.45 * np.sin(noise * 5)
+    col = np.zeros(m.shape + (3,)) + np.array(COLOUR) * (rim * ripple)[..., None]
+    a = np.clip(inner + rim * 0.75, 0, 1) * 255 * mask
+    return Image.fromarray(np.dstack([np.clip(col, 0, 255), a]).astype(np.uint8), "RGBA")
 
 
 def main():
@@ -70,17 +77,15 @@ def main():
     args = ap.parse_args()
     mask = hex_mask(args.wesnoth_data)
     make_art.hex_mask_cache = mask
-    rng = np.random.default_rng(SEED)
-    # two seamless fields: one the swirl lines follow, one that wobbles the band
-    swirl = (lattice_noise(rng, max_k=5), lattice_noise(rng, max_k=3))
-    geo = _BankGeometry()
+    # seamless stand-in for the prototype's fBm (12 px, 2 octaves): waves down to ~13 px
+    noise = lattice_noise(np.random.default_rng(SEED), max_k=4)
 
     img_dir = os.path.join(args.out, "images/terrain/sc/void")
     os.makedirs(img_dir, exist_ok=True)
     rules = []
     for centre, neighbours in bank_patterns():
         code = bank_code(centre, neighbours)
-        void_layer(geo.field(centre, neighbours), swirl, mask).save(os.path.join(img_dir, code + ".png"))
+        void_layer(void_mask(centre, neighbours), noise, mask).save(os.path.join(img_dir, code + ".png"))
         kinds = ["Yv" if v else "!,Yv" for v in neighbours]
         rules.append("{SC_VOID_EDGE sc/void/%s (%s) %s}" % (
             code, "Yv" if centre else "!,Yv", " ".join(f"({k})" for k in kinds)))
