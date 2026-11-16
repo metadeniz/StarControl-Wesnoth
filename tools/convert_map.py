@@ -20,13 +20,24 @@ Terrain is translated by role, so a converted map plays like the original:
     castle / keep                          -> docking ring / base Yc / Yk
     castle in water or swamp (sunken or    -> docking ring out in  Yci
       swamp ruin, aquatic castle)             the badlands (plays as Yc)
-    impassable (walls, ^Xm...), chasm      -> star                Ys^Yx
-        ...but where impassable hexes touch,  -> asteroid wall       Ys^Yw
-        so a wall doesn't become a row of suns
-    off-map                                -> unchanged
+    cave and stone walls, impassable       -> debris disk         Ys^Yw
+      mountains, the ^Xo overlay
+    void (Xv)                              -> dark nebula         Yqd
+    lava, volcano                          -> star                Ys^Yx
+        ...but lava that touches more lava -> plasma storm        Yqp
+    chasm                                  -> black hole          Ys^Yxb
+        ...but chasm touching more chasm   -> gravity eddy        Yqe
+      (so a lava field or a chasm doesn't become a row of suns)
+    off-map                                -> unchanged, but holes cut into
+                                              the play area -> dark nebula Yqd
     fake map edge (^_fme)                  -> kept, over the converted base
+    a big block of debris disk or dark     -> void                Yv
+      nebula that reaches the map's edge
 
 Starting positions are kept.
+
+lua/space.lua does the same in-game, for any map played with the era;
+keep the two in step.
 
 Usage: convert_map.py <wesnoth .map> <output .map> [X,Y=CODE ...]
 
@@ -42,18 +53,34 @@ import sys
 from assign_planet_types import assign_file
 
 
+VOID_MIN = 6                                # play-area hexes in a block to void it
+LONE = {"#lava": "Ys^Yx", "#chasm": "Ys^Yxb"}
+FIELD = {"#lava": "Yqp", "#chasm": "Yqe"}
+
+
 def convert(code):
     if code.startswith("_off"):
         return code
     if code.endswith("^_fme"):                 # fake map edge: keep it over the new base
-        return convert(code[:-len("^_fme")]).partition("^")[0] + "^_fme"
+        under = convert(code[:-len("^_fme")])
+        under = FIELD.get(under, under)
+        return under.partition("^")[0] + "^_fme"
     base, _, overlay = code.partition("^")
     b = base[:1]
 
-    if overlay.startswith("X") or b in "XQ":   # impassable, chasm
-        return "Ys^Yx"
     if overlay.startswith("B"):                # bridges become open lanes
         return "Ys"
+    # impassable terrain; lava and chasms are settled by what they touch
+    if base == "Xv":                           # void
+        return "Yqd"
+    if overlay.startswith("X") or b == "X":
+        return "Ys^Yw"
+    if base.startswith("Ql"):
+        return "#lava"
+    if b == "Q" or overlay.startswith("Q"):
+        return "#chasm"
+    if base == "Mv":                           # volcano
+        return "Ys^Yx"
     if b == "K":
         return "Yk"
     if b == "C":
@@ -105,15 +132,43 @@ def main():
             m = re.match(r"^(\d+ )?(.*)$", cell.strip())
             row.append([m.group(1) or "", convert(m.group(2))])
         grid.append(row)
-    # Impassable hexes that touch another one become an asteroid wall.
-    star = {(x, y) for y, row in enumerate(grid) for x, (_, c) in enumerate(row) if c == "Ys^Yx"}
-    for x, y in star:
-        if any(n in star for n in neighbours(x, y)):
-            grid[y][x][1] = "Ys^Yw"
+    # Off-map holes cut into the play area become dark nebula.
+    for y, row in enumerate(grid[1:-1], 1):
+        for x, cell in enumerate(row[1:-1], 1):
+            if cell[1].startswith("_off"):
+                cell[1] = "Yqd"
+    # A lone lava hex is a star, a lone chasm a black hole; where they touch
+    # more of the same they are a plasma storm or a gravity eddy.
+    kind = {(x, y): c for y, row in enumerate(grid) for x, (_, c) in enumerate(row) if c in LONE}
+    for (x, y), c in kind.items():
+        field = any(kind.get(n) == c for n in neighbours(x, y))
+        grid[y][x][1] = FIELD[c] if field else LONE[c]
     for arg in sys.argv[3:]:
         xy, code = arg.split("=")
         x, y = (int(v) for v in xy.split(","))
         grid[y][x][1] = code
+    # Big blocks of debris disk or dark nebula that reach the edge of the
+    # map become void (cols, rows here include the border).
+    voidable = {"Ys^Yw", "Yqd", "Yv"}
+    h, w = len(grid), len(grid[0])
+    seen = set()
+    for sy in range(h):
+        for sx in range(w):
+            if grid[sy][sx][1] not in voidable or (sx, sy) in seen:
+                continue
+            block, edge, inside = [(sx, sy)], False, 0
+            seen.add((sx, sy))
+            for x, y in block:
+                edge |= x <= 1 or y <= 1 or x >= w - 2 or y >= h - 2
+                inside += 1 <= x <= w - 2 and 1 <= y <= h - 2
+                for nx, ny in neighbours(x, y):
+                    if 0 <= nx < w and 0 <= ny < h and (nx, ny) not in seen \
+                            and grid[ny][nx][1] in voidable:
+                        seen.add((nx, ny))
+                        block.append((nx, ny))
+            if edge and inside >= VOID_MIN:
+                for x, y in block:
+                    grid[y][x][1] = "Yv"
     rows = []
     counts = collections.Counter()
     for row in grid:
