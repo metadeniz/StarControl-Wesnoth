@@ -30,7 +30,8 @@
 --       ...but lava that touches more lava      -> plasma storm        Yqp
 --   chasm                                       -> black hole          Ys^Yxb
 --       ...but chasm that touches more chasm    -> gravity eddy        Yqe
---   off-map                                     -> unchanged
+--   off-map                                     -> unchanged, but holes cut
+--                                                  into the play area -> Yqd
 --   fake map edge (^_fme)                       -> kept, over the converted base
 --
 -- The new planets are then given types (life, mineral, dead: 40/40/20, no
@@ -140,9 +141,9 @@ end
 
 -- Turn the map into space, unless the era's "Play any map in space" option
 -- is off or the map is space already (prestart, before the planets are
--- dealt). Called again at start (again = true) for any terrain the
--- scenario's own prestart events drew after ours, such as Team Survival's
--- masks.
+-- dealt). Called again (again = true) at start and at every turn refresh
+-- for any terrain the scenario drew after ours or changed since: Team
+-- Survival's masks, Aethermaw's halves joining on turns 4-6.
 function sc.convert_to_space(again)
 	if wml.variables["sc_space"] == false then return end
 	local map = wesnoth.current.map
@@ -161,6 +162,11 @@ function sc.convert_to_space(again)
 		new[x] = {}
 		for y = y0, y1 do
 			local code = convert(map[{ x, y }])
+			-- off-map holes cut into the play area become dark nebula
+			if code:sub(1, 4) == "_off" and x >= 1 and y >= 1
+				and x <= map.playable_width and y <= map.playable_height then
+				code = "Yqd"
+			end
 			new[x][y] = code
 			if code:sub(1, 1) == "#" then marked[#marked + 1] = { x, y, code } end
 		end

@@ -28,7 +28,8 @@ Terrain is translated by role, so a converted map plays like the original:
     chasm                                  -> black hole          Ys^Yxb
         ...but chasm touching more chasm   -> gravity eddy        Yqe
       (so a lava field or a chasm doesn't become a row of suns)
-    off-map                                -> unchanged
+    off-map                                -> unchanged, but holes cut into
+                                              the play area -> dark nebula Yqd
     fake map edge (^_fme)                  -> kept, over the converted base
 
 Starting positions are kept.
@@ -128,6 +129,11 @@ def main():
             m = re.match(r"^(\d+ )?(.*)$", cell.strip())
             row.append([m.group(1) or "", convert(m.group(2))])
         grid.append(row)
+    # Off-map holes cut into the play area become dark nebula.
+    for y, row in enumerate(grid[1:-1], 1):
+        for x, cell in enumerate(row[1:-1], 1):
+            if cell[1].startswith("_off"):
+                cell[1] = "Yqd"
     # A lone lava hex is a star, a lone chasm a black hole; where they touch
     # more of the same they are a plasma storm or a gravity eddy.
     kind = {(x, y): c for y, row in enumerate(grid) for x, (_, c) in enumerate(row) if c in LONE}
