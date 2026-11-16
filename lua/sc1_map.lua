@@ -1,4 +1,4 @@
--- Star Control TC: a fresh Star Control 1 star cluster, as a Wesnoth map.
+-- The Ur-Quan Wars: a fresh Star Control 1 star cluster, as a Wesnoth map.
 -- Used by lua/sc1.lua at the start of every SC1 mission game, and by
 -- tools/sc1_map_preview.lua to draw sample maps outside the game.
 --

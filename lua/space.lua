@@ -1,4 +1,4 @@
--- Star Control TC: play any map in space. When a game with the era starts
+-- The Ur-Quan Wars: play any map in space. When a game with the era starts
 -- on a map drawn with ordinary Wesnoth terrain (a core map, or a user-made
 -- one), every hex is turned into its deep-space counterpart, so the map
 -- plays like the original but looks like space. Maps that already use the
@@ -41,7 +41,7 @@
 -- option deals them (sc.deal_planet_types in planets.lua), and the
 -- scenario's day and night is replaced by the space maps' Deep Space time.
 
-local _ = wesnoth.textdomain "wesnoth-Star_Control_TC"
+local _ = wesnoth.textdomain "wesnoth-The_Ur-Quan_Wars"
 
 -- One hex's terrain code, in space.
 local function convert(code)

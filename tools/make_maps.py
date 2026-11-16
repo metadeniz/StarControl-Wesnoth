@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write the Star Control TC multiplayer maps.
+"""Write The Ur-Quan Wars multiplayer maps.
 
 Each map is drawn as the left half plus the centre column, as text; the
 right half is the mirror image, so both sides get exactly the same map.
